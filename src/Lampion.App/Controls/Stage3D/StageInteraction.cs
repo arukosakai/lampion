@@ -64,6 +64,7 @@ internal sealed class StageInteraction
             return;
         }
 
+        _editor.PieceOnly = false;
         if (_view.BuildMode && TryGrabArrow(point))
             return;
 
@@ -72,7 +73,9 @@ internal sealed class StageInteraction
         if (_picker.Pick(rayOrigin, direction) is { } picked)
         {
             Select(picked, additive);
-            if (_view.BuildMode && !additive && _view.GizmoOrigin is { } origin)
+            // Set pieces are selected one at a time, so Ctrl on one means "just this piece, not its structure".
+            _editor.PieceOnly = additive && !picked.IsFixture;
+            if (_view.BuildMode && (!additive || _editor.PieceOnly) && _view.GizmoOrigin is { } origin)
             {
                 var vertical = modifiers.HasFlag(KeyModifiers.Alt);
                 var grab = vertical ? origin : StageGeometry.IntersectPlaneY(rayOrigin, direction, origin.Y) ?? origin;

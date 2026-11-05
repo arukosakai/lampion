@@ -35,7 +35,7 @@ internal static class PreviewSet
     /// <summary>A model vector as a render vector.</summary>
     public static Vector3 ToVector(Vec3 v) => new((float)v.X, (float)v.Y, (float)v.Z);
 
-    private static ObjectVisual Visual(StageObject o) => new(o.Id, o.Kind, ToVector(o.Position), ToVector(o.Size), Quaternion.Identity, Linear(o.Color), false);
+    private static ObjectVisual Visual(StageObject o) => new(o.Id, o.Kind, ToVector(o.Position), ToVector(o.Size), Quaternion.Identity, Linear(o.Color), 0);
 
     private static Vector3 Linear(string hex)
     {

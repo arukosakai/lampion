@@ -39,7 +39,8 @@ internal static class FixturePatcher
 
     /// <summary>
     /// Adds fixtures like <see cref="Patch"/> but without committing, so a caller can make them part of a bigger
-    /// edit. They're named "<paramref name="prefix"/> n" counting on from <paramref name="firstNumber"/>.
+    /// edit. They're named "<paramref name="prefix"/> n" counting on from <paramref name="firstNumber"/>. Hung on a truss that's
+    /// part of a structure, they join it and move with it.
     /// </summary>
     /// <returns>The fixtures added, in patch order; may be fewer than <paramref name="count"/> when the universes run out.</returns>
     public static List<Fixture> Add(Project project, FixtureProfile profile, int count, int universe, int? startAddress, string? prefix, StageObject? truss, int firstNumber = 1)
@@ -65,6 +66,7 @@ internal static class FixturePatcher
                 Address = address,
                 Position = new Vec3(-(count - 1) / 2.0 + i, 5.5, 0),
                 Pitch = profile.HasPanTilt ? -90 : -60,
+                StructureId = truss?.StructureId,
             };
             project.Fixtures.Add(fixture);
             fixtures.Add(fixture);

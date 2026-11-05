@@ -18,11 +18,15 @@ internal sealed class StageObjectEditor(InspectorFields fields)
     private static readonly ScrubRange YawRange = new(-360, 360, 0.5, Format: "0.#", Unit: "°");
     private static readonly ScrubRange TiltRange = new(-180, 180, 0.5, Format: "0.#", Unit: "°");
 
+    private readonly StructureSection _structure = new(fields);
+
     /// <summary>Adds the sections for <paramref name="obj"/> to <paramref name="root"/>.</summary>
     public void Build(Panel root, StageObject obj)
     {
         var context = fields.Context;
         InspectorLayout.Title(root, obj.Name, $"{obj.Kind} · top at {obj.Position.Y + StageMath.HalfHeight(obj):0.00} m");
+        if (StructureEdits.Find(context.State.Project, obj.StructureId) is { } structure)
+            _structure.Build(root, structure);
         var section = InspectorLayout.Section(root, "object", "Object");
         InspectorLayout.Row(section, "Name", fields.Text(obj.Name, v => obj.Name = v));
         InspectorLayout.Row(section, "Kind", fields.Choice(Enum.GetValues<StageObjectKind>(), obj.Kind, v => obj.Kind = v));

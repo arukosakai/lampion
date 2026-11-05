@@ -15,6 +15,7 @@ namespace Lampion.App.Controls.Stage3D;
 internal sealed partial class StageSceneBuilder
 {
     private const float MaxThrow = 30;
+    private const float StructureGlow = 0.45f;
 
     private readonly EditorState _state;
     private readonly SceneSnapshot _scene = new();
@@ -91,6 +92,10 @@ internal sealed partial class StageSceneBuilder
         return peak > 0.6f ? bounce * (0.6f / peak) : bounce;
     }
 
+    /// <summary>Full glow for the selected piece, a softer one for the rest of its structure (what a drag will move).</summary>
+    private static float Highlight(StageObject o, string? selected, string? selectedStructure) =>
+        o.Id == selected ? 1 : selectedStructure is not null && o.StructureId == selectedStructure ? StructureGlow : 0;
+
     private void Rebuild(Project project)
     {
         var fixtures = project.Fixtures;
@@ -105,10 +110,11 @@ internal sealed partial class StageSceneBuilder
         if (_objects.Length != objects.Count)
             _objects = new ObjectVisual[objects.Count];
         var selected = _state.SelectedObjectId;
+        var selectedStructure = selected is null ? null : StageSelection.ObjectById(_state, selected)?.StructureId;
         for (var i = 0; i < objects.Count; i++)
         {
             var o = objects[i];
-            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), o.Id == selected);
+            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), Highlight(o, selected, selectedStructure));
         }
         _scene.SetObjects(_objects);
 

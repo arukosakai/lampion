@@ -27,6 +27,9 @@ public sealed class StageObject
     /// <summary>Degrees around the object's own Z axis, applied first; 90 stands a truss upright with its +X end on top.</summary>
     public double Roll { get; set; }
 
+    /// <summary>The <see cref="Structure"/> it belongs to, or null for a piece on its own.</summary>
+    public string? StructureId { get; set; }
+
     /// <summary>Surface colour as <c>#RRGGBB</c>.</summary>
     public string Color { get; set; } = "#3A3A40";
 
@@ -41,6 +44,7 @@ public sealed class StageObject
             Yaw = Yaw,
             Pitch = Pitch,
             Roll = Roll,
+            StructureId = StructureId,
             Color = Color,
         };
 }

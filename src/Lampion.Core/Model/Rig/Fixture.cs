@@ -35,6 +35,9 @@ public sealed class Fixture
     /// </summary>
     public double Roll { get; set; }
 
+    /// <summary>The <see cref="Stage.Structure"/> it hangs on and moves with, or null for a free-standing fixture.</summary>
+    public string? StructureId { get; set; }
+
     /// <summary>Tint as <c>#RRGGBB</c> for fixtures with no colour channels (a dimmer behind a gel).</summary>
     public string GelColor { get; set; } = "#FFE6B0";
 
@@ -54,6 +57,7 @@ public sealed class Fixture
             Yaw = Yaw,
             Pitch = Pitch,
             Roll = Roll,
+            StructureId = StructureId,
             GelColor = GelColor,
             ExtractWhite = ExtractWhite,
         };

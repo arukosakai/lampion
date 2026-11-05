@@ -28,11 +28,7 @@ internal static class SelectionEdits
                     track.Clips.RemoveAll(c => state.SelectedClipIds.Contains(c.Id));
                 break;
             case SelectionKind.Fixture:
-                state.Project.Fixtures.RemoveAll(f => state.SelectedFixtureIds.Contains(f.Id));
-                foreach (var group in state.Project.Groups)
-                    group.FixtureIds.RemoveAll(state.SelectedFixtureIds.Contains);
-                foreach (var track in state.Project.Tracks)
-                    track.FixtureIds.RemoveAll(state.SelectedFixtureIds.Contains);
+                state.Project.RemoveFixtures(state.SelectedFixtureIds.ToHashSet());
                 break;
             case SelectionKind.StageObject:
                 state.Project.Stage.Objects.RemoveAll(o => o.Id == state.SelectedObjectId);

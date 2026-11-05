@@ -36,6 +36,8 @@ internal sealed class SelectionReadout(StageView view, EditorState state)
         else if (state.SelectionKind == SelectionKind.StageObject && StageSelection.SelectedObject(state) is { } obj)
         {
             Line().Append(obj.Name).Append(" (").Append(KindName(obj.Kind)).Append(")");
+            if (StructureEdits.Find(state.Project, obj.StructureId) is { } structure)
+                _text.Append(" · part of ").Append(structure.Name).Append(view.BuildMode ? " (Ctrl+drag moves just this piece)" : "");
             Position(obj.Position);
             Line().Append("W ").AppendMetres(obj.Size.X).Append("   H ").AppendMetres(obj.Size.Y).Append("   D ").AppendMetres(obj.Size.Z);
             Line().Append("Yaw ").Append(obj.Yaw, "0.#").Append("°   Pitch ").Append(obj.Pitch, "0.#").Append("°   Roll ").Append(obj.Roll, "0.#").Append("°");

@@ -25,6 +25,7 @@
         "yaw": 0,
         "pitch": 0,
         "roll": 0,
+        "structureId": null,
         "color": "#2B2622"
       },
       {
@@ -46,6 +47,7 @@
         "yaw": 15,
         "pitch": 0,
         "roll": 0,
+        "structureId": null,
         "color": "#B8BCC4"
       },
       {
@@ -67,6 +69,7 @@
         "yaw": 10,
         "pitch": -4,
         "roll": 90,
+        "structureId": "st-tower",
         "color": "#B8BCC4"
       },
       {
@@ -88,6 +91,7 @@
         "yaw": 0,
         "pitch": 0,
         "roll": 0,
+        "structureId": null,
         "color": "#050505"
       },
       {
@@ -109,7 +113,15 @@
         "yaw": 0,
         "pitch": 0,
         "roll": 0,
+        "structureId": null,
         "color": "#1E1E24"
+      }
+    ],
+    "structures": [
+      {
+        "id": "st-tower",
+        "name": "Side tower",
+        "yaw": 10
       }
     ],
     "haze": 0.4,
@@ -530,6 +542,7 @@
       "yaw": -9,
       "pitch": -47,
       "roll": -21,
+      "structureId": "st-tower",
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -548,6 +561,7 @@
       "yaw": -3,
       "pitch": -49,
       "roll": -7,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -566,6 +580,7 @@
       "yaw": 3,
       "pitch": -51,
       "roll": 7,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": false
     },
@@ -584,6 +599,7 @@
       "yaw": 9,
       "pitch": -53,
       "roll": 21,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -602,6 +618,7 @@
       "yaw": -12,
       "pitch": -46,
       "roll": -28,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -620,6 +637,7 @@
       "yaw": 0,
       "pitch": -50,
       "roll": 0,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -638,6 +656,7 @@
       "yaw": 12,
       "pitch": -54,
       "roll": 28,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -656,6 +675,7 @@
       "yaw": -6,
       "pitch": -48,
       "roll": -14,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -674,6 +694,7 @@
       "yaw": 6,
       "pitch": -52,
       "roll": 14,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -692,6 +713,7 @@
       "yaw": 1.5,
       "pitch": -50.5,
       "roll": 3.5,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -710,6 +732,7 @@
       "yaw": 15,
       "pitch": -55,
       "roll": 35,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -728,6 +751,7 @@
       "yaw": 0,
       "pitch": -50,
       "roll": 0,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -746,6 +770,7 @@
       "yaw": -18,
       "pitch": -44,
       "roll": -42,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -764,6 +789,7 @@
       "yaw": -18,
       "pitch": -44,
       "roll": -42,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -782,6 +808,7 @@
       "yaw": 18,
       "pitch": -56,
       "roll": 42,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -800,6 +827,7 @@
       "yaw": -4.5,
       "pitch": -48.5,
       "roll": -10.5,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -818,6 +846,7 @@
       "yaw": 4.5,
       "pitch": -51.5,
       "roll": 10.5,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -836,6 +865,7 @@
       "yaw": 21,
       "pitch": -57,
       "roll": 49,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -854,6 +884,7 @@
       "yaw": -21,
       "pitch": -43,
       "roll": -49,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -872,6 +903,7 @@
       "yaw": 0,
       "pitch": -50,
       "roll": 0,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -890,6 +922,7 @@
       "yaw": -15,
       "pitch": -45,
       "roll": -35,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -908,6 +941,7 @@
       "yaw": 7.5,
       "pitch": -52.5,
       "roll": 17.5,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -926,6 +960,7 @@
       "yaw": 24,
       "pitch": -58,
       "roll": 56,
+      "structureId": null,
       "gelColor": "#FFD080",
       "extractWhite": true
     }

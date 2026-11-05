@@ -15,17 +15,39 @@ internal sealed class SelectionEditor(EditorState state, StagePicker picker)
     /// <summary>Where the aim tool last landed on the stage, or null before the first aim.</summary>
     public Vector3? AimTarget { get; private set; }
 
-    /// <summary>Remembers where every selected fixture, or the selected set piece, is now; moves are relative to this.</summary>
+    /// <summary>
+    /// Whether the next captured move takes only the selected set piece rather than its whole structure.
+    /// Set before a drag begins; the drag reads it when it captures origins.
+    /// </summary>
+    public bool PieceOnly { get; set; }
+
+    /// <summary>
+    /// Remembers where every selected fixture, or the selected set piece, is now; moves are relative to this.
+    /// A piece of a structure brings the rest of it and its hung fixtures along, unless <see cref="PieceOnly"/>.
+    /// </summary>
     public void CaptureOrigins()
     {
         _origins.Clear();
         if (state.SelectionKind == SelectionKind.StageObject && StageSelection.SelectedObject(state) is { } obj)
         {
             _origins[obj.Id] = obj.Position;
+            if (!PieceOnly && obj.StructureId is { } structure)
+                CaptureStructure(structure);
             return;
         }
         foreach (var id in state.SelectedFixtureIds)
             if (state.Project.FixtureById(id) is { } fixture)
+                _origins[fixture.Id] = fixture.Position;
+    }
+
+    private void CaptureStructure(string id)
+    {
+        var project = state.Project;
+        foreach (var piece in project.Stage.Objects)
+            if (piece.StructureId == id)
+                _origins[piece.Id] = piece.Position;
+        foreach (var fixture in project.Fixtures)
+            if (fixture.StructureId == id)
                 _origins[fixture.Id] = fixture.Position;
     }
 

@@ -6,6 +6,9 @@ public sealed class StageSettings
     /// <summary>Set pieces, in drawing order.</summary>
     public List<StageObject> Objects { get; } = [];
 
+    /// <summary>Groups of set pieces that move together; empty for a set with none.</summary>
+    public List<Structure> Structures { get; } = [];
+
     /// <summary>How visible beams are in the air, 0..1.</summary>
     public double Haze { get; set; } = 0.6;
 

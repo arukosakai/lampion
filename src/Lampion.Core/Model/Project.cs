@@ -79,6 +79,16 @@ public sealed class Project
         return null;
     }
 
+    /// <summary>Removes these fixtures from the patch and from every group and track that lists them.</summary>
+    public void RemoveFixtures(IReadOnlySet<string> ids)
+    {
+        Fixtures.RemoveAll(f => ids.Contains(f.Id));
+        foreach (var group in Groups)
+            group.FixtureIds.RemoveAll(ids.Contains);
+        foreach (var track in Tracks)
+            track.FixtureIds.RemoveAll(ids.Contains);
+    }
+
     /// <summary>The first fixture with this id, or null. Linear in the fixture count; allocation-free.</summary>
     public Fixture? FixtureById(string id)
     {

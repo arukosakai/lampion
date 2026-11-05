@@ -27,11 +27,12 @@ internal static class EverythingProject
                 Ambient = 0.2,
                 LightBounce = true,
                 GridStep = 0.5,
+                Structures = { new Structure { Id = "st-tower", Name = "Side tower", Yaw = 10 } },
                 Objects =
                 {
                     new StageObject { Id = "so-deck", Name = "Deck", Kind = StageObjectKind.Platform, Position = new Vec3(0, 0.5, -1), Size = new Vec3(10, 1, 6), Color = "#2B2622" },
                     new StageObject { Id = "so-truss", Name = "Truss", Kind = StageObjectKind.Truss, Position = new Vec3(0, 6, 1), Size = new Vec3(12, 0.3, 0.3), Yaw = 15, Color = "#B8BCC4" },
-                    new StageObject { Id = "so-tower", Name = "Tower", Kind = StageObjectKind.Truss, Position = new Vec3(-6, 2.5, 1), Size = new Vec3(5, 0.3, 0.3), Yaw = 10, Pitch = -4, Roll = 90, Color = "#B8BCC4" },
+                    new StageObject { Id = "so-tower", Name = "Tower", Kind = StageObjectKind.Truss, Position = new Vec3(-6, 2.5, 1), Size = new Vec3(5, 0.3, 0.3), Yaw = 10, Pitch = -4, Roll = 90, StructureId = "st-tower", Color = "#B8BCC4" },
                     new StageObject { Id = "so-screen", Name = "Screen", Kind = StageObjectKind.Screen, Position = new Vec3(0, 3, -4), Size = new Vec3(6, 3.4, 0.1), Color = "#050505" },
                     new StageObject { Id = "so-wall", Name = "Wall", Kind = StageObjectKind.Wall, Position = new Vec3(0, 4, -5), Size = new Vec3(12, 8, 0.2), Color = "#1E1E24" },
                 },
@@ -414,6 +415,7 @@ internal static class EverythingProject
         project.Tracks.AddRange([top, adder, heads, washes, muted, bottom, empty, audio, video]);
         project.Markers.Add(new Marker { Id = "mk-drop", Time = 14, Label = "Drop" });
         project.Markers.Add(new Marker { Id = "mk-end", Time = 30, Label = "Outro" });
+        project.FixtureById("par1")!.StructureId = "st-tower";
         return project;
     }
 
