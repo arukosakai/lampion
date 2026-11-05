@@ -46,6 +46,25 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
 
     public string? Error { get; private set; }
 
+    /// <summary>In aim mode a click or drag on the set points a moving head there instead of orbiting.</summary>
+    public bool AimMode
+    {
+        get => _aimMode;
+        set
+        {
+            _aimMode = value;
+            _aimTarget = null;
+            Cursor = new Cursor(value ? StandardCursorType.Cross : StandardCursorType.SizeAll);
+        }
+    }
+
+    /// <summary>Raised with the pan/tilt (0..1) that reach the clicked spot; the owner writes them into its values.</summary>
+    public event Action<double, double>? Aimed;
+
+    private bool _aimMode;
+    private Vector3? _aimTarget;
+    private Fixture? _fixture;
+
     public bool HitTest(Point point) => new Rect(Bounds.Size).Contains(point);
 
     private void ResetCamera()
@@ -125,6 +144,7 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
             Yaw = 180,
             Pitch = onFloor ? 35 : profile.HasPanTilt ? -90 : -32,
         };
+        _fixture = fixture;
 
         var emitted = DmxMapper.Decode(fixture, profile, Values);
         var direction = StageMath.BeamDirection(fixture, profile, emitted.Pan, emitted.Tilt).Normalized();
@@ -137,7 +157,24 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         var lens = visual.Lens;
         var throwDistance = StageMath.Raycast(objects, new Vec3(lens.X, lens.Y, lens.Z), direction, 40) ?? 30;
         var objectVisuals = objects.Select(o => new ObjectVisual(o.Id, o.Kind, ToVector(o.Position), ToVector(o.Size), 0, Linear(o.Color), false)).ToList();
-        _scene = new SceneSnapshot([visual with { BeamLength = (float)Math.Min(throwDistance, 30) }], objectVisuals, 0.55f, 0.3f, 0.35f, Vector3.Zero, time, null, null);
+        _scene = new SceneSnapshot([visual with { BeamLength = (float)Math.Min(throwDistance, 30) }], objectVisuals, 0.55f, 0.3f, 0.35f, Vector3.Zero, time, null, _aimMode ? _aimTarget : null);
+    }
+
+    private void AimAt(Point point)
+    {
+        if (Profile is not { HasPanTilt: true } profile || _fixture is not { } fixture)
+            return;
+        var (origin, direction) = _camera.Ray((float)point.X, (float)point.Y, (float)Bounds.Width, (float)Bounds.Height);
+        var from = new Vec3(origin.X, origin.Y, origin.Z);
+        var dir = new Vec3(direction.X, direction.Y, direction.Z);
+        if (StageMath.Raycast(SetObjects(onFloor: false), from, dir, 60) is not { } distance)
+            return;
+        var hit = from + dir * distance;
+        var current = DmxMapper.Decode(fixture, profile, Values);
+        if (StageMath.PanTiltToward(fixture, profile, hit, (current.Pan, current.Tilt)) is not { } aim)
+            return;
+        _aimTarget = ToVector(hit);
+        Aimed?.Invoke(aim.Pan, aim.Tilt);
     }
 
     private static List<StageObject> SetObjects(bool onFloor)
@@ -170,6 +207,9 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         _dragFrom = e.GetPosition(this);
         e.Pointer.Capture(this);
         e.Handled = true;
+        // Right-drag still orbits in aim mode, so the view never gets stuck.
+        if (_aimMode && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            AimAt(_dragFrom.Value);
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
@@ -178,6 +218,12 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         if (_dragFrom is not { } from)
             return;
         var point = e.GetPosition(this);
+        if (_aimMode && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            AimAt(point);
+            _dragFrom = point;
+            return;
+        }
         _camera.Orbit((float)(point.X - from.X), (float)(point.Y - from.Y));
         _dragFrom = point;
     }

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
@@ -33,14 +34,31 @@ public static class ProfileEditorDialog
         var window = new Window
         {
             Title = isNew ? "New Fixture Profile" : $"Fixture Profile — {profile.Manufacturer} {profile.Model}",
-            Width = 1180,
-            Height = 740,
+            Width = 1240,
+            Height = 840,
             MinWidth = 980,
             MinHeight = 560,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
 
         var preview = new FixturePreview { Profile = working };
+        var orbit = new ToggleButton { Content = "Orbit", IsChecked = true, Padding = new Thickness(10, 2), CornerRadius = new CornerRadius(3, 0, 0, 3) };
+        var aim = new ToggleButton { Content = "◎ Aim", Padding = new Thickness(10, 2), CornerRadius = new CornerRadius(0, 3, 3, 0) };
+        ToolTip.SetTip(orbit, "Drag to orbit the camera");
+        ToolTip.SetTip(aim, "Click or drag on the floor or wall to point the head there (right-drag still orbits)");
+        var modeSwitch = new StackPanel { Orientation = Orientation.Horizontal, Children = { orbit, aim }, VerticalAlignment = VerticalAlignment.Center };
+        var hint = new TextBlock { Foreground = Muted, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
+
+        void SetAim(bool on)
+        {
+            preview.AimMode = on;
+            orbit.IsChecked = !on;
+            aim.IsChecked = on;
+            hint.Text = on ? "click the set to aim · right-drag orbits" : "drag to orbit · scroll to zoom";
+        }
+        orbit.Click += (_, _) => SetAim(false);
+        aim.Click += (_, _) => SetAim(true);
+        SetAim(false);
         var ribbon = new WrapPanel();
         var channels = new StackPanel { Spacing = 4 };
         var channelCount = new TextBlock { Foreground = Muted, VerticalAlignment = VerticalAlignment.Center };
@@ -50,10 +68,31 @@ public static class ProfileEditorDialog
         var users = state.Project.Fixtures.Count(f => f.ProfileId == profile.Id);
         var ribbonFills = new List<Border>();
         var ribbonNumbers = new List<TextBlock>();
+        var rowSliders = new List<Slider>();
+        var syncingRows = false;
+        var patched = state.Project.Fixtures.Where(f => f.ProfileId == profile.Id).ToList();
+        IReadOnlySet<string> liveTargets = new HashSet<string>();
+        FixtureTester tester = null!;
+        tester = new FixtureTester(working, test, () =>
+        {
+            SyncRows();
+            PushTestValues();
+        });
+        preview.Aimed += tester.SetPanTilt;
+
+        void SyncRows()
+        {
+            syncingRows = true;
+            for (var i = 0; i < rowSliders.Count && i < test.Count; i++)
+                rowSliders[i].Value = test[i];
+            syncingRows = false;
+        }
 
         void PushTestValues()
         {
             preview.Values = test.ToArray();
+            tester.Sync();
+            state.Test = liveTargets.Count == 0 ? null : new FixtureTest(liveTargets, test.ToArray());
             for (var i = 0; i < ribbonFills.Count && i < test.Count; i++)
             {
                 ribbonFills[i].Height = 30 * test[i] / 255.0;
@@ -70,6 +109,9 @@ public static class ProfileEditorDialog
             PushTestValues();
             channelCount.Text = working.Channels.Count == 1 ? "1 channel" : $"{working.Channels.Count} channels";
             panRange.IsEnabled = tiltRange.IsEnabled = working.HasPanTilt;
+            modeSwitch.IsVisible = working.HasPanTilt;
+            if (!working.HasPanTilt)
+                SetAim(false);
             footerNote.Text = FooterNote();
             footerNote.Foreground = users > 0 && working.Channels.Count != profile.Channels.Count ? Warning : Muted;
         }
@@ -119,6 +161,7 @@ public static class ProfileEditorDialog
         void FillChannels()
         {
             channels.Children.Clear();
+            rowSliders.Clear();
             channels.Children.Add(HeaderRow());
             for (var i = 0; i < working.Channels.Count; i++)
                 channels.Children.Add(ChannelRow(i));
@@ -169,11 +212,14 @@ public static class ProfileEditorDialog
                 slider.Resources[key] = color;
             slider.ValueChanged += (_, e) =>
             {
+                valueText.Text = $"{(byte)Math.Round(e.NewValue)}";
+                if (syncingRows)
+                    return;
                 test[index] = (byte)Math.Round(e.NewValue);
-                valueText.Text = $"{test[index]}";
                 PushTestValues();
             };
-            ToolTip.SetTip(slider, "Test value for the preview only. It isn't saved.");
+            rowSliders.Add(slider);
+            ToolTip.SetTip(slider, "Test value. It drives the preview (and the rig, when output is on) but isn't saved.");
             var testCell = new DockPanel { Children = { valueText, slider } };
             DockPanel.SetDock(valueText, Dock.Right);
             Place(grid, testCell, 4);
@@ -231,20 +277,8 @@ public static class ProfileEditorDialog
         {
             for (var i = 0; i < test.Count; i++)
                 test[i] = value(working.Channels[i]);
-            Refresh();
-        }
-
-        void TestColor(Color color)
-        {
-            SetTest(c => c.Role switch
-            {
-                ChannelRole.Dimmer => 255,
-                ChannelRole.Red => color.R,
-                ChannelRole.Green => color.G,
-                ChannelRole.Blue => color.B,
-                ChannelRole.White => (byte)(color is { R: 255, G: 255, B: 255 } ? 255 : 0),
-                _ => test[working.Channels.IndexOf(c)],
-            });
+            SyncRows();
+            PushTestValues();
         }
 
         // ---- Layout ------------------------------------------------------------------------------------
@@ -301,15 +335,6 @@ public static class ProfileEditorDialog
             },
         };
 
-        var swatches = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        foreach (var (hex, tip) in new[] { ("#FFFFFF", "White"), ("#FF0000", "Red"), ("#00FF00", "Green"), ("#0000FF", "Blue"), ("#FF00FF", "Magenta"), ("#FF8000", "Orange") })
-        {
-            var color = Ui.ToColor(hex);
-            var swatch = new Button { Width = 22, Height = 22, MinHeight = 22, Padding = new Thickness(0), Background = new SolidColorBrush(color), CornerRadius = new CornerRadius(11) };
-            ToolTip.SetTip(swatch, $"Test in {tip.ToLowerInvariant()}");
-            swatch.Click += (_, _) => TestColor(color);
-            swatches.Children.Add(swatch);
-        }
         var testButtons = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -322,18 +347,44 @@ public static class ProfileEditorDialog
             },
         };
 
-        var previewFrame = new Border { CornerRadius = new CornerRadius(4), ClipToBounds = true, Child = preview, MinHeight = 280 };
+        // Where the test values go besides the preview: nowhere, every patched fixture of this profile, or one of them.
+        var outputs = new List<(string Label, HashSet<string> Ids)> { ("Preview only", []) };
+        if (patched.Count > 1)
+            outputs.Add(($"All {patched.Count} patched fixtures", patched.Select(f => f.Id).ToHashSet()));
+        outputs.AddRange(patched.Select(f => ($"{f.Name}  ·  {f.Universe}.{f.Address:000}", new HashSet<string> { f.Id })));
+        var output = Ui.Combo(outputs, outputs[0], o =>
+        {
+            liveTargets = o.Ids;
+            PushTestValues();
+        }, o => o.Label);
+        output.IsEnabled = patched.Count > 0;
+        output.MinWidth = 200;
+        output.HorizontalAlignment = HorizontalAlignment.Right;
+        ToolTip.SetTip(output, patched.Count == 0
+            ? "Patch fixtures with this profile to test them live"
+            : "Hold these values on the patched fixtures while the editor is open: the stage view shows them, and Art-Net sends them when it's on");
+        var testerHeader = new DockPanel { Margin = new Thickness(0, 6, 0, 0) };
+        var testerTitle = Heading("Tester");
+        testerTitle.Margin = new Thickness(0);
+        testerTitle.VerticalAlignment = VerticalAlignment.Center;
+        var outputLabel = new TextBlock { Text = "Output", Foreground = Muted, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+        var outputRow = new StackPanel { Orientation = Orientation.Horizontal, Children = { outputLabel, output } };
+        DockPanel.SetDock(outputRow, Dock.Right);
+        testerHeader.Children.Add(outputRow);
+        testerHeader.Children.Add(testerTitle);
+
+        var previewFrame = new Border { CornerRadius = new CornerRadius(4), ClipToBounds = true, Child = preview, MinHeight = 260 };
         var previewHeader = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
-        var hint = new TextBlock { Text = "drag to orbit · scroll to zoom", Foreground = Muted, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-        DockPanel.SetDock(hint, Dock.Right);
-        previewHeader.Children.Add(hint);
-        previewHeader.Children.Add(new TextBlock { Text = "Preview", FontWeight = FontWeight.SemiBold, FontSize = 14 });
+        var headerRight = new StackPanel { Orientation = Orientation.Horizontal, Children = { modeSwitch, hint } };
+        DockPanel.SetDock(headerRight, Dock.Right);
+        previewHeader.Children.Add(headerRight);
+        previewHeader.Children.Add(new TextBlock { Text = "Preview", FontWeight = FontWeight.SemiBold, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
 
         var previewBottom = new StackPanel
         {
             Spacing = 8,
             Margin = new Thickness(0, 10, 0, 0),
-            Children = { Heading("DMX footprint"), ribbon, Heading("Test"), swatches, testButtons },
+            Children = { Heading("DMX footprint"), ribbon, testerHeader, tester, testButtons },
         };
         var previewPanel = new DockPanel { Margin = new Thickness(16, 14, 16, 14) };
         DockPanel.SetDock(previewHeader, Dock.Top);
@@ -365,7 +416,10 @@ public static class ProfileEditorDialog
         footer.Children.Add(footerNote);
         var footerBar = new Border { Background = PanelBackground, BorderBrush = Brushes.Black, BorderThickness = new Thickness(0, 1, 0, 0), Child = footer };
 
-        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("*,440") };
+        // However the window goes (Save, Cancel, ✕), the patched fixtures go back to the show.
+        window.Closed += (_, _) => state.Test = null;
+
+        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("*,500") };
         var scroller = new ScrollViewer { Content = editor };
         body.Children.Add(scroller);
         // Opening focuses the last field, and the scroller follows focus; start at the top instead.
