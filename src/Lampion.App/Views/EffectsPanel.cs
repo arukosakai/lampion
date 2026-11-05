@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.Core.Model;
+using Lampion.Core.Persistence;
 using LightEffect = Lampion.Core.Model.Effect;
 
 namespace Lampion.App.Views;
@@ -43,9 +44,24 @@ public sealed class EffectsPanel : DockPanel
         {
             var folder = TwirlSection.Titled("fx-light", "📁  Light effects");
             foreach (var (kind, name, description) in effects)
-                folder.Body.Children.Add(Item(EffectIcon(kind), name, description, () => AddEffect(kind), p => _timeline.PreviewDrop(p, DropKind.Effect), p => _timeline.Drop(kind, p)));
+                folder.Body.Children.Add(Item(EffectIcon(LightEffect.Create(kind)), name, description, () => AddEffect(kind), p => _timeline.PreviewDrop(p, DropKind.Effect), p => _timeline.Drop(kind, p)));
             _list.Children.Add(folder);
         }
+
+        var presets = PresetActions.Library().Where(p => Match(p.Preset.Name) || Match(p.Preset.Description) || Match(p.Preset.Effect.DisplayName)).ToList();
+        var import = new GlyphButton("Import…", "Add a preset file (" + EffectPreset.Extension + ") to your presets", () => WithOwner(PresetActions.Import));
+        var presetFolder = TwirlSection.Titled("fx-presets", "📁  Presets", true, import);
+        foreach (var (path, preset) in presets)
+        {
+            var tip = (preset.Description.Length > 0 ? preset.Description + "\n" : "") + $"{preset.Effect.DisplayName}, {preset.Duration:0.##} s" + (path is null ? " · built in" : "");
+            var row = Item(EffectIcon(preset.Effect), preset.Name, tip, () => AddPreset(preset), p => _timeline.PreviewDrop(p, DropKind.Effect, preset.Duration), p => _timeline.DropPreset(preset, p));
+            row.ContextMenu = PresetMenu(path, preset);
+            presetFolder.Body.Children.Add(row);
+        }
+        if (filter.Length == 0 && presets.All(p => p.Path is null))
+            presetFolder.Body.Children.Add(new TextBlock { Text = "Right-click a clip → Save as preset… to add your own.", Foreground = Brushes.Gray, FontSize = 11, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(6, 4) });
+        if (presets.Count > 0 || filter.Length == 0)
+            _list.Children.Add(presetFolder);
 
         var transitions = new (TransitionKind Kind, string Name, string Description)[]
         {
@@ -65,17 +81,75 @@ public sealed class EffectsPanel : DockPanel
             _list.Children.Add(new TextBlock { Text = "Nothing matches.", Foreground = Brushes.Gray, Margin = new Thickness(8) });
     }
 
-    private static Control EffectIcon(string kind)
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        var chip = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(3), Background = Ui.Brush(LightEffect.Create(kind).SwatchColor) };
-        if (kind == "rainbow")
-            chip.Background = new LinearGradientBrush
+        base.OnAttachedToVisualTree(e);
+        UserData.PresetsChanged += Fill;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        UserData.PresetsChanged -= Fill;
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private static Control EffectIcon(LightEffect effect)
+    {
+        var chip = new Border { Width = 14, Height = 14, CornerRadius = new CornerRadius(3), Background = Ui.Brush(effect.SwatchColor) };
+        IReadOnlyList<string>? stops = effect switch
+        {
+            RainbowEffect => ["#FF0000", "#00FF00", "#0000FF"],
+            GradientEffect g => g.Colors,
+            ColorCycleEffect c => c.Colors,
+            ColorWaveEffect w => [w.Base, w.Color],
+            FireEffect f => [f.Ember, f.Flame],
+            _ => null,
+        };
+        if (stops is { Count: > 1 })
+        {
+            var gradient = new LinearGradientBrush
             {
                 StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
                 EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Colors.Red, 0), new GradientStop(Colors.Lime, 0.5), new GradientStop(Colors.Blue, 1) },
             };
+            for (var i = 0; i < stops.Count; i++)
+                gradient.GradientStops.Add(new GradientStop(Color.TryParse(stops[i], out var c) ? c : Colors.White, i / (stops.Count - 1.0)));
+            chip.Background = gradient;
+        }
         return chip;
+    }
+
+    private ContextMenu PresetMenu(string? path, EffectPreset preset)
+    {
+        var menu = new ContextMenu();
+        MenuItem Add(string header, Action action)
+        {
+            var item = new MenuItem { Header = header };
+            item.Click += (_, _) => action();
+            menu.Items.Add(item);
+            return item;
+        }
+        Add("Add at playhead", () => AddPreset(preset));
+        var apply = Add("Apply to selected clip", () =>
+        {
+            if (_state.PrimaryClip is LightClip clip)
+                TimelineOps.ApplyPreset(_state, clip, preset);
+        });
+        menu.Opening += (_, _) => apply.IsEnabled = _state.PrimaryClip is LightClip;
+        menu.Items.Add(new Separator());
+        Add("Export…", () => WithOwner(owner => PresetActions.Export(owner, preset)));
+        if (path is not null)
+        {
+            Add("Rename…", () => WithOwner(owner => PresetActions.Rename(owner, path, preset)));
+            Add("Delete…", () => WithOwner(owner => PresetActions.Delete(owner, path, preset)));
+        }
+        return menu;
+    }
+
+    private void WithOwner(Func<Window, Task> action)
+    {
+        if (TopLevel.GetTopLevel(this) is Window owner)
+            _ = action(owner);
     }
 
     private Control Item(Control icon, string name, string description, Action onDoubleClick, Action<Point?> preview, Func<Point, bool> drop)
@@ -96,6 +170,9 @@ public sealed class EffectsPanel : DockPanel
         var dragging = false;
         row.PointerPressed += (_, e) =>
         {
+            // Right-click opens the context menu; only the left button picks the item up.
+            if (!e.GetCurrentPoint(row).Properties.IsLeftButtonPressed)
+                return;
             if (e.ClickCount == 2)
             {
                 onDoubleClick();
@@ -123,9 +200,13 @@ public sealed class EffectsPanel : DockPanel
 
     private void AddEffect(string kind)
     {
-        var track = _state.SelectedTrack is { Kind: TrackKind.Light } selected ? selected : _state.Project.Tracks.FirstOrDefault(t => t.Kind == TrackKind.Light) ?? TimelineOps.AddLightTrack(_state);
-        TimelineOps.AddEffectClip(_state, track, kind, _state.Playhead);
+        TimelineOps.AddEffectClip(_state, TargetTrack(), kind, _state.Playhead);
     }
+
+    private void AddPreset(EffectPreset preset) => TimelineOps.AddPresetClip(_state, TargetTrack(), preset, _state.Playhead);
+
+    private Track TargetTrack() =>
+        _state.SelectedTrack is { Kind: TrackKind.Light } selected ? selected : _state.Project.Tracks.FirstOrDefault(t => t.Kind == TrackKind.Light) ?? TimelineOps.AddLightTrack(_state);
 
     private void ApplyTransition(TransitionKind kind)
     {

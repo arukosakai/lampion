@@ -1,4 +1,5 @@
 using Lampion.Core.Model;
+using Lampion.Core.Persistence;
 
 namespace Lampion.App.Editor;
 
@@ -49,6 +50,24 @@ public static class TimelineOps
         state.Commit();
         state.SelectClip(clip.Id);
         return clip;
+    }
+
+    public static LightClip AddPresetClip(EditorState state, Track track, EffectPreset preset, double start)
+    {
+        var clip = preset.CreateClip(start);
+        track.Clips.Add(clip);
+        track.SortClips();
+        state.Commit();
+        state.SelectClip(clip.Id);
+        return clip;
+    }
+
+    public static void ApplyPreset(EditorState state, LightClip clip, EffectPreset preset)
+    {
+        preset.ApplyTo(clip);
+        clip.Name = preset.Name;
+        state.Commit();
+        state.SelectClip(clip.Id);
     }
 
     public static void DeleteSelection(EditorState state)

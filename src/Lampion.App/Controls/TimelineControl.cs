@@ -7,6 +7,7 @@ using Lampion.App.Editor;
 using Lampion.App.Views;
 using Lampion.Core.Color;
 using Lampion.Core.Model;
+using Lampion.Core.Persistence;
 
 namespace Lampion.App.Controls;
 
@@ -909,13 +910,14 @@ public sealed class TimelineControl : Control
     // ---- Drag-and-drop from the Project and Effects panels ----------------------------------------------
 
     /// <summary>Shows where a drag from another panel would land; pass null to clear.</summary>
-    public void PreviewDrop(Point? p, DropKind kind = DropKind.Effect)
+    /// <param name="length">Seconds the dropped clip will last; defaults to eight beats.</param>
+    public void PreviewDrop(Point? p, DropKind kind = DropKind.Effect, double? length = null)
     {
-        _dropPreview = p is { } point ? DropRect(point, kind) : null;
+        _dropPreview = p is { } point ? DropRect(point, kind, length ?? _state.SecondsPerBeat * 8) : null;
         InvalidateVisual();
     }
 
-    private Rect? DropRect(Point p, DropKind kind)
+    private Rect? DropRect(Point p, DropKind kind, double length)
     {
         var row = RowAt(p.Y);
         var width = Math.Max(0, Bounds.Width - HeaderWidth);
@@ -923,7 +925,7 @@ public sealed class TimelineControl : Control
         {
             case DropKind.Effect when p.X > HeaderWidth && row is { LaneKey: null, Track.Kind: TrackKind.Light }:
                 var x = TimeToX(_state.Snap(Math.Max(0, XToTime(p.X)), 8 / PixelsPerSecond));
-                return new Rect(x, row.Y + 2, _state.SecondsPerBeat * 8 * PixelsPerSecond, row.Height - 4);
+                return new Rect(x, row.Y + 2, length * PixelsPerSecond, row.Height - 4);
             case DropKind.Targets when row is { Track.Kind: TrackKind.Light }:
                 return new Rect(0, row.Y + 1, Bounds.Width, TrackHeight(row.Track) - 2);
             case DropKind.Targets when p.Y > RulerHeight:
@@ -939,12 +941,16 @@ public sealed class TimelineControl : Control
         }
     }
 
-    public bool Drop(string effectKind, Point p)
+    public bool Drop(string effectKind, Point p) => DropClip(p, (track, start) => TimelineOps.AddEffectClip(_state, track, effectKind, start));
+
+    public bool DropPreset(EffectPreset preset, Point p) => DropClip(p, (track, start) => TimelineOps.AddPresetClip(_state, track, preset, start));
+
+    private bool DropClip(Point p, Action<Track, double> place)
     {
         PreviewDrop(null);
         if (p.X <= HeaderWidth || RowAt(p.Y) is not { LaneKey: null } row || row.Track.Kind != TrackKind.Light)
             return false;
-        TimelineOps.AddEffectClip(_state, row.Track, effectKind, _state.Snap(Math.Max(0, XToTime(p.X)), 8 / PixelsPerSecond));
+        place(row.Track, _state.Snap(Math.Max(0, XToTime(p.X)), 8 / PixelsPerSecond));
         return true;
     }
 
@@ -1005,6 +1011,16 @@ public sealed class TimelineControl : Control
                 roles.Items.Add(Item(role.ToString(), () => AddLane(light, track, AutomationTarget.Role, role)));
             lanes.Items.Add(roles);
             menu.Items.Add(lanes);
+            menu.Items.Add(new Separator());
+            var apply = new MenuItem { Header = "Apply preset" };
+            foreach (var (_, preset) in PresetActions.Library())
+                apply.Items.Add(Item(preset.Name, () => TimelineOps.ApplyPreset(_state, light, preset)));
+            menu.Items.Add(apply);
+            menu.Items.Add(Item("Save as preset…", () =>
+            {
+                if (TopLevel.GetTopLevel(this) is Window owner)
+                    _ = PresetActions.SaveFromClip(owner, light);
+            }));
         }
         return menu;
     }
@@ -1026,6 +1042,10 @@ public sealed class TimelineControl : Control
             foreach (var (kind, name, _) in Core.Model.Effect.Catalog)
                 add.Items.Add(Item(name, () => TimelineOps.AddEffectClip(_state, track, kind, _state.Snap(Math.Max(0, time), 8 / PixelsPerSecond))));
             menu.Items.Add(add);
+            var addPreset = new MenuItem { Header = "Add preset here" };
+            foreach (var (_, preset) in PresetActions.Library())
+                addPreset.Items.Add(Item(preset.Name, () => TimelineOps.AddPresetClip(_state, track, preset, _state.Snap(Math.Max(0, time), 8 / PixelsPerSecond))));
+            menu.Items.Add(addPreset);
         }
         menu.Items.Add(Item("New light track", () => TimelineOps.AddLightTrack(_state, index: _state.Project.Tracks.IndexOf(track))));
         menu.Items.Add(Item("Move up", () => MoveTrack(track, -1)));

@@ -175,7 +175,7 @@ public sealed class InspectorPanel : ScrollViewer
         }
         var changeButton = new GlyphButton("⇄", "Change effect", () => { });
         changeButton.Flyout = change;
-        var reset = new GlyphButton("Reset", "Reset the effect's parameters", () => ReplaceEffect(clip, LightEffect.Create(KindOf(effect)), keepColor: false));
+        var reset = new GlyphButton("Reset", "Reset the effect's parameters", () => ReplaceEffect(clip, LightEffect.Create(effect.Kind), keepColor: false));
         var header = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -186,7 +186,12 @@ public sealed class InspectorPanel : ScrollViewer
                 new TextBlock { Text = effect.DisplayName, FontWeight = FontWeight.SemiBold },
             },
         };
-        var section = new TwirlSection("effect", header, true, changeButton, reset);
+        var save = new GlyphButton("★", "Save this clip's look (effect, fades, light automation) as a preset", () =>
+        {
+            if (TopLevel.GetTopLevel(this) is Window owner)
+                _ = PresetActions.SaveFromClip(owner, clip);
+        });
+        var section = new TwirlSection("effect", header, true, changeButton, save, reset);
         _root.Children.Add(section);
 
         foreach (var prop in effect.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
@@ -234,8 +239,6 @@ public sealed class InspectorPanel : ScrollViewer
         Rebuild();
     }
 
-    private static string KindOf(LightEffect effect) => LightEffect.Catalog.First(c => c.Name == effect.DisplayName).Kind;
-
     private Control ColorList(List<string> colors)
     {
         var panel = new WrapPanel();
@@ -270,8 +273,10 @@ public sealed class InspectorPanel : ScrollViewer
             "StartHue" => (0, 1, 1 / 360.0, 360, "°"),
             "Speed" => (-4, 4, 0.005, 1, " /s"),
             "Rate" => (0.05, 30, 0.02, 1, " Hz"),
-            "StepTime" or "Decay" or "Offset" => (0, 8, 0.005, 1, " s"),
+            "StepTime" or "Decay" or "Offset" or "Interval" => (0, 8, 0.005, 1, " s"),
             "Tail" => (0, 12, 0.02, 1, " fx"),
+            "Wavelength" => (0.25, 32, 0.02, 1, " fx"),
+            "Repeat" => (0, 8, 0.01, 1, "×"),
             "Phase" or "FixtureOffset" => (-1, 1, 0.005, 1, ""),
             _ => (0, 1, 0.005, 1, ""),
         };

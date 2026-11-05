@@ -38,6 +38,12 @@ public enum Waveform
 [JsonDerivedType(typeof(StrobeEffect), "strobe")]
 [JsonDerivedType(typeof(PulseEffect), "pulse")]
 [JsonDerivedType(typeof(SparkleEffect), "sparkle")]
+[JsonDerivedType(typeof(GradientEffect), "gradient")]
+[JsonDerivedType(typeof(ColorWaveEffect), "wave")]
+[JsonDerivedType(typeof(FireEffect), "fire")]
+[JsonDerivedType(typeof(LightningEffect), "lightning")]
+[JsonDerivedType(typeof(HeartbeatEffect), "heartbeat")]
+[JsonDerivedType(typeof(HitEffect), "hit")]
 public abstract class Effect
 {
     public double Intensity { get; set; } = 1;
@@ -57,6 +63,16 @@ public abstract class Effect
 
     protected static double Frac(double v) => v - Math.Floor(v);
 
+    /// <summary>One cycle of a waveform at phase 0..1, peaking at 1.</summary>
+    protected static double Shape(Waveform wave, double phase) =>
+        wave switch
+        {
+            Waveform.Triangle => 1 - Math.Abs(2 * phase - 1),
+            Waveform.Saw => 1 - phase,
+            Waveform.Square => phase < 0.5 ? 1 : 0,
+            _ => 0.5 - 0.5 * Math.Cos(2 * Math.PI * phase),
+        };
+
     public static Effect Create(string kind) =>
         kind switch
         {
@@ -67,8 +83,18 @@ public abstract class Effect
             "strobe" => new StrobeEffect(),
             "pulse" => new PulseEffect(),
             "sparkle" => new SparkleEffect(),
+            "gradient" => new GradientEffect(),
+            "wave" => new ColorWaveEffect(),
+            "fire" => new FireEffect(),
+            "lightning" => new LightningEffect(),
+            "heartbeat" => new HeartbeatEffect(),
+            "hit" => new HitEffect(),
             _ => new SolidEffect(),
         };
+
+    /// <summary>The catalog kind for an effect instance, e.g. "rainbow".</summary>
+    [JsonIgnore]
+    public string Kind => Catalog.First(c => c.Name == DisplayName).Kind;
 
     public static readonly IReadOnlyList<(string Kind, string Name, string Description)> Catalog =
     [
@@ -80,6 +106,12 @@ public abstract class Effect
         ("strobe", "Strobe", "Hard on/off flashes"),
         ("pulse", "Pulse", "Breathing intensity wave"),
         ("sparkle", "Sparkle", "Random twinkles"),
+        ("gradient", "Gradient", "A palette laid across the fixtures, optionally scrolling"),
+        ("wave", "Color Wave", "Two colours rolling across the fixtures in a smooth wave"),
+        ("fire", "Fire", "Flickering embers and flames"),
+        ("lightning", "Lightning", "Irregular bursts of bright flashes"),
+        ("heartbeat", "Heartbeat", "A lub-dub double pulse"),
+        ("hit", "Hit", "A sharp flash that decays, once or on repeat"),
     ];
 }
 
@@ -271,14 +303,7 @@ public sealed class PulseEffect : Effect
 
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var p = Frac(ctx.Time * Rate + Phase * ctx.Index);
-        var shape = Wave switch
-        {
-            Waveform.Triangle => 1 - Math.Abs(2 * p - 1),
-            Waveform.Saw => 1 - p,
-            Waveform.Square => p < 0.5 ? 1 : 0,
-            _ => 0.5 - 0.5 * Math.Cos(2 * Math.PI * p),
-        };
+        var shape = Shape(Wave, Frac(ctx.Time * Rate + Phase * ctx.Index));
         return new(Rgb.FromHex(Color), Intensity * (Minimum + (1 - Minimum) * shape));
     }
 }
@@ -315,7 +340,8 @@ public sealed class SparkleEffect : Effect
         return new(Rgb.FromHex(Color), Intensity * level);
     }
 
-    private static double Hash(int slot, int index, int seed)
+    /// <summary>A repeatable pseudo-random number in 0..1, so random-looking effects scrub and export identically.</summary>
+    internal static double Hash(int slot, int index, int seed)
     {
         unchecked
         {
@@ -325,5 +351,206 @@ public sealed class SparkleEffect : Effect
             h ^= h >> 15;
             return (h & 0xFFFFFF) / (double)0x1000000;
         }
+    }
+}
+
+public sealed class GradientEffect : Effect
+{
+    public List<string> Colors { get; set; } = ["#FF2A6D", "#05D9E8"];
+
+    /// <summary>Times the palette repeats across the fixtures; it wraps, so the last colour blends back into the first.</summary>
+    public double Repeat { get; set; } = 1;
+
+    /// <summary>Palette lengths the gradient scrolls per second; 0 holds it still.</summary>
+    public double Speed { get; set; }
+
+    public override string DisplayName => "Gradient";
+    public override string SwatchColor => Colors.FirstOrDefault() ?? "#FFFFFF";
+
+    public override EffectSample Sample(in EffectContext ctx)
+    {
+        if (Colors.Count == 0)
+            return new(Rgb.Black, 0);
+        var across = ctx.Count <= 1 ? 0 : ctx.Index / (double)ctx.Count;
+        var position = Frac(across * Repeat + ctx.Time * Speed) * Colors.Count;
+        var step = (int)Math.Floor(position);
+        var from = Rgb.FromHex(Colors[step % Colors.Count]);
+        var to = Rgb.FromHex(Colors[(step + 1) % Colors.Count]);
+        return new(Rgb.Lerp(from, to, position - step), Intensity);
+    }
+
+    protected override object MemberwiseCloneDeep()
+    {
+        var copy = (GradientEffect)MemberwiseClone();
+        copy.Colors = [.. Colors];
+        return copy;
+    }
+}
+
+public sealed class ColorWaveEffect : Effect
+{
+    /// <summary>Colour at the wave's crest.</summary>
+    public string Color { get; set; } = "#00E5FF";
+
+    /// <summary>Colour in the wave's trough.</summary>
+    public string Base { get; set; } = "#3A00FF";
+
+    /// <summary>Crests passing each fixture per second.</summary>
+    public double Rate { get; set; } = 0.5;
+
+    /// <summary>Fixtures from one crest to the next.</summary>
+    public double Wavelength { get; set; } = 4;
+
+    public Waveform Wave { get; set; } = Waveform.Sine;
+
+    public override string DisplayName => "Color Wave";
+    public override string SwatchColor => Color;
+
+    public override EffectSample Sample(in EffectContext ctx)
+    {
+        var shape = Shape(Wave, Frac(ctx.Time * Rate - ctx.Index / Math.Max(0.1, Wavelength)));
+        return new(Rgb.Lerp(Rgb.FromHex(Base), Rgb.FromHex(Color), shape), Intensity);
+    }
+}
+
+public sealed class FireEffect : Effect
+{
+    public string Ember { get; set; } = "#B31200";
+    public string Flame { get; set; } = "#FFB238";
+
+    /// <summary>Flickers per second.</summary>
+    public double Rate { get; set; } = 8;
+
+    /// <summary>Brightness the embers never drop below.</summary>
+    public double Minimum { get; set; } = 0.35;
+
+    public int Seed { get; set; } = 3;
+
+    public override string DisplayName => "Fire";
+    public override string SwatchColor => Flame;
+
+    public override EffectSample Sample(in EffectContext ctx)
+    {
+        var x = ctx.Time * Math.Max(0.05, Rate);
+        var heat = 0.65 * Noise(x, ctx.Index, Seed) + 0.35 * Noise(x * 2.3, ctx.Index, Seed + 1);
+        return new(Rgb.Lerp(Rgb.FromHex(Ember), Rgb.FromHex(Flame), heat), Intensity * (Minimum + (1 - Minimum) * heat));
+    }
+
+    /// <summary>Smoothly interpolated value noise, 0..1, built on the same repeatable hash as Sparkle.</summary>
+    private static double Noise(double x, int index, int seed)
+    {
+        var i = (int)Math.Floor(x);
+        var f = x - i;
+        var s = f * f * (3 - 2 * f);
+        var a = SparkleEffect.Hash(i, index, seed);
+        var b = SparkleEffect.Hash(i + 1, index, seed);
+        return a + (b - a) * s;
+    }
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<LightningMode>))]
+public enum LightningMode
+{
+    Together,
+    Scattered,
+}
+
+public sealed class LightningEffect : Effect
+{
+    public string Color { get; set; } = "#E8F0FF";
+
+    /// <summary>Strikes per second, on average.</summary>
+    public double Rate { get; set; } = 0.5;
+
+    /// <summary>Seconds each flash in a strike takes to fade.</summary>
+    public double Decay { get; set; } = 0.12;
+
+    /// <summary>Whether every fixture strikes at once or each on its own.</summary>
+    public LightningMode Mode { get; set; } = LightningMode.Together;
+
+    public int Seed { get; set; } = 11;
+
+    public override string DisplayName => "Lightning";
+    public override string SwatchColor => Color;
+
+    public override EffectSample Sample(in EffectContext ctx)
+    {
+        // One strike per 1/Rate slot at a hashed instant; each strike is 1–3 quick flashes, the later ones dimmer.
+        var slotLength = 1 / Math.Max(0.02, Rate);
+        var key = Mode == LightningMode.Together ? 0 : ctx.Index;
+        var slot = (int)Math.Floor(ctx.Time / slotLength);
+        var level = 0.0;
+        for (var s = slot - 1; s <= slot; s++)
+        {
+            var at = (s + 0.7 * SparkleEffect.Hash(s, key, Seed)) * slotLength;
+            var flashes = 1 + (int)(SparkleEffect.Hash(s, key, Seed + 1) * 3);
+            for (var k = 0; k < flashes; k++)
+            {
+                var age = ctx.Time - at;
+                var brightness = k == 0 ? 1 : 0.4 + 0.6 * SparkleEffect.Hash(s, key, Seed + 2 + k);
+                if (age >= 0)
+                    level = Math.Max(level, brightness * Math.Max(0, 1 - age / Math.Max(0.01, Decay)));
+                at += 0.06 + 0.1 * SparkleEffect.Hash(s, key, Seed + 5 + k);
+            }
+        }
+        return new(Rgb.FromHex(Color), Intensity * level);
+    }
+}
+
+public sealed class HeartbeatEffect : Effect
+{
+    public string Color { get; set; } = "#FF1744";
+
+    /// <summary>Beats per second (1.2 ≈ 72 bpm).</summary>
+    public double Rate { get; set; } = 1.2;
+
+    public double Minimum { get; set; } = 0.05;
+
+    /// <summary>Phase offset between neighbouring fixtures, in cycles.</summary>
+    public double Phase { get; set; }
+
+    public override string DisplayName => "Heartbeat";
+    public override string SwatchColor => Color;
+
+    public override EffectSample Sample(in EffectContext ctx)
+    {
+        var p = Frac(ctx.Time * Rate + Phase * ctx.Index);
+        var shape = Math.Max(Beat(p, 0.08, 0.05), 0.6 * Beat(p, 0.3, 0.06));
+        return new(Rgb.FromHex(Color), Intensity * (Minimum + (1 - Minimum) * shape));
+    }
+
+    private static double Beat(double phase, double center, double width)
+    {
+        var d = Math.Abs(phase - center);
+        d = Math.Min(d, 1 - d);
+        return Math.Exp(-(d / width) * (d / width));
+    }
+}
+
+public sealed class HitEffect : Effect
+{
+    public string Color { get; set; } = "#FFFFFF";
+
+    /// <summary>Seconds a hit takes to fade out.</summary>
+    public double Decay { get; set; } = 0.4;
+
+    /// <summary>Seconds between hits; 0 fires once at the start of the clip.</summary>
+    public double Interval { get; set; }
+
+    /// <summary>Seconds each fixture's hit lands after the previous one's, for a rolling hit.</summary>
+    public double Offset { get; set; }
+
+    public override string DisplayName => "Hit";
+    public override string SwatchColor => Color;
+
+    public override EffectSample Sample(in EffectContext ctx)
+    {
+        var age = ctx.Time - Offset * ctx.Index;
+        if (age < 0)
+            return new(Rgb.FromHex(Color), 0);
+        if (Interval > 0.01)
+            age %= Interval;
+        var fall = Math.Max(0, 1 - age / Math.Max(0.01, Decay));
+        return new(Rgb.FromHex(Color), Intensity * fall * fall);
     }
 }

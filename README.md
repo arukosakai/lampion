@@ -34,7 +34,8 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 <td width="50%" valign="top">
 
 ### 🌈 Effects & automation
-- Solid, colour fade, rainbow, colour cycle, chase, strobe, pulse, sparkle
+- Solid, colour fade, rainbow, colour cycle, chase, strobe, pulse, sparkle, gradient, colour wave, fire, lightning, heartbeat, hit
+- Presets: save a clip's whole look (effect, fades, automation) and reuse it in any show; import/export as `.lampfx`
 - Keyframe lanes for hue shift, saturation, intensity, opacity and white
 - …or drive any channel directly: pan, tilt, strobe, gobo, or a raw channel number
 - Tracks stack with Normal, HTP or Add blending

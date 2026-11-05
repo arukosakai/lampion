@@ -95,11 +95,63 @@ public static class UserData
     public static string SaveTemplate(StageLayout layout, string name)
     {
         Directory.CreateDirectory(TemplatesDirectory);
-        var safe = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).Trim();
-        var path = Path.Combine(TemplatesDirectory, (safe.Length == 0 ? "Template" : safe) + StageLayout.Extension);
+        var path = Path.Combine(TemplatesDirectory, SafeFileName(name, "Template") + StageLayout.Extension);
         layout.Name = name;
         layout.Save(path);
         return path;
+    }
+
+    public static string PresetsDirectory => Path.Combine(Root, "Presets");
+
+    /// <summary>The user's saved effect presets, by name; files that fail to load are skipped.</summary>
+    public static List<(string Path, EffectPreset Preset)> Presets()
+    {
+        if (!Directory.Exists(PresetsDirectory))
+            return [];
+        var result = new List<(string, EffectPreset)>();
+        foreach (var file in Directory.EnumerateFiles(PresetsDirectory, "*" + EffectPreset.Extension))
+            if (TryLoadPreset(file) is { } preset)
+                result.Add((file, preset));
+        return result.OrderBy(p => p.Item2.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+    }
+
+    /// <summary>Raised after a preset is saved or deleted, so every list of presets can refresh.</summary>
+    public static event Action? PresetsChanged;
+
+    public static string PresetPath(string name) => Path.Combine(PresetsDirectory, SafeFileName(name, "Preset") + EffectPreset.Extension);
+
+    /// <summary>Saves under the preset's name, replacing an earlier preset of the same name.</summary>
+    public static string SavePreset(EffectPreset preset)
+    {
+        Directory.CreateDirectory(PresetsDirectory);
+        var path = PresetPath(preset.Name);
+        preset.Save(path);
+        PresetsChanged?.Invoke();
+        return path;
+    }
+
+    public static void DeletePreset(string path)
+    {
+        File.Delete(path);
+        PresetsChanged?.Invoke();
+    }
+
+    public static EffectPreset? TryLoadPreset(string path)
+    {
+        try
+        {
+            return EffectPreset.Load(path);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    private static string SafeFileName(string name, string fallback)
+    {
+        var safe = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).Trim();
+        return safe.Length == 0 ? fallback : safe;
     }
 
     public static StageLayout? DefaultLayout() => File.Exists(DefaultLayoutPath) ? TryLoadLayout(DefaultLayoutPath) : null;
