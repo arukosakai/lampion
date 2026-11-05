@@ -22,6 +22,21 @@ public sealed class DmxFrame
         var start = Math.Clamp(fixture.Address - 1, 0, 512);
         return data.AsSpan(start, Math.Clamp(channelCount, 0, 512 - start));
     }
+
+    /// <summary>A copy with <paramref name="values"/> written over each fixture's channels; this frame is untouched.</summary>
+    public DmxFrame With(IEnumerable<Fixture> fixtures, ReadOnlySpan<byte> values)
+    {
+        var copy = new DmxFrame();
+        foreach (var (universe, data) in Universes)
+            copy.Universes[universe] = (byte[])data.Clone();
+        foreach (var fixture in fixtures)
+        {
+            var start = Math.Clamp(fixture.Address - 1, 0, 512);
+            var count = Math.Min(values.Length, 512 - start);
+            values[..count].CopyTo(copy.Universe(fixture.Universe).AsSpan(start, count));
+        }
+        return copy;
+    }
 }
 
 public sealed class ShowRenderer(Project project)

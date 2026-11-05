@@ -15,6 +15,9 @@ public enum SelectionKind
     StageObject,
 }
 
+/// <summary>Channel values held on patched fixtures while testing a profile.</summary>
+public sealed record FixtureTest(IReadOnlySet<string> FixtureIds, byte[] Values);
+
 /// <summary>
 /// The single source of truth the panels share: the project, what is selected, the playhead and undo.
 /// Panels mutate the model directly, then call <see cref="Touch"/> while dragging or <see cref="Commit"/>
@@ -306,7 +309,13 @@ public sealed class EditorState
         PlayheadChanged?.Invoke();
     }
 
-    /// <summary>DMX output at the playhead, rendered at most once per playhead/model change.</summary>
+    /// <summary>
+    /// Values the profile editor's tester holds on some patched fixtures, over whatever the show says.
+    /// Replace the whole record to change it; null hands the fixtures back to the show.
+    /// </summary>
+    public FixtureTest? Test { get; set; }
+
+    /// <summary>DMX output at the playhead (with any <see cref="Test"/> on top), rendered at most once per change.</summary>
     public DmxFrame CurrentFrame
     {
         get
@@ -315,10 +324,22 @@ public sealed class EditorState
             {
                 _frame = Renderer.Render(Playhead);
                 _frameKey = (Playhead, Version);
+                _testedFrame = null;
             }
-            return _frame;
+            if (Test is not { } test)
+                return _frame;
+            if (_testedFrame is null || _testedFor != test)
+            {
+                var fixtures = Project.Fixtures.Where(f => test.FixtureIds.Contains(f.Id));
+                _testedFrame = _frame.With(fixtures, test.Values);
+                _testedFor = test;
+            }
+            return _testedFrame;
         }
     }
+
+    private DmxFrame? _testedFrame;
+    private FixtureTest? _testedFor;
 
     // ---- Timeline helpers ------------------------------------------------------------------------------
 
