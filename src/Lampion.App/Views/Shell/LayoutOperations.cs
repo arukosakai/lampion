@@ -1,13 +1,15 @@
 using System.Text.Json;
 using Avalonia.Controls;
 using Lampion.App.Editor;
+using Lampion.App.Views.TrussBuilder;
+using Lampion.Core.Model.Stage;
 using Lampion.Core.Persistence;
 
 namespace Lampion.App.Views.Shell;
 
 /// <summary>
-/// The Stage menu's layout commands: export and import a stage layout, save it as a start-screen template
-/// or as the default for new shows. Failures are explained in a dialog; nothing here throws.
+/// The Stage menu's layout commands: build a truss structure, export and import a stage layout, save it as a
+/// start-screen template or as the default for new shows. Failures are explained in a dialog; nothing here throws.
 /// </summary>
 internal sealed class LayoutOperations
 {
@@ -21,6 +23,15 @@ internal sealed class LayoutOperations
         _owner = owner;
         _state = state;
         _status = status;
+    }
+
+    /// <summary>Opens the truss structure builder, starting near <paramref name="near"/>; reports what was built in the status bar.</summary>
+    public async Task BuildTruss(Vec3 near)
+    {
+        var window = new TrussBuilderWindow(_state, near);
+        await window.ShowDialog(_owner);
+        if (window.Result is { } summary)
+            _status.Message = summary;
     }
 
     /// <summary>Asks for a name and saves the stage and rig as a template on the start screen.</summary>

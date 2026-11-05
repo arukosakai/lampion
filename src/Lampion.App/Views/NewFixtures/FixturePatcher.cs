@@ -1,5 +1,6 @@
 using Lampion.App.Editor;
 using Lampion.App.Views.ProjectBin;
+using Lampion.Core.Model;
 using Lampion.Core.Model.Rig;
 using Lampion.Core.Model.Stage;
 
@@ -27,6 +28,22 @@ internal static class FixturePatcher
     public static List<string> Patch(EditorState state, FixtureProfile profile, int count, int universe, int? startAddress, string name, StageObject? truss, bool group)
     {
         var project = state.Project;
+        var fixtures = Add(project, profile, count, universe, startAddress, count == 1 ? null : name, truss);
+        if (count == 1 && fixtures.Count == 1)
+            fixtures[0].Name = name;
+        if (group)
+            Group(project, name, fixtures);
+        state.Commit();
+        return fixtures.Select(f => f.Id).ToList();
+    }
+
+    /// <summary>
+    /// Adds fixtures like <see cref="Patch"/> but without committing, so a caller can make them part of a bigger
+    /// edit. They're named "<paramref name="prefix"/> n" counting on from <paramref name="firstNumber"/>.
+    /// </summary>
+    /// <returns>The fixtures added, in patch order; may be fewer than <paramref name="count"/> when the universes run out.</returns>
+    public static List<Fixture> Add(Project project, FixtureProfile profile, int count, int universe, int? startAddress, string? prefix, StageObject? truss, int firstNumber = 1)
+    {
         var footprint = profile.Channels.Count;
         var fixtures = new List<Fixture>();
         var address = startAddress ?? PatchPlanner.NextFreeAddress(project, universe, footprint);
@@ -42,7 +59,7 @@ internal static class FixturePatcher
                 break;
             var fixture = new Fixture
             {
-                Name = count == 1 ? name : $"{name} {i + 1}",
+                Name = $"{prefix ?? profile.Model} {firstNumber + i}",
                 ProfileId = profile.Id,
                 Universe = universe,
                 Address = address,
@@ -55,13 +72,16 @@ internal static class FixturePatcher
         }
         if (truss is not null)
             StageMath.DistributeAlong(truss, fixtures);
-        if (group && fixtures.Count > 1)
-        {
-            var created = new FixtureGroup { Name = name, Color = GroupPalette.ForIndex(project.Groups.Count) };
-            created.FixtureIds.AddRange(fixtures.Select(f => f.Id));
-            project.Groups.Add(created);
-        }
-        state.Commit();
-        return fixtures.Select(f => f.Id).ToList();
+        return fixtures;
+    }
+
+    /// <summary>Puts <paramref name="fixtures"/> in a new group called <paramref name="name"/>; does nothing for fewer than two.</summary>
+    public static void Group(Project project, string name, IReadOnlyCollection<Fixture> fixtures)
+    {
+        if (fixtures.Count < 2)
+            return;
+        var created = new FixtureGroup { Name = name, Color = GroupPalette.ForIndex(project.Groups.Count) };
+        created.FixtureIds.AddRange(fixtures.Select(f => f.Id));
+        project.Groups.Add(created);
     }
 }

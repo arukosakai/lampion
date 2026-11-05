@@ -38,7 +38,7 @@ internal sealed class StagePanel : DockPanel
         ToolTip.SetTip(_snapButton, "Snap step for moving things");
 
         var add = new Button { Content = "＋", Padding = new Thickness(8, 1), Flyout = AddMenu() };
-        ToolTip.SetTip(add, "Add a set piece: truss, riser, wall or screen");
+        ToolTip.SetTip(add, "Add a set piece: truss, tower, riser, wall, screen or a whole truss structure");
 
         var viewMenu = new Button { Content = "View ▾", Padding = new Thickness(8, 1), Flyout = new Flyout { Content = new StageViewOptions(View, state), Placement = PlacementMode.BottomEdgeAlignedRight } };
         ToolTip.SetTip(viewMenu, "Labels, light bounce, haze and stage quality");
@@ -64,6 +64,9 @@ internal sealed class StagePanel : DockPanel
 
     /// <summary>The 3D view; the main window drives its scene and camera.</summary>
     public StageView View { get; }
+
+    /// <summary>Opens the truss structure builder; set by the window, which owns the dialog and status bar.</summary>
+    public Action? OpenTrussBuilder { get; set; }
 
     /// <summary>Jumps to a named view (keys 1–5).</summary>
     public void SetPreset(ViewPreset preset) => View.ApplyPreset(preset);
@@ -115,6 +118,11 @@ internal sealed class StagePanel : DockPanel
             item.Click += (_, _) => AddObject(label);
             menu.Items.Add(item);
         }
+        menu.Items.Add(new Separator());
+        var structure = new MenuItem { Header = "Truss structure…" };
+        ToolTip.SetTip(structure, "Build an arch or a cube with lights hung on it");
+        structure.Click += (_, _) => OpenTrussBuilder?.Invoke();
+        menu.Items.Add(structure);
         return menu;
     }
 

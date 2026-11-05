@@ -71,6 +71,7 @@ internal sealed class EditorCommands
         MoveTool = new("Move tool", () => stage.SetTool(BuilderTool.Move), "W");
         AimTool = new("Aim tool", () => stage.SetTool(BuilderTool.Aim), "A");
         FrameSelection = new("Frame selection", stage.View.FrameSelection, "F");
+        BuildTruss = new("Truss structure…", () => _ = layouts.BuildTruss(Controls.Stage3D.StageGeometry.ToVec(stage.View.Camera.Target)));
         ExportLayout = new("Export stage layout…", () => _ = layouts.Export());
         ImportLayout = new("Import stage layout…", () => _ = layouts.Import());
         SaveTemplate = new("Save layout as template…", () => _ = layouts.SaveTemplate());
@@ -208,6 +209,9 @@ internal sealed class EditorCommands
 
     /// <summary>Stage → Forget default layout.</summary>
     public ShellCommand ForgetDefaultLayout { get; }
+
+    /// <summary>Stage → Truss structure: build an arch or cube with lights.</summary>
+    public ShellCommand BuildTruss { get; }
 
     /// <summary>Output → Send Art-Net (a check box).</summary>
     public ShellCommand ToggleArtNet { get; }

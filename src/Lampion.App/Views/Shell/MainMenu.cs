@@ -27,6 +27,8 @@ internal static class MainMenu
                     c.AimTool,
                     c.FrameSelection,
                     null,
+                    c.BuildTruss,
+                    null,
                     c.ExportLayout,
                     c.ImportLayout,
                     c.SaveTemplate,

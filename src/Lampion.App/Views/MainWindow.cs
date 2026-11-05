@@ -41,6 +41,7 @@ internal sealed class MainWindow : Window
         var import = new MediaImport(this, state, _media, status, zoomToFit);
         var layouts = new LayoutOperations(this, state, status);
         var commands = new EditorCommands(this, state, _files, import, layouts, stage, timeline.Timeline, _artNet);
+        stage.OpenTrussBuilder = commands.BuildTruss.Run;
 
         var projectPanel = new ProjectPanel(state, timeline.Timeline, () => import.Import(TrackKind.Audio), () => import.Import(TrackKind.Video));
         var effects = new EffectsPanel(state, timeline.Timeline);
