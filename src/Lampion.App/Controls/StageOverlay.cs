@@ -59,7 +59,8 @@ public sealed class StageOverlay : Control
                     Text(ctx, obj.Name, new Point(s.X, s.Y), Brushes.Gray, 10, null, center: true);
         }
 
-        if (_view.Camera.Preset == ViewPreset.Top && _view.BuildMode)
+        var measurements = _view.ShowGizmos && _view.ShowMeasurements;
+        if (measurements && _view.Camera.Preset == ViewPreset.Top && _view.BuildMode)
             DrawMetreRuler(ctx);
 
         if (_view.Gizmo() is { } gizmo)
@@ -78,7 +79,8 @@ public sealed class StageOverlay : Control
             ctx.DrawEllipse(Brushes.White, null, new Point(gizmo.Origin.X, gizmo.Origin.Y), 3, 3);
         }
 
-        DrawReadout(ctx, scene);
+        if (measurements)
+            DrawReadout(ctx, scene);
 
         if (_view.Tool == BuilderTool.Aim && _view.AimTarget is { } aim && _view.ToScreen(aim) is { } at)
         {

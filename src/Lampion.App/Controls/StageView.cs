@@ -49,6 +49,12 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
     public bool BuildMode => Tool != BuilderTool.Hand;
 
     public bool ShowLabels { get; set; } = true;
+
+    /// <summary>Master switch over the three gizmo kinds below, like Blender's viewport gizmo toggle.</summary>
+    public bool ShowGizmos { get; set; } = true;
+    public bool ShowNavigation { get; set; } = true;
+    public bool ShowMoveHandles { get; set; } = true;
+    public bool ShowMeasurements { get; set; } = true;
     public VideoFrame? Video { get; set; }
     public string? RendererInfo { get; private set; }
     public string? Error { get; private set; }
@@ -260,7 +266,7 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
     /// <summary>Screen-space end of each gizmo arrow (1 m along the axis), for drawing and hit testing.</summary>
     public (Vector2 Origin, Vector2[] Tips)? Gizmo()
     {
-        if (!BuildMode || GizmoOrigin is not { } origin || ToScreen(origin) is not { } o)
+        if (!BuildMode || !(ShowGizmos && ShowMoveHandles) || GizmoOrigin is not { } origin || ToScreen(origin) is not { } o)
             return null;
         var tips = new Vector2[3];
         Vector3[] axes = [Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ];

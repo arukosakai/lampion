@@ -42,12 +42,11 @@ public sealed class StagePanel : DockPanel
 
         var bar = new DockPanel { Height = 30, Background = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x26)), LastChildFill = false };
         var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { tools, Divider(), snap, add } };
-        viewMenu.Margin = new Thickness(0, 0, 6, 0);
-        viewMenu.VerticalAlignment = VerticalAlignment.Center;
+        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { GizmoToggle(gizmo), viewMenu } };
         SetDock(left, Dock.Left);
-        SetDock(viewMenu, Dock.Right);
+        SetDock(right, Dock.Right);
         bar.Children.Add(left);
-        bar.Children.Add(viewMenu);
+        bar.Children.Add(right);
 
         SetDock(bar, Dock.Top);
         Children.Add(bar);
@@ -104,6 +103,41 @@ public sealed class StagePanel : DockPanel
             menu.Items.Add(item);
         }
         return menu;
+    }
+
+    /// <summary>Blender's split gizmo button: the icon flips every gizmo at once, the arrow picks which kinds show.</summary>
+    private Control GizmoToggle(ViewGizmo navigation)
+    {
+        var toggle = new ToggleButton { Content = "↗", IsChecked = View.ShowGizmos, Width = 28, MinHeight = 24, Padding = new Thickness(0), FontSize = 14, HorizontalContentAlignment = HorizontalAlignment.Center };
+        ToolTip.SetTip(toggle, "Show gizmos");
+
+        var kinds = new StackPanel { Spacing = 4, Width = 180 };
+        kinds.Children.Add(new TextBlock { Text = "Viewport gizmos", Foreground = Brushes.Gray, Margin = new Thickness(0, 0, 0, 2) });
+        kinds.Children.Add(GizmoCheck("Navigate", () => View.ShowNavigation, v => View.ShowNavigation = v));
+        kinds.Children.Add(GizmoCheck("Move handles", () => View.ShowMoveHandles, v => View.ShowMoveHandles = v));
+        kinds.Children.Add(GizmoCheck("Measurements", () => View.ShowMeasurements, v => View.ShowMeasurements = v));
+        var dropdown = new Button { Content = "▾", Width = 18, MinHeight = 24, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center, Flyout = new Flyout { Content = kinds, Placement = PlacementMode.BottomEdgeAlignedRight } };
+        ToolTip.SetTip(dropdown, "Choose which gizmos show");
+
+        void Apply()
+        {
+            View.ShowGizmos = toggle.IsChecked == true;
+            navigation.IsVisible = View.ShowGizmos && View.ShowNavigation;
+            // Greyed out rather than hidden, so you can still pick kinds before turning gizmos back on.
+            kinds.Opacity = View.ShowGizmos ? 1 : 0.5;
+        }
+        toggle.IsCheckedChanged += (_, _) => Apply();
+        foreach (var check in kinds.Children.OfType<CheckBox>())
+            check.IsCheckedChanged += (_, _) => Apply();
+
+        return new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0, Children = { toggle, dropdown } };
+    }
+
+    private static CheckBox GizmoCheck(string label, Func<bool> get, Action<bool> set)
+    {
+        var check = new CheckBox { Content = label, IsChecked = get() };
+        check.IsCheckedChanged += (_, _) => set(check.IsChecked == true);
+        return check;
     }
 
     /// <summary>The scene view's display options, tucked into one dropdown like Unity's.</summary>
