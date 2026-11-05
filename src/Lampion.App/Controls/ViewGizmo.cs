@@ -19,7 +19,6 @@ public sealed class ViewGizmo : Control, Avalonia.Rendering.ICustomHitTest
     private const double Size = 92;
     private const double DragThreshold = 3;
 
-    private static readonly Typeface Font = new("Inter", FontStyle.Normal, FontWeight.Bold);
     private static readonly Color[] AxisColors = [Color.FromRgb(0xFF, 0x33, 0x52), Color.FromRgb(0x8B, 0xDC, 0x00), Color.FromRgb(0x28, 0x90, 0xFF)];
     private static readonly IBrush Backdrop = new SolidColorBrush(Color.FromArgb(46, 255, 255, 255));
     private static readonly IBrush Letter = new SolidColorBrush(Color.FromRgb(0x10, 0x10, 0x10));
@@ -86,7 +85,7 @@ public sealed class ViewGizmo : Control, Avalonia.Rendering.ICustomHitTest
         foreach (var (index, position, depth) in Layout().OrderBy(c => c.Depth))
             DrawBall(ctx, index, position, depth);
 
-        var label = new FormattedText(_view.Camera.Label, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Inter"), 11, _hoverLabel ? HoverLabel : Brushes.Gainsboro);
+        var label = TextCache.Get(_view.Camera.Label, 11, _hoverLabel ? HoverLabel : Brushes.Gainsboro);
         ctx.DrawText(label, new Point(Center.X - label.Width / 2, Size + 2));
     }
 
@@ -116,7 +115,7 @@ public sealed class ViewGizmo : Control, Avalonia.Rendering.ICustomHitTest
 
     private static void DrawLetter(DrawingContext ctx, string text, Point at, IBrush brush)
     {
-        var formatted = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Font, 10, brush);
+        var formatted = TextCache.Get(text, 10, brush, FontWeight.Bold);
         ctx.DrawText(formatted, new Point(at.X - formatted.Width / 2, at.Y - formatted.Height / 2));
     }
 

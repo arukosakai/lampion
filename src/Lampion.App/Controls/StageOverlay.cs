@@ -15,7 +15,6 @@ namespace Lampion.App.Controls;
 /// </summary>
 public sealed class StageOverlay : Control
 {
-    private static readonly Typeface Font = new("Inter");
     private static readonly IBrush LabelBrush = new SolidColorBrush(Color.FromArgb(200, 230, 230, 235));
     private static readonly IBrush PanelBrush = new SolidColorBrush(Color.FromArgb(190, 18, 18, 22));
     private static readonly IBrush Accent = new SolidColorBrush(Color.FromRgb(45, 140, 235));
@@ -152,7 +151,7 @@ public sealed class StageOverlay : Control
 
     private static void Text(DrawingContext ctx, string text, Point at, IBrush brush, double size, IBrush? background, bool center = false)
     {
-        var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Font, size, brush);
+        var formatted = TextCache.Get(text, size, brush);
         var origin = center ? new Point(at.X - formatted.Width / 2, at.Y) : at;
         if (background is not null)
             ctx.DrawRectangle(background, null, new Rect(origin.X - 6, origin.Y - 4, formatted.Width + 12, formatted.Height + 8), 4, 4);

@@ -16,7 +16,7 @@ public sealed class DmxMonitor : Control
     private const int Columns = 32;
     private const double Cell = 30;
     private const double CellHeight = 22;
-    private static readonly Typeface Font = new("Inter");
+    private static readonly string[] ByteLabels = Enumerable.Range(0, 256).Select(i => i.ToString(CultureInfo.InvariantCulture)).ToArray();
     private readonly EditorState _state;
     private Point? _hover;
 
@@ -62,12 +62,12 @@ public sealed class DmxMonitor : Control
             var v = data[ch];
             var fill = owners[ch] is null ? Color.FromRgb(0x22, 0x22, 0x22) : Color.FromRgb((byte)(0x26 + v * 0.55), (byte)(0x2A + v * 0.4), (byte)(0x30 + v * 0.1));
             ctx.DrawRectangle(new SolidColorBrush(fill), selected[ch] ? new Pen(new SolidColorBrush(Color.FromRgb(0x4D, 0xA3, 0xFF)), 1.5) : null, rect, 2, 2);
-            var text = new FormattedText(v.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Font, 10, owners[ch] is null ? Brushes.DimGray : Brushes.White);
+            var text = TextCache.Get(ByteLabels[v], 10, owners[ch] is null ? Brushes.DimGray : Brushes.White);
             ctx.DrawText(text, new Point(rect.Center.X - text.Width / 2, rect.Top + 4));
             if (_hover is { } h && rect.Contains(h))
                 hoverText = owners[ch] is null ? $"{Universe}.{ch + 1}: {v} (unpatched)" : $"{Universe}.{ch + 1}: {v}  —  {owners[ch]} · {roles[ch]}";
         }
-        var footer = new FormattedText(hoverText ?? $"Universe {Universe} · hover a channel for details", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Font, 11, Brushes.Gray);
+        var footer = TextCache.Get(hoverText ?? $"Universe {Universe} · hover a channel for details", 11, Brushes.Gray);
         ctx.DrawText(footer, new Point(6, 512 / Columns * CellHeight + 12));
     }
 

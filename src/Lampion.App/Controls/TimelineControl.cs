@@ -20,7 +20,8 @@ public enum DropKind
 
 /// <summary>
 /// Premiere-style timeline: track headers on the left, clips on the right, keyframe lanes under expanded
-/// light tracks, and a ruler with the beat grid. Everything is drawn here; there are no child controls.
+/// light tracks, and a ruler with the beat grid. Everything is drawn here except the playhead, which has
+/// its own child layer so playback repaints only that.
 /// </summary>
 public sealed class TimelineControl : Control
 {
@@ -29,7 +30,7 @@ public sealed class TimelineControl : Control
     private const double LaneHeight = 38;
     private const double EdgeGrab = 6;
 
-    private static readonly Typeface Font = new("Inter");
+    private static readonly IBrush KeyBrush = new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x3A));
     private static readonly IBrush Background = new SolidColorBrush(Color.FromRgb(0x1D, 0x1D, 0x1D));
     private static readonly IBrush HeaderBrush = new SolidColorBrush(Color.FromRgb(0x26, 0x26, 0x26));
     private static readonly IBrush RowAlt = new SolidColorBrush(Color.FromRgb(0x21, 0x21, 0x21));
@@ -53,22 +54,51 @@ public sealed class TimelineControl : Control
     private static readonly Pen Divider = new(new SolidColorBrush(Color.FromRgb(0x12, 0x12, 0x12)), 1);
 
     private readonly EditorState _state;
+    private readonly PlayheadLayer _playheadLayer;
     private Interaction? _interaction;
     private Rect? _dropPreview;
+    private double _pixelsPerSecond = 40;
+    private double _scrollX;
 
     public TimelineControl(EditorState state)
     {
         _state = state;
         Focusable = true;
         ClipToBounds = true;
+        _playheadLayer = new PlayheadLayer(this) { IsHitTestVisible = false };
+        VisualChildren.Add(_playheadLayer);
         state.Changed += InvalidateVisual;
         state.SelectionChanged += InvalidateVisual;
         state.PlayheadChanged += OnPlayhead;
     }
 
-    public double PixelsPerSecond { get; set; } = 40;
-    public double ScrollX { get; set; }
+    public double PixelsPerSecond
+    {
+        get => _pixelsPerSecond;
+        set
+        {
+            _pixelsPerSecond = value;
+            _playheadLayer?.InvalidateVisual();
+        }
+    }
+
+    public double ScrollX
+    {
+        get => _scrollX;
+        set
+        {
+            _scrollX = value;
+            _playheadLayer?.InvalidateVisual();
+        }
+    }
+
     public double ScrollY { get; set; }
+
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        _playheadLayer.Arrange(new Rect(finalSize));
+        return finalSize;
+    }
 
     public event Action? ViewChanged;
 
@@ -92,9 +122,17 @@ public sealed class TimelineControl : Control
             {
                 ScrollX = Math.Max(0, _state.Playhead - VisibleSeconds * 0.1);
                 ViewChanged?.Invoke();
+                InvalidateVisual();
             }
         }
-        InvalidateVisual();
+        // Only the playhead moved: repaint its layer, not the whole timeline under it.
+        _playheadLayer.InvalidateVisual();
+    }
+
+    /// <summary>The playhead and timecode, on their own layer so playback doesn't repaint every clip each frame.</summary>
+    private sealed class PlayheadLayer(TimelineControl owner) : Control
+    {
+        public override void Render(DrawingContext ctx) => owner.RenderPlayhead(ctx);
     }
 
     public void ZoomAround(double factor, double anchorX)
@@ -183,7 +221,6 @@ public sealed class TimelineControl : Control
                 DrawHeader(ctx, row);
 
         DrawRuler(ctx, bounds);
-        DrawPlayhead(ctx, bounds);
         ctx.DrawLine(new Pen(Brushes.Black, 1), new Point(HeaderWidth, 0), new Point(HeaderWidth, bounds.Height));
     }
 
@@ -212,7 +249,6 @@ public sealed class TimelineControl : Control
     {
         ctx.FillRectangle(RulerBrush, new Rect(0, 0, bounds.Width, RulerHeight));
         ctx.FillRectangle(HeaderBrush, new Rect(0, 0, HeaderWidth, RulerHeight));
-        Text(ctx, Timecode(_state.Playhead), new Point(10, 6), PlayheadBrush, 14, FontWeight.SemiBold);
 
         var step = NiceStep(80 / PixelsPerSecond);
         var pen = new Pen(DimText, 1);
@@ -248,8 +284,12 @@ public sealed class TimelineControl : Control
         }
     }
 
-    private void DrawPlayhead(DrawingContext ctx, Rect bounds)
+    private void RenderPlayhead(DrawingContext ctx)
     {
+        var bounds = Bounds;
+        // The timecode changes every frame, so it is shaped fresh rather than filling the text cache.
+        var timecode = new FormattedText(Timecode(_state.Playhead), CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(FontFamily.Default, FontStyle.Normal, FontWeight.SemiBold), 14, PlayheadBrush);
+        ctx.DrawText(timecode, new Point(10, 6));
         var x = TimeToX(_state.Playhead);
         if (x < HeaderWidth || x > bounds.Width)
             return;
@@ -275,7 +315,7 @@ public sealed class TimelineControl : Control
         ctx.DrawLine(Divider, rect.BottomLeft, rect.BottomRight);
         if (row.LaneKey is not null)
         {
-            Text(ctx, "◆ " + row.Label, new Point(30, row.Y + 11), new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x3A)), 11);
+            Text(ctx, "◆ " + row.Label, new Point(30, row.Y + 11), KeyBrush, 11);
             return;
         }
         var track = row.Track;
@@ -473,7 +513,7 @@ public sealed class TimelineControl : Control
             {
                 var center = new Point(TimeToX(clip.Start + key.Time), Y(key.Value));
                 var isSelected = _state.SelectedKey is { } sk && sk.Key == key;
-                DrawDiamond(ctx, center, isSelected ? 6 : 4.5, isSelected ? Brushes.White : new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x3A)));
+                DrawDiamond(ctx, center, isSelected ? 6 : 4.5, isSelected ? Brushes.White : KeyBrush);
             }
         }
     }
@@ -1031,8 +1071,7 @@ public sealed class TimelineControl : Control
 
     private static void Text(DrawingContext ctx, string text, Point at, IBrush brush, double size, FontWeight weight = FontWeight.Normal)
     {
-        var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface(Font.FontFamily, FontStyle.Normal, weight), size, brush);
-        ctx.DrawText(formatted, at);
+        ctx.DrawText(TextCache.Get(text, size, brush, weight), at);
     }
 
     public static string Timecode(double seconds, int fps = 30)
