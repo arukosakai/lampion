@@ -9,9 +9,13 @@ using Lampion.Core.Color;
 
 namespace Lampion.App.Views;
 
-/// <summary>Small factory helpers so the code-built panels stay readable.</summary>
+/// <summary>
+/// Small factory helpers so the code-built panels stay readable. Each call returns a new control wired to
+/// its callbacks; callbacks run on the UI thread.
+/// </summary>
 internal static class Ui
 {
+    /// <summary>A text label with style class <paramref name="cls"/> ("label" by default; null for none).</summary>
     public static TextBlock Label(string text, string? cls = "label")
     {
         var block = new TextBlock { Text = text };
@@ -20,8 +24,10 @@ internal static class Ui
         return block;
     }
 
+    /// <summary>A section heading in the accent colour, like Effect Controls' group titles.</summary>
     public static TextBlock Section(string text) => Label(text, "section");
 
+    /// <summary>A push button running <paramref name="onClick"/>, with an optional tooltip.</summary>
     public static Button Button(string text, Action onClick, string? tip = null)
     {
         var button = new Button { Content = text };
@@ -31,6 +37,7 @@ internal static class Ui
         return button;
     }
 
+    /// <summary>A toggle button; <paramref name="onChange"/> gets the new state on every change.</summary>
     public static ToggleButton Toggle(string text, bool initial, Action<bool> onChange, string? tip = null)
     {
         var toggle = new ToggleButton { Content = text, IsChecked = initial };
@@ -40,6 +47,7 @@ internal static class Ui
         return toggle;
     }
 
+    /// <summary>Controls side by side, 4 px apart.</summary>
     public static StackPanel Row(params Control[] children)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
@@ -47,6 +55,7 @@ internal static class Ui
         return row;
     }
 
+    /// <summary>Controls stacked top to bottom, <paramref name="spacing"/> px apart.</summary>
     public static StackPanel Column(double spacing = 4, params Control[] children)
     {
         var column = new StackPanel { Orientation = Orientation.Vertical, Spacing = spacing };
@@ -55,6 +64,9 @@ internal static class Ui
     }
 
     /// <summary>A label-on-the-left property row, the After Effects "Effect Controls" layout.</summary>
+    /// <param name="label">The property name.</param>
+    /// <param name="editor">The value editor, placed in the second column.</param>
+    /// <param name="labelWidth">Width of the label column, in pixels.</param>
     public static Grid Field(string label, Control editor, double labelWidth = 92)
     {
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions($"{labelWidth.ToString(CultureInfo.InvariantCulture)},*"), Margin = new Thickness(0, 1) };
@@ -66,6 +78,12 @@ internal static class Ui
     }
 
     /// <summary>Numeric editor that commits on Enter/blur and steps with the spinner.</summary>
+    /// <param name="value">Initial value, clamped into range.</param>
+    /// <param name="onCommit">Gets each new value.</param>
+    /// <param name="min">Smallest value allowed.</param>
+    /// <param name="max">Largest value allowed.</param>
+    /// <param name="step">Spinner increment.</param>
+    /// <param name="format">.NET number format for the text, e.g. "0.##".</param>
     public static NumericUpDown Number(double value, Action<double> onCommit, double min = -10000, double max = 10000, double step = 0.1, string format = "0.###")
     {
         var box = new NumericUpDown
@@ -86,6 +104,7 @@ internal static class Ui
         return box;
     }
 
+    /// <summary>A text box that commits on Enter or when it loses focus, and only when the text changed.</summary>
     public static TextBox Text(string value, Action<string> onCommit)
     {
         var box = new TextBox { Text = value };
@@ -99,7 +118,7 @@ internal static class Ui
         };
         box.KeyDown += (_, e) =>
         {
-            if (e.Key == Avalonia.Input.Key.Enter && box.Text != value)
+            if (e.Key == Key.Enter && box.Text != value)
             {
                 value = box.Text ?? "";
                 onCommit(value);
@@ -108,6 +127,11 @@ internal static class Ui
         return box;
     }
 
+    /// <summary>A drop-down over <paramref name="items"/>; nothing is selected when <paramref name="selected"/> isn't among them.</summary>
+    /// <param name="items">The choices, in display order.</param>
+    /// <param name="selected">The initial choice.</param>
+    /// <param name="onChange">Gets the item the user picks.</param>
+    /// <param name="display">Turns an item into its text; <see cref="object.ToString"/> when null.</param>
     public static ComboBox Combo<T>(IEnumerable<T> items, T selected, Action<T> onChange, Func<T, string>? display = null)
     {
         var list = items.ToList();
@@ -125,6 +149,7 @@ internal static class Ui
         return combo;
     }
 
+    /// <summary>A horizontal slider; <paramref name="onChange"/> fires while dragging, <paramref name="onRelease"/> once the pointer lets go.</summary>
     public static Slider Slider(double value, double min, double max, Action<double> onChange, Action? onRelease = null)
     {
         var slider = new Slider { Minimum = min, Maximum = max, Value = value, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -134,12 +159,14 @@ internal static class Ui
         return slider;
     }
 
+    /// <summary>A new solid brush for a "#RRGGBB" colour. Allocates; cache it in per-frame code.</summary>
     public static IBrush Brush(string hex)
     {
         var c = Rgb.FromHex(hex);
         return new SolidColorBrush(Color.FromRgb(Rgb.ToByte(c.R), Rgb.ToByte(c.G), Rgb.ToByte(c.B)));
     }
 
+    /// <summary>A "#RRGGBB" colour with the given alpha (0–255).</summary>
     public static Color ToColor(string hex, byte alpha = 255)
     {
         var c = Rgb.FromHex(hex);
@@ -150,86 +177,8 @@ internal static class Ui
     /// A colour swatch that opens a flyout with hue/saturation/brightness sliders, a hex box and presets.
     /// <paramref name="onPreview"/> fires while dragging; <paramref name="onCommit"/> when the flyout closes.
     /// </summary>
-    public static Button ColorPicker(string hex, Action<string> onPreview, Action onCommit)
-    {
-        var swatch = new Border
-        {
-            Width = 44,
-            Height = 16,
-            CornerRadius = new CornerRadius(2),
-            Background = Brush(hex),
-            BorderBrush = Brushes.Black,
-            BorderThickness = new Thickness(1),
-        };
-        var hexLabel = new TextBlock { Text = hex.ToUpperInvariant(), VerticalAlignment = VerticalAlignment.Center };
-        var button = new Button { Content = Row(swatch, hexLabel), HorizontalAlignment = HorizontalAlignment.Left };
-
-        var (h, s, v) = Rgb.FromHex(hex).ToHsv();
-        var updating = false;
-        var hexBox = new TextBox { Text = hex, Width = 90 };
-        Slider? hue = null, sat = null, val = null;
-        void Apply(string newHex, bool fromHexBox = false)
-        {
-            hex = newHex.ToUpperInvariant();
-            swatch.Background = Brush(hex);
-            hexLabel.Text = hex;
-            if (!fromHexBox)
-                hexBox.Text = hex;
-            onPreview(hex);
-        }
-        void FromSliders()
-        {
-            if (!updating && hue is not null && sat is not null && val is not null)
-                Apply(Rgb.FromHsv(hue.Value / 360, sat.Value, val.Value).ToHex());
-        }
-        hue = Slider(h * 360, 0, 360, _ => FromSliders());
-        sat = Slider(s, 0, 1, _ => FromSliders());
-        val = Slider(v, 0, 1, _ => FromSliders());
-        hexBox.TextChanged += (_, _) =>
-        {
-            if (!Rgb.TryParseHex(hexBox.Text, out var parsed) || parsed.ToHex() == hex)
-                return;
-            updating = true;
-            var hsv = parsed.ToHsv();
-            hue.Value = hsv.H * 360;
-            sat.Value = hsv.S;
-            val.Value = hsv.V;
-            updating = false;
-            Apply(parsed.ToHex(), fromHexBox: true);
-        };
-
-        var presets = new WrapPanel { MaxWidth = 230 };
-        foreach (var preset in new[] { "#FFFFFF", "#FFE6B0", "#FF0000", "#FF6A00", "#FFC800", "#00FF00", "#00FFC8", "#00A0FF", "#0000FF", "#8000FF", "#FF00C8", "#000000" })
-        {
-            var chip = new Button
-            {
-                Width = 18,
-                Height = 18,
-                MinHeight = 18,
-                Padding = new Thickness(0),
-                Margin = new Thickness(1),
-                Background = Brush(preset),
-            };
-            chip.Click += (_, _) =>
-            {
-                updating = true;
-                var hsv = Rgb.FromHex(preset).ToHsv();
-                hue.Value = hsv.H * 360;
-                sat.Value = hsv.S;
-                val.Value = hsv.V;
-                updating = false;
-                Apply(preset);
-            };
-            presets.Children.Add(chip);
-        }
-
-        var flyout = new Flyout
-        {
-            Content = Column(4, Field("Hue", hue, 70), Field("Saturation", sat, 70), Field("Brightness", val, 70), Field("Hex", hexBox, 70), presets),
-            Placement = PlacementMode.BottomEdgeAlignedLeft,
-        };
-        flyout.Closed += (_, _) => onCommit();
-        button.Flyout = flyout;
-        return button;
-    }
+    /// <param name="hex">The initial "#RRGGBB" colour.</param>
+    /// <param name="onPreview">Gets each new colour as "#RRGGBB" (upper case).</param>
+    /// <param name="onCommit">Runs when the flyout closes, changed or not.</param>
+    public static Button ColorPicker(string hex, Action<string> onPreview, Action onCommit) => new HexColorPicker(hex, onPreview, onCommit).Button;
 }

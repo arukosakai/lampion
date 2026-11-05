@@ -1,0 +1,194 @@
+{
+  "formatVersion": 1,
+  "name": "Golden chase",
+  "description": "Bounce with pan and tilt",
+  "effect": {
+    "type": "chase",
+    "colors": [
+      "#FF0000",
+      "#00FF00",
+      "#0000FF"
+    ],
+    "stepTime": 0.3,
+    "tail": 2,
+    "direction": "Bounce",
+    "background": 0.05,
+    "displayName": "Chase",
+    "swatchColor": "#FF0000",
+    "intensity": 1
+  },
+  "duration": 12,
+  "fadeIn": 0,
+  "fadeOut": 1,
+  "fadeEasing": "Linear",
+  "automation": [
+    {
+      "id": "preset-lane-0",
+      "target": "Role",
+      "role": "Pan",
+      "channel": 1,
+      "enabled": true,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 0.1,
+          "easing": "Linear"
+        },
+        {
+          "time": 2,
+          "value": 0.9,
+          "easing": "Hold"
+        },
+        {
+          "time": 4,
+          "value": 0.3,
+          "easing": "EaseIn"
+        },
+        {
+          "time": 6,
+          "value": 0.7,
+          "easing": "EaseOut"
+        },
+        {
+          "time": 8,
+          "value": 0.2,
+          "easing": "EaseInOut"
+        },
+        {
+          "time": 12,
+          "value": 0.6,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-1",
+      "target": "Role",
+      "role": "Tilt",
+      "channel": 1,
+      "enabled": true,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 0.2,
+          "easing": "Linear"
+        },
+        {
+          "time": 12,
+          "value": 0.8,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-2",
+      "target": "Role",
+      "role": "PanFine",
+      "channel": 1,
+      "enabled": true,
+      "animated": false,
+      "keys": [
+        {
+          "time": 0,
+          "value": 0.4,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-3",
+      "target": "Role",
+      "role": "Zoom",
+      "channel": 1,
+      "enabled": true,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 0,
+          "easing": "Linear"
+        },
+        {
+          "time": 12,
+          "value": 1,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-4",
+      "target": "Channel",
+      "role": "Strobe",
+      "channel": 5,
+      "enabled": true,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 1,
+          "easing": "Linear"
+        },
+        {
+          "time": 12,
+          "value": 0,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-5",
+      "target": "Channel",
+      "role": "Strobe",
+      "channel": 99,
+      "enabled": true,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 1,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-6",
+      "target": "Channel",
+      "role": "Strobe",
+      "channel": 0,
+      "enabled": true,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 0.5,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    },
+    {
+      "id": "preset-lane-7",
+      "target": "Role",
+      "role": "Strobe",
+      "channel": 1,
+      "enabled": false,
+      "animated": true,
+      "keys": [
+        {
+          "time": 0,
+          "value": 1,
+          "easing": "Linear"
+        }
+      ],
+      "defaultValue": 0
+    }
+  ]
+}

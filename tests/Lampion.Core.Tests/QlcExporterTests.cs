@@ -2,6 +2,9 @@ using System.Xml.Linq;
 using Lampion.Core.Engine;
 using Lampion.Core.Export;
 using Lampion.Core.Model;
+using Lampion.Core.Model.Effects;
+using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Timeline;
 using Lampion.Core.Output;
 using Lampion.Core.Persistence;
 
@@ -14,7 +17,7 @@ public class QlcExporterTests
     [Fact]
     public void DemoProjectExportsAWellFormedWorkspace()
     {
-        var project = Project.CreateDemo();
+        var project = DemoProject.Create();
         var result = new QlcExporter(project).Export();
 
         Assert.Contains("<!DOCTYPE Workspace>", result.Xml);
@@ -40,9 +43,9 @@ public class QlcExporterTests
     public void RgbwFixturesBecomeQlcRgbPanels()
     {
         var profiles = BuiltInProfiles.All();
-        Assert.Equal("RGBW", QlcExporter.RgbPanelMode(profiles.First(p => p.Id == BuiltInProfiles.RgbwParId)));
-        Assert.Equal("RGB", QlcExporter.RgbPanelMode(profiles.First(p => p.Id == BuiltInProfiles.RgbParId)));
-        Assert.Null(QlcExporter.RgbPanelMode(profiles.First(p => p.Id == BuiltInProfiles.MovingHeadId)));
+        Assert.Equal("RGBW", QlcFixtureWriter.RgbPanelMode(profiles.First(p => p.Id == BuiltInProfiles.RgbwParId)));
+        Assert.Equal("RGB", QlcFixtureWriter.RgbPanelMode(profiles.First(p => p.Id == BuiltInProfiles.RgbParId)));
+        Assert.Null(QlcFixtureWriter.RgbPanelMode(profiles.First(p => p.Id == BuiltInProfiles.MovingHeadId)));
     }
 
     [Fact]
@@ -50,7 +53,7 @@ public class QlcExporterTests
     {
         var times = Enumerable.Range(0, 11).Select(i => i / 10.0).ToList();
         var ramp = times.Select(t => new[] { (byte)(t * 200) }).ToList();
-        Assert.Equal([0, 10], QlcExporter.Simplify(ramp, times, 1));
+        Assert.Equal([0, 10], FadeReducer.Simplify(ramp, times, 1));
     }
 
     [Fact]
@@ -58,13 +61,13 @@ public class QlcExporterTests
     {
         var times = Enumerable.Range(0, 6).Select(i => (double)i).ToList();
         var cut = new[] { 0, 0, 0, 255, 255, 255 }.Select(v => new[] { (byte)v }).ToList();
-        Assert.Equal([0, 2, 3, 5], QlcExporter.Simplify(cut, times, 1));
+        Assert.Equal([0, 2, 3, 5], FadeReducer.Simplify(cut, times, 1));
     }
 
     [Fact]
     public void ReplayedStepsMatchTheRenderedShow()
     {
-        var project = Project.CreateDemo();
+        var project = DemoProject.Create();
         var options = new QlcExportOptions { SampleRate = 25, Tolerance = 1 };
         var doc = XDocument.Parse(new QlcExporter(project, options).Export().Xml);
         var engine = doc.Root!.Element(Ns + "Engine")!;
@@ -74,6 +77,7 @@ public class QlcExporterTests
         // Rebuild the timeline of step values and compare a fixture against the renderer between samples.
         var steps = sequence.Elements(Ns + "Step").Select(s => (FadeIn: (int)s.Attribute("FadeIn")!, Text: s.Value)).ToList();
         var fixture = project.Fixtures.First(f => project.Groups[0].FixtureIds.Contains(f.Id));
+        var fixtureIndex = project.Fixtures.IndexOf(fixture);
         var qlcId = qlcIds[fixture.Name];
         var renderer = new ShowRenderer(project);
         var at = 0;
@@ -84,7 +88,7 @@ public class QlcExporterTests
             if (previous is not null && fadeIn > 40)
             {
                 var midMs = at + fadeIn / 2;
-                var expected = renderer.RenderFixtures(midMs / 1000.0)[fixture.Id];
+                var expected = renderer.RenderFixtures(midMs / 1000.0)[fixtureIndex];
                 for (var c = 0; c < values.Length; c++)
                     Assert.InRange((previous[c] + values[c]) / 2.0, expected[c] - 2.5, expected[c] + 2.5);
             }
@@ -108,7 +112,7 @@ public class QlcExporterTests
     [Fact]
     public void MergingReusesBaseFixturesAtTheSameAddress()
     {
-        var project = Project.CreateDemo();
+        var project = DemoProject.Create();
         var first = new QlcExporter(project).Export().Xml;
         var path = Path.GetTempFileName();
         try
@@ -131,7 +135,7 @@ public class QlcExporterTests
     [Fact]
     public void ProjectSurvivesAJsonRoundTrip()
     {
-        var project = Project.CreateDemo();
+        var project = DemoProject.Create();
         var copy = ProjectSerializer.Deserialize(ProjectSerializer.Serialize(project));
         Assert.Equal(ProjectSerializer.Serialize(project), ProjectSerializer.Serialize(copy));
         Assert.IsType<RainbowEffect>(copy.Tracks[1].Clips.OfType<LightClip>().Last().Effect);
@@ -140,7 +144,7 @@ public class QlcExporterTests
     [Fact]
     public void ArtNetPacketHasTheArtDmxHeader()
     {
-        var packet = ArtNetSender.BuildPacket(0x123, new byte[512], 7);
+        var packet = ArtDmxPacket.Build(0x123, new byte[512], 7);
         Assert.Equal("Art-Net\0"u8.ToArray(), packet[..8]);
         Assert.Equal([0x00, 0x50, 0, 14, 7, 0, 0x23, 0x01, 0x02, 0x00], packet[8..18]);
     }

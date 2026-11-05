@@ -9,18 +9,39 @@ using Lampion.App.Rendering;
 
 namespace Lampion.App.Controls;
 
-/// <summary>The "Program monitor": shows the latest decoded video frame, letterboxed.</summary>
-public sealed class VideoMonitor : Control
+/// <summary>The Video tab of the program monitor: shows the latest decoded video frame, letterboxed.</summary>
+internal sealed class VideoMonitor : Control
 {
+    private const string NoVideo = "No video at the playhead. Import one from the Media tab.";
+    private static readonly Typeface Font = new("Inter");
+
     private readonly VideoFrame _frame;
     private WriteableBitmap? _bitmap;
     private int _version = -1;
+    private FormattedText? _placeholder;
+    private string? _message;
 
+    /// <summary>A monitor showing <paramref name="frame"/>, which a decoder fills from another thread under a lock on itself.</summary>
     public VideoMonitor(VideoFrame frame) => _frame = frame;
 
-    public string? Message { get; set; }
+    /// <summary>Shown instead of the usual hint while there is no video; null for the hint.</summary>
+    public string? Message
+    {
+        get => _message;
+        set
+        {
+            if (value == _message)
+                return;
+            _message = value;
+            _placeholder = null;
+            InvalidateVisual();
+        }
+    }
 
-    /// <summary>Copies a new frame into the bitmap, if one arrived; call once per UI tick.</summary>
+    /// <summary>
+    /// Copies a new frame into the bitmap, if one arrived; call once per UI tick. Allocation-free while the
+    /// video size stays the same, apart from Avalonia's framebuffer lock handle per new frame.
+    /// </summary>
     public void Update()
     {
         if (_frame.Version == _version || _frame.Width == 0)
@@ -41,19 +62,13 @@ public sealed class VideoMonitor : Control
         InvalidateVisual();
     }
 
+    /// <inheritdoc />
     public override void Render(DrawingContext ctx)
     {
         ctx.FillRectangle(Brushes.Black, new Rect(Bounds.Size));
         if (_bitmap is null)
         {
-            var text = new FormattedText(
-                Message ?? "No video at the playhead. Import one from the Media tab.",
-                CultureInfo.CurrentCulture,
-                FlowDirection.LeftToRight,
-                new Typeface("Inter"),
-                13,
-                Brushes.Gray
-            );
+            var text = _placeholder ??= new FormattedText(_message ?? NoVideo, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Font, 13, Brushes.Gray);
             ctx.DrawText(text, new Point((Bounds.Width - text.Width) / 2, (Bounds.Height - text.Height) / 2));
             return;
         }

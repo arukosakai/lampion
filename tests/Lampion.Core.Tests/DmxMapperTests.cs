@@ -1,18 +1,23 @@
 using Lampion.Core.Color;
 using Lampion.Core.Engine;
-using Lampion.Core.Model;
+using Lampion.Core.Model.Rig;
 
 namespace Lampion.Core.Tests;
 
 public class DmxMapperTests
 {
+    private delegate void Configure(ref FixtureState state);
+
     private static FixtureProfile Profile(string id) => BuiltInProfiles.All().First(p => p.Id == id);
 
-    private static byte[] Map(string profileId, Rgb light, Action<FixtureState>? configure = null, bool extractWhite = true)
+    private static byte[] Map(string profileId, Rgb light, Configure? configure = null, bool extractWhite = true)
     {
         var state = new FixtureState { Light = light };
-        configure?.Invoke(state);
-        return DmxMapper.Map(new Fixture { ExtractWhite = extractWhite }, Profile(profileId), state);
+        configure?.Invoke(ref state);
+        var profile = Profile(profileId);
+        var values = new byte[profile.Channels.Count];
+        DmxMapper.Map(new Fixture { ExtractWhite = extractWhite }, profile, in state, values);
+        return values;
     }
 
     [Fact]
@@ -51,7 +56,7 @@ public class DmxMapperTests
     [Fact]
     public void PanUsesTheFineChannelForSixteenBits()
     {
-        var values = Map(BuiltInProfiles.MovingHeadId, Rgb.Black, s => s.SetRole(ChannelRole.Pan, 0.5));
+        var values = Map(BuiltInProfiles.MovingHeadId, Rgb.Black, (ref FixtureState s) => s.SetRole(ChannelRole.Pan, 0.5));
         Assert.Equal(0x80, values[0]);
         Assert.Equal(0x00, values[1]);
         // Tilt untouched keeps the profile default.
@@ -61,7 +66,7 @@ public class DmxMapperTests
     [Fact]
     public void RawChannelOverridesWin()
     {
-        var values = Map(BuiltInProfiles.RgbParId, Rgb.White, s => s.SetRaw(1, 0.2));
+        var values = Map(BuiltInProfiles.RgbParId, Rgb.White, (ref FixtureState s) => s.SetRaw(1, 0.2));
         Assert.Equal([255, 51, 255], values);
     }
 
@@ -70,7 +75,8 @@ public class DmxMapperTests
     {
         var profile = Profile(BuiltInProfiles.DimRgbParId);
         var fixture = new Fixture();
-        var values = DmxMapper.Map(fixture, profile, new FixtureState { Light = new Rgb(0, 0.4, 0.4) });
+        var values = new byte[profile.Channels.Count];
+        DmxMapper.Map(fixture, profile, new FixtureState { Light = new Rgb(0, 0.4, 0.4) }, values);
         var emitted = DmxMapper.Decode(fixture, profile, values);
         Assert.Equal(0, emitted.Color.R, 2);
         Assert.Equal(0.4, emitted.Color.G, 2);

@@ -6,6 +6,7 @@ namespace Lampion.App.Controls;
 /// <summary>
 /// Shaped text for the custom-drawn controls. Shaping is the costly part of drawing a label, and labels
 /// (fixture names, DMX values, ruler times) repeat frame after frame, so each one is shaped once.
+/// UI thread only.
 /// </summary>
 internal static class TextCache
 {
@@ -15,11 +16,22 @@ internal static class TextCache
     public static readonly Typeface Regular = new(FontFamily.Default);
 
     private static readonly Dictionary<(string Text, Typeface Face, double Size, IBrush Brush), FormattedText> Entries = [];
+    private static readonly Dictionary<FontWeight, Typeface> Weights = new() { [FontWeight.Normal] = Regular };
 
-    /// <remarks>Brushes are part of the key by reference, so pass shared brush instances, not fresh ones.</remarks>
+    /// <summary>
+    /// The shaped <paramref name="text"/>, from the cache when it was shaped before with the same size,
+    /// brush and weight. Allocation-free on a hit; the cache is emptied when it reaches its bound.
+    /// </summary>
+    /// <param name="text">The label. Pass a cached string; formatting a new one each frame defeats the point.</param>
+    /// <param name="size">Font size in pixels.</param>
+    /// <param name="brush">
+    /// Foreground. Brushes are part of the key by reference, so pass shared brush instances, not fresh ones.
+    /// </param>
+    /// <param name="weight">Font weight of the default family.</param>
+    /// <returns>Shared text; don't change its properties.</returns>
     public static FormattedText Get(string text, double size, IBrush brush, FontWeight weight = FontWeight.Normal)
     {
-        var face = weight == FontWeight.Normal ? Regular : new Typeface(FontFamily.Default, FontStyle.Normal, weight);
+        var face = Face(weight);
         var key = (text, face, size, brush);
         if (Entries.TryGetValue(key, out var cached))
             return cached;
@@ -29,5 +41,15 @@ internal static class TextCache
         var formatted = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, face, size, brush);
         Entries[key] = formatted;
         return formatted;
+    }
+
+    private static Typeface Face(FontWeight weight)
+    {
+        if (!Weights.TryGetValue(weight, out var face))
+        {
+            face = new Typeface(FontFamily.Default, FontStyle.Normal, weight);
+            Weights[weight] = face;
+        }
+        return face;
     }
 }

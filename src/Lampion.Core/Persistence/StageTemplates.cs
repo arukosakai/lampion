@@ -1,14 +1,17 @@
 using Lampion.Core.Model;
+using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Stage;
 
 namespace Lampion.Core.Persistence;
 
 /// <summary>Venues that ship with Lampion, offered on the start screen next to the user's own templates.</summary>
 public static class StageTemplates
 {
+    /// <summary>Fresh built-in layouts with a one-line description each; callers own them.</summary>
     public static IReadOnlyList<(StageLayout Layout, string Description)> BuiltIn() =>
     [
         (Club(), "Small stage, one front truss with four RGB pars, two LED bars on the floor"),
-        (StageLayout.From(Project.CreateDemo(), "Concert stage"), "12 m deck, two trusses, six RGBW pars, four moving heads, LED wall"),
+        (StageLayout.From(DemoProject.Create(), "Concert stage"), "12 m deck, two trusses, six RGBW pars, four moving heads, LED wall"),
     ];
 
     private static StageLayout Club()
@@ -22,11 +25,11 @@ public static class StageTemplates
         {
             Haze = 0.45,
             Objects =
-            [
+            {
                 new StageObject { Name = "Stage", Kind = StageObjectKind.Platform, Position = new Vec3(0, 0.3, -0.5), Size = new Vec3(6, 0.6, 4), Color = "#2B2622" },
                 new StageObject { Name = "Back wall", Kind = StageObjectKind.Wall, Position = new Vec3(0, 2.5, -2.6), Size = new Vec3(8, 5, 0.2), Color = "#1E1E24" },
                 truss,
-            ],
+            },
         };
 
         var pars = new FixtureGroup { Name = "Front pars", Color = "#E6A23A" };

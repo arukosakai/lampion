@@ -6,9 +6,9 @@ using Avalonia.Input;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
 using Avalonia.Threading;
+using Lampion.App.Controls.Preview;
 using Lampion.App.Rendering;
-using Lampion.Core.Engine;
-using Lampion.Core.Model;
+using Lampion.Core.Model.Rig;
 using Silk.NET.OpenGL;
 
 namespace Lampion.App.Controls;
@@ -17,33 +17,35 @@ namespace Lampion.App.Controls;
 /// One fixture in a small set, drawn by the real stage renderer, so a profile can be checked while it is
 /// being written. Drag to orbit, scroll to zoom, double-click to reset the camera.
 /// </summary>
-public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICustomHitTest
+internal sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICustomHitTest
 {
-    private static readonly Vector3 HangPoint = new(0, 2.8f, 0);
-    private static readonly Vector3 FloorPoint = new(0, 0.08f, 0);
-
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly Camera _camera = new();
     private readonly DispatcherTimer _timer;
+    private readonly PreviewScene _builder = new();
+    private readonly Cursor _orbitCursor = new(StandardCursorType.SizeAll);
+    private readonly Cursor _aimCursor = new(StandardCursorType.Cross);
     private StageRenderer? _renderer;
     private GL? _gl;
     private SceneSnapshot? _scene;
     private Point? _dragFrom;
+    private bool _aimMode;
+    private Vector3? _aimTarget;
 
+    /// <summary>Creates the preview; it starts drawing once attached to a window.</summary>
     public FixturePreview()
     {
         ClipToBounds = true;
-        Cursor = new Cursor(StandardCursorType.SizeAll);
+        Cursor = _orbitCursor;
         ResetCamera();
         // The snapshot is built on the UI thread, where the profile is edited, never inside the GL callback.
         _timer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Render, (_, _) => UpdateScene());
     }
 
+    /// <summary>The profile to draw, read every frame so edits show at once; null draws an empty set.</summary>
     public FixtureProfile? Profile { get; set; }
 
-    /// <summary>Test DMX values, one per profile channel. Missing entries read as 0.</summary>
-    public byte[] Values { get; set; } = [];
-
+    /// <summary>Why the 3D view couldn't start or stopped drawing, or null while it works.</summary>
     public string? Error { get; private set; }
 
     /// <summary>In aim mode a click or drag on the set points a moving head there instead of orbiting.</summary>
@@ -54,37 +56,37 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         {
             _aimMode = value;
             _aimTarget = null;
-            Cursor = new Cursor(value ? StandardCursorType.Cross : StandardCursorType.SizeAll);
+            Cursor = value ? _aimCursor : _orbitCursor;
         }
     }
 
     /// <summary>Raised with the pan/tilt (0..1) that reach the clicked spot; the owner writes them into its values.</summary>
     public event Action<double, double>? Aimed;
 
-    private bool _aimMode;
-    private Vector3? _aimTarget;
-    private Fixture? _fixture;
+    /// <summary>
+    /// Sets the test DMX values, one per profile channel (missing entries read as absent). The values are
+    /// copied, so the caller may reuse its buffer; allocates only when the footprint grows.
+    /// </summary>
+    public void SetValues(ReadOnlySpan<byte> values) => _builder.SetValues(values);
 
+    /// <summary>Hit anywhere inside the bounds, so drags on the GL surface reach the control.</summary>
     public bool HitTest(Point point) => new Rect(Bounds.Size).Contains(point);
 
-    private void ResetCamera()
-    {
-        _camera.Target = new Vector3(0, 1.6f, -1.2f);
-        (_camera.Yaw, _camera.Pitch, _camera.Distance) = (0.75f, 0.12f, 8.5f);
-    }
-
+    /// <inheritdoc />
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
         _timer.Start();
     }
 
+    /// <inheritdoc />
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _timer.Stop();
         base.OnDetachedFromVisualTree(e);
     }
 
+    /// <inheritdoc />
     protected override void OnOpenGlInit(GlInterface gl)
     {
         try
@@ -98,12 +100,14 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         }
     }
 
+    /// <inheritdoc />
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
         _renderer?.Dispose();
         _renderer = null;
     }
 
+    /// <inheritdoc />
     protected override void OnOpenGlRender(GlInterface gl, int fb)
     {
         var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
@@ -130,72 +134,32 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         RequestNextFrameRendering();
     }
 
+    private void ResetCamera()
+    {
+        _camera.Target = new Vector3(0, 1.6f, -1.2f);
+        (_camera.Yaw, _camera.Pitch, _camera.Distance) = (0.75f, 0.12f, 8.5f);
+    }
+
     private void UpdateScene()
     {
-        if (Profile is not { } profile)
-            return;
-        var time = (float)_clock.Elapsed.TotalSeconds;
-        // Bars stand on the floor and uplight the wall; everything else hangs from the truss.
-        var onFloor = profile.Beam == BeamKind.Bar;
-        var position = onFloor ? FloorPoint : HangPoint;
-        var fixture = new Fixture
-        {
-            Position = new Vec3(position.X, position.Y, position.Z),
-            Yaw = 180,
-            Pitch = onFloor ? 35 : profile.HasPanTilt ? -90 : -32,
-        };
-        _fixture = fixture;
-
-        var emitted = DmxMapper.Decode(fixture, profile, Values);
-        var direction = StageMath.BeamDirection(fixture, profile, emitted.Pan, emitted.Tilt).Normalized();
-        var light = new Vector3(MathF.Pow((float)emitted.Color.R, 2.2f), MathF.Pow((float)emitted.Color.G, 2.2f), MathF.Pow((float)emitted.Color.B, 2.2f));
-        if (emitted.Strobe > 0.04 && (time * (1 + emitted.Strobe * 19)) % 1 > 0.18)
-            light = Vector3.Zero;
-
-        var objects = SetObjects(onFloor);
-        var visual = new FixtureVisual("preview", profile.Beam, position, ToVector(direction), (float)profile.BeamAngle, light, 0, profile.HasPanTilt, false);
-        var lens = visual.Lens;
-        var throwDistance = StageMath.Raycast(objects, new Vec3(lens.X, lens.Y, lens.Z), direction, 40) ?? 30;
-        var objectVisuals = objects.Select(o => new ObjectVisual(o.Id, o.Kind, ToVector(o.Position), ToVector(o.Size), 0, Linear(o.Color), false)).ToList();
-        _scene = new SceneSnapshot([visual with { BeamLength = (float)Math.Min(throwDistance, 30) }], objectVisuals, 0.55f, 0.3f, 0.35f, Vector3.Zero, time, null, _aimMode ? _aimTarget : null);
+        if (Profile is { } profile)
+            _scene = _builder.Build(profile, (float)_clock.Elapsed.TotalSeconds, _aimMode ? _aimTarget : null);
     }
 
     private void AimAt(Point point)
     {
-        if (Profile is not { HasPanTilt: true } profile || _fixture is not { } fixture)
+        if (Profile is not { HasPanTilt: true } profile)
             return;
         var (origin, direction) = _camera.Ray((float)point.X, (float)point.Y, (float)Bounds.Width, (float)Bounds.Height);
-        var from = new Vec3(origin.X, origin.Y, origin.Z);
-        var dir = new Vec3(direction.X, direction.Y, direction.Z);
-        if (StageMath.Raycast(SetObjects(onFloor: false), from, dir, 60) is not { } distance)
+        if (_builder.AimAt(profile, origin, direction, out var hit) is not { } aim)
             return;
-        var hit = from + dir * distance;
-        var current = DmxMapper.Decode(fixture, profile, Values);
-        if (StageMath.PanTiltToward(fixture, profile, hit, (current.Pan, current.Tilt)) is not { } aim)
-            return;
-        _aimTarget = ToVector(hit);
+        _aimTarget = hit;
         Aimed?.Invoke(aim.Pan, aim.Tilt);
-    }
-
-    private static List<StageObject> SetObjects(bool onFloor)
-    {
-        var wall = new StageObject { Kind = StageObjectKind.Wall, Position = new Vec3(0, 4, -4.5), Size = new Vec3(14, 8, 0.15), Color = "#26262C" };
-        if (onFloor)
-            return [wall];
-        var truss = new StageObject { Kind = StageObjectKind.Truss, Position = new Vec3(0, HangPoint.Y + 0.42, 0), Size = new Vec3(3, 0.3, 0.3), Color = "#B8BCC4" };
-        return [wall, truss];
-    }
-
-    private static Vector3 ToVector(Vec3 v) => new((float)v.X, (float)v.Y, (float)v.Z);
-
-    private static Vector3 Linear(string hex)
-    {
-        var c = Core.Color.Rgb.FromHex(hex);
-        return new Vector3(MathF.Pow((float)c.R, 2.2f), MathF.Pow((float)c.G, 2.2f), MathF.Pow((float)c.B, 2.2f));
     }
 
     // ---- Camera ----------------------------------------------------------------------------------------
 
+    /// <inheritdoc />
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
@@ -212,6 +176,7 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
             AimAt(_dragFrom.Value);
     }
 
+    /// <inheritdoc />
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
@@ -228,6 +193,7 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         _dragFrom = point;
     }
 
+    /// <inheritdoc />
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
@@ -235,6 +201,7 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         e.Pointer.Capture(null);
     }
 
+    /// <inheritdoc />
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);

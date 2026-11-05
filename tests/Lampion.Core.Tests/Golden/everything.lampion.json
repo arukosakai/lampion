@@ -1,0 +1,3287 @@
+{
+  "formatVersion": 1,
+  "name": "Everything",
+  "duration": 36,
+  "bpm": 128,
+  "beatOffset": 0.25,
+  "stage": {
+    "objects": [
+      {
+        "id": "so-deck",
+        "name": "Deck",
+        "kind": "Platform",
+        "position": {
+          "x": 0,
+          "y": 0.5,
+          "z": -1,
+          "length": 1.118033988749895
+        },
+        "size": {
+          "x": 10,
+          "y": 1,
+          "z": 6,
+          "length": 11.704699910719626
+        },
+        "yaw": 0,
+        "color": "#2B2622"
+      },
+      {
+        "id": "so-truss",
+        "name": "Truss",
+        "kind": "Truss",
+        "position": {
+          "x": 0,
+          "y": 6,
+          "z": 1,
+          "length": 6.082762530298219
+        },
+        "size": {
+          "x": 12,
+          "y": 0.3,
+          "z": 0.3,
+          "length": 12.007497657713701
+        },
+        "yaw": 15,
+        "color": "#B8BCC4"
+      },
+      {
+        "id": "so-screen",
+        "name": "Screen",
+        "kind": "Screen",
+        "position": {
+          "x": 0,
+          "y": 3,
+          "z": -4,
+          "length": 5
+        },
+        "size": {
+          "x": 6,
+          "y": 3.4,
+          "z": 0.1,
+          "length": 6.897100840208152
+        },
+        "yaw": 0,
+        "color": "#050505"
+      },
+      {
+        "id": "so-wall",
+        "name": "Wall",
+        "kind": "Wall",
+        "position": {
+          "x": 0,
+          "y": 4,
+          "z": -5,
+          "length": 6.4031242374328485
+        },
+        "size": {
+          "x": 12,
+          "y": 8,
+          "z": 0.2,
+          "length": 14.423591785682234
+        },
+        "yaw": 0,
+        "color": "#1E1E24"
+      }
+    ],
+    "haze": 0.4,
+    "ambient": 0.2,
+    "lightBounce": true,
+    "gridStep": 0.5
+  },
+  "profiles": [
+    {
+      "id": "builtin-rgb-par",
+      "manufacturer": "Generic",
+      "model": "RGB Par",
+      "mode": "3 Channel",
+      "beam": "Par",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-rgbw-par",
+      "manufacturer": "Generic",
+      "model": "RGBW Par",
+      "mode": "4 Channel",
+      "beam": "Par",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-drgb-par",
+      "manufacturer": "Generic",
+      "model": "Dimmer RGB Par",
+      "mode": "4 Channel",
+      "beam": "Par",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-hex-par",
+      "manufacturer": "Generic",
+      "model": "RGBWA\u002BUV Par",
+      "mode": "8 Channel",
+      "beam": "Wash",
+      "beamAngle": 30,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        },
+        {
+          "name": "Amber",
+          "role": "Amber",
+          "default": 0
+        },
+        {
+          "name": "UV",
+          "role": "UV",
+          "default": 0
+        },
+        {
+          "name": "Strobe",
+          "role": "Strobe",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-moving-head",
+      "manufacturer": "Generic",
+      "model": "Moving Head Spot",
+      "mode": "12 Channel",
+      "beam": "Spot",
+      "beamAngle": 14,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Pan",
+          "role": "Pan",
+          "default": 128
+        },
+        {
+          "name": "Pan fine",
+          "role": "PanFine",
+          "default": 0
+        },
+        {
+          "name": "Tilt",
+          "role": "Tilt",
+          "default": 128
+        },
+        {
+          "name": "Tilt fine",
+          "role": "TiltFine",
+          "default": 0
+        },
+        {
+          "name": "Speed",
+          "role": "PanTiltSpeed",
+          "default": 0
+        },
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Strobe",
+          "role": "Strobe",
+          "default": 0
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        },
+        {
+          "name": "Gobo",
+          "role": "Gobo",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": true
+    },
+    {
+      "id": "builtin-led-bar",
+      "manufacturer": "Generic",
+      "model": "LED Bar",
+      "mode": "3 Channel",
+      "beam": "Bar",
+      "beamAngle": 60,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-strobe",
+      "manufacturer": "Generic",
+      "model": "Strobe",
+      "mode": "2 Channel",
+      "beam": "Strobe",
+      "beamAngle": 90,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Rate",
+          "role": "Strobe",
+          "default": 0
+        }
+      ],
+      "hasColor": false,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-dimmer",
+      "manufacturer": "Generic",
+      "model": "Dimmer (1ch)",
+      "mode": "1 Channel",
+      "beam": "Par",
+      "beamAngle": 30,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        }
+      ],
+      "hasColor": false,
+      "hasPanTilt": false
+    },
+    {
+      "id": "custom-odd",
+      "manufacturer": "Acme",
+      "model": "Odd Wash",
+      "mode": "12ch",
+      "beam": "Wash",
+      "beamAngle": 40,
+      "panRange": 360,
+      "tiltRange": 180,
+      "channels": [
+        {
+          "name": "Zoom",
+          "role": "Zoom",
+          "default": 128
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "Amber",
+          "role": "Amber",
+          "default": 0
+        },
+        {
+          "name": "UV",
+          "role": "UV",
+          "default": 0
+        },
+        {
+          "name": "Macro",
+          "role": "Generic",
+          "default": 10
+        },
+        {
+          "name": "Wheel",
+          "role": "ColorWheel",
+          "default": 0
+        },
+        {
+          "name": "Gobo",
+          "role": "Gobo",
+          "default": 5
+        },
+        {
+          "name": "FX",
+          "role": "Effect",
+          "default": 0
+        },
+        {
+          "name": "Tilt",
+          "role": "Tilt",
+          "default": 128
+        },
+        {
+          "name": "Speed",
+          "role": "PanTiltSpeed",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": true
+    },
+    {
+      "id": "custom-white",
+      "manufacturer": "Generic",
+      "model": "White Blinder",
+      "mode": "Default",
+      "beam": "Blinder",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        },
+        {
+          "name": "Strobe",
+          "role": "Strobe",
+          "default": 0
+        }
+      ],
+      "hasColor": false,
+      "hasPanTilt": false
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "par1",
+      "name": "PAR1",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 1,
+      "position": {
+        "x": -3,
+        "y": 5.5,
+        "z": 1,
+        "length": 6.34428877022476
+      },
+      "yaw": -9,
+      "pitch": -47,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "par2",
+      "name": "PAR2",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 5,
+      "position": {
+        "x": -1,
+        "y": 5.5,
+        "z": 1,
+        "length": 5.678908345800274
+      },
+      "yaw": -3,
+      "pitch": -49,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "par3",
+      "name": "PAR3",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 9,
+      "position": {
+        "x": 1,
+        "y": 5.5,
+        "z": 1,
+        "length": 5.678908345800274
+      },
+      "yaw": 3,
+      "pitch": -51,
+      "gelColor": "#FFD080",
+      "extractWhite": false
+    },
+    {
+      "id": "par4",
+      "name": "PAR4",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 13,
+      "position": {
+        "x": 3,
+        "y": 5.5,
+        "z": 1,
+        "length": 6.34428877022476
+      },
+      "yaw": 9,
+      "pitch": -53,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "head1",
+      "name": "HEAD1",
+      "profileId": "builtin-moving-head",
+      "universe": 1,
+      "address": 20,
+      "position": {
+        "x": -4,
+        "y": 6,
+        "z": -2,
+        "length": 7.483314773547883
+      },
+      "yaw": -12,
+      "pitch": -46,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "head2",
+      "name": "HEAD2",
+      "profileId": "builtin-moving-head",
+      "universe": 1,
+      "address": 32,
+      "position": {
+        "x": 0,
+        "y": 6,
+        "z": -2,
+        "length": 6.324555320336759
+      },
+      "yaw": 0,
+      "pitch": -50,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "head3",
+      "name": "HEAD3",
+      "profileId": "builtin-moving-head",
+      "universe": 1,
+      "address": 44,
+      "position": {
+        "x": 4,
+        "y": 6,
+        "z": -2,
+        "length": 7.483314773547883
+      },
+      "yaw": 12,
+      "pitch": -54,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "hex1",
+      "name": "HEX1",
+      "profileId": "builtin-hex-par",
+      "universe": 1,
+      "address": 60,
+      "position": {
+        "x": -2,
+        "y": 0.5,
+        "z": 2,
+        "length": 2.8722813232690143
+      },
+      "yaw": -6,
+      "pitch": -48,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "hex2",
+      "name": "HEX2",
+      "profileId": "builtin-hex-par",
+      "universe": 1,
+      "address": 68,
+      "position": {
+        "x": 2,
+        "y": 0.5,
+        "z": 2,
+        "length": 2.8722813232690143
+      },
+      "yaw": 6,
+      "pitch": -52,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "overlap",
+      "name": "OVERLAP",
+      "profileId": "builtin-rgb-par",
+      "universe": 1,
+      "address": 61,
+      "position": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 2,
+        "length": 2.1213203435596424
+      },
+      "yaw": 1.5,
+      "pitch": -50.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "dimrgb1",
+      "name": "DIMRGB1",
+      "profileId": "builtin-drgb-par",
+      "universe": 1,
+      "address": 80,
+      "position": {
+        "x": 5,
+        "y": 5.5,
+        "z": 1,
+        "length": 7.5
+      },
+      "yaw": 15,
+      "pitch": -55,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "strobe1",
+      "name": "STROBE1",
+      "profileId": "builtin-strobe",
+      "universe": 1,
+      "address": 90,
+      "position": {
+        "x": 0,
+        "y": 7,
+        "z": 1,
+        "length": 7.0710678118654755
+      },
+      "yaw": 0,
+      "pitch": -50,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "dimmer1",
+      "name": "DIMMER1",
+      "profileId": "builtin-dimmer",
+      "universe": 1,
+      "address": 95,
+      "position": {
+        "x": -6,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.200609733428363
+      },
+      "yaw": -18,
+      "pitch": -44,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "dimmer2",
+      "name": "DIMMER2",
+      "profileId": "builtin-dimmer",
+      "universe": 1,
+      "address": 96,
+      "position": {
+        "x": -6,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.200609733428363
+      },
+      "yaw": -18,
+      "pitch": -44,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "custom1",
+      "name": "CUSTOM1",
+      "profileId": "custom-odd",
+      "universe": 1,
+      "address": 100,
+      "position": {
+        "x": 6,
+        "y": 4,
+        "z": 1,
+        "length": 7.280109889280518
+      },
+      "yaw": 18,
+      "pitch": -56,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "bar1",
+      "name": "BAR1",
+      "profileId": "builtin-led-bar",
+      "universe": 2,
+      "address": 1,
+      "position": {
+        "x": -1.5,
+        "y": 0.2,
+        "z": 3,
+        "length": 3.3600595232822883
+      },
+      "yaw": -4.5,
+      "pitch": -48.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "bar2",
+      "name": "BAR2",
+      "profileId": "builtin-led-bar",
+      "universe": 2,
+      "address": 4,
+      "position": {
+        "x": 1.5,
+        "y": 0.2,
+        "z": 3,
+        "length": 3.3600595232822883
+      },
+      "yaw": 4.5,
+      "pitch": -51.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "rgb1",
+      "name": "RGB1",
+      "profileId": "builtin-rgb-par",
+      "universe": 2,
+      "address": 7,
+      "position": {
+        "x": 7,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.958236433584458
+      },
+      "yaw": 21,
+      "pitch": -57,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "edge",
+      "name": "EDGE",
+      "profileId": "builtin-moving-head",
+      "universe": 2,
+      "address": 505,
+      "position": {
+        "x": -7,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.958236433584458
+      },
+      "yaw": -21,
+      "pitch": -43,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "noprofile",
+      "name": "NOPROFILE",
+      "profileId": "nope",
+      "universe": 3,
+      "address": 1,
+      "position": {
+        "x": 0,
+        "y": 5.5,
+        "z": 1,
+        "length": 5.5901699437494745
+      },
+      "yaw": 0,
+      "pitch": -50,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "custom2",
+      "name": "CUSTOM2",
+      "profileId": "custom-odd",
+      "universe": 3,
+      "address": 10,
+      "position": {
+        "x": -5,
+        "y": 5.5,
+        "z": 1,
+        "length": 7.5
+      },
+      "yaw": -15,
+      "pitch": -45,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "white1",
+      "name": "WHITE1",
+      "profileId": "custom-white",
+      "universe": 3,
+      "address": 30,
+      "position": {
+        "x": 2.5,
+        "y": 5.5,
+        "z": 1,
+        "length": 6.123724356957945
+      },
+      "yaw": 7.5,
+      "pitch": -52.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "zero",
+      "name": "ZERO",
+      "profileId": "builtin-rgb-par",
+      "universe": 0,
+      "address": 1,
+      "position": {
+        "x": 8,
+        "y": 5.5,
+        "z": 1,
+        "length": 9.759610647971568
+      },
+      "yaw": 24,
+      "pitch": -58,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "g-pars",
+      "name": "Pars",
+      "color": "#E6A23A",
+      "fixtureIds": [
+        "par1",
+        "par2",
+        "par3",
+        "par4",
+        "ghost"
+      ]
+    },
+    {
+      "id": "g-heads",
+      "name": "Heads",
+      "color": "#3AA0E6",
+      "fixtureIds": [
+        "head1",
+        "head2",
+        "head3"
+      ]
+    },
+    {
+      "id": "g-mixed",
+      "name": "Mixed",
+      "color": "#A03AE6",
+      "fixtureIds": [
+        "hex1",
+        "hex2",
+        "dimrgb1",
+        "custom1",
+        "bar1",
+        "bar2",
+        "rgb1",
+        "edge",
+        "zero",
+        "overlap"
+      ]
+    },
+    {
+      "id": "g-dim",
+      "name": "Dimmers",
+      "color": "#E63A5A",
+      "fixtureIds": [
+        "dimmer1",
+        "dimmer2",
+        "strobe1",
+        "white1",
+        "custom2",
+        "noprofile"
+      ]
+    },
+    {
+      "id": "g-front",
+      "name": "Front two",
+      "color": "#3AE6A0",
+      "fixtureIds": [
+        "par2",
+        "par1"
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "id": "t-top",
+      "name": "Top HTP",
+      "kind": "Light",
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Htp",
+      "order": "CenterOut",
+      "fixtureIds": [
+        "par3"
+      ],
+      "groupIds": [
+        "g-front",
+        "g-pars"
+      ],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "strobe",
+            "color": "#FFEEDD",
+            "rate": 5,
+            "duty": 0.4,
+            "displayName": "Strobe",
+            "swatchColor": "#FFEEDD",
+            "intensity": 0.8
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-strobe",
+          "name": "Strobe",
+          "start": 0,
+          "duration": 6
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "sparkle",
+            "color": "#AACCFF",
+            "rate": 3,
+            "decay": 0.25,
+            "seed": 42,
+            "displayName": "Sparkle",
+            "swatchColor": "#AACCFF",
+            "intensity": 1
+          },
+          "fadeIn": 1,
+          "fadeOut": 2,
+          "fadeEasing": "EaseInOut",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-sparkle",
+          "name": "Sparkle",
+          "start": 6,
+          "duration": 8
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "lightning",
+            "color": "#E8F0FF",
+            "rate": 1.5,
+            "decay": 0.2,
+            "mode": "Scattered",
+            "seed": 5,
+            "displayName": "Lightning",
+            "swatchColor": "#E8F0FF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "Wipe",
+            "duration": 2,
+            "easing": "Linear"
+          },
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-lightning-s",
+          "name": "Lightning scattered",
+          "start": 14,
+          "duration": 8
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "lightning",
+            "color": "#FFFFFF",
+            "rate": 1,
+            "decay": 0.12,
+            "mode": "Together",
+            "seed": 11,
+            "displayName": "Lightning",
+            "swatchColor": "#FFFFFF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "DipToBlack",
+            "duration": 3,
+            "easing": "EaseIn"
+          },
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-lightning-t",
+          "name": "Lightning together",
+          "start": 22,
+          "duration": 8
+        }
+      ]
+    },
+    {
+      "id": "t-add",
+      "name": "Adder",
+      "kind": "Light",
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Add",
+      "order": "RightToLeft",
+      "fixtureIds": [],
+      "groupIds": [
+        "g-mixed"
+      ],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "fire",
+            "ember": "#B31200",
+            "flame": "#FFB238",
+            "rate": 6,
+            "minimum": 0.2,
+            "seed": 9,
+            "displayName": "Fire",
+            "swatchColor": "#FFB238",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-fire",
+          "name": "Fire",
+          "start": 0,
+          "duration": 10
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "hit",
+            "color": "#FF00FF",
+            "decay": 0.3,
+            "interval": 0.5,
+            "offset": 0.1,
+            "displayName": "Hit",
+            "swatchColor": "#FF00FF",
+            "intensity": 1
+          },
+          "fadeIn": 0.5,
+          "fadeOut": 0,
+          "fadeEasing": "EaseOut",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-hit",
+          "name": "Hit",
+          "start": 5,
+          "duration": 4
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "gradient",
+            "colors": [
+              "#FF2A6D",
+              "#05D9E8",
+              "#F9F871"
+            ],
+            "repeat": 2,
+            "speed": 0.3,
+            "displayName": "Gradient",
+            "swatchColor": "#FF2A6D",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "Crossfade",
+            "duration": 2,
+            "easing": "Linear"
+          },
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-gradient",
+          "name": "Gradient",
+          "start": 10,
+          "duration": 10
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "wave",
+            "color": "#00E5FF",
+            "base": "#3A00FF",
+            "rate": 0.7,
+            "wavelength": 3,
+            "wave": "Triangle",
+            "displayName": "Color Wave",
+            "swatchColor": "#00E5FF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "Crossfade",
+            "duration": 1.5,
+            "easing": "EaseOut"
+          },
+          "automation": [
+            {
+              "id": "a-hue",
+              "target": "HueShift",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "EaseInOut"
+                },
+                {
+                  "time": 10,
+                  "value": 2.5,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-sat",
+              "target": "Saturation",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "EaseIn"
+                },
+                {
+                  "time": 5,
+                  "value": 0.2,
+                  "easing": "EaseOut"
+                },
+                {
+                  "time": 10,
+                  "value": 1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 1
+            },
+            {
+              "id": "a-gobo",
+              "target": "Role",
+              "role": "Gobo",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.1,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 10,
+                  "value": 0.9,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-wheel",
+              "target": "Role",
+              "role": "ColorWheel",
+              "channel": 1,
+              "enabled": true,
+              "animated": false,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.33,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 5,
+                  "value": 0.9,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            }
+          ],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-wave",
+          "name": "Wave",
+          "start": 20,
+          "duration": 10
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "heartbeat",
+            "color": "#FF1744",
+            "rate": 1.4,
+            "minimum": 0.1,
+            "phase": 0.15,
+            "displayName": "Heartbeat",
+            "swatchColor": "#FF1744",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-heart",
+          "name": "Heartbeat",
+          "start": 30,
+          "duration": 8
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "cycle",
+            "colors": [],
+            "stepTime": 1,
+            "fadeRatio": 0.5,
+            "fixtureOffset": 0,
+            "displayName": "Color Cycle",
+            "swatchColor": "#FFFFFF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-empty-cycle",
+          "name": "Empty cycle",
+          "start": 31,
+          "duration": 3
+        }
+      ]
+    },
+    {
+      "id": "t-heads",
+      "name": "Heads",
+      "kind": "Light",
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Normal",
+      "order": "LeftToRight",
+      "fixtureIds": [],
+      "groupIds": [
+        "g-heads"
+      ],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "chase",
+            "colors": [
+              "#FF0000",
+              "#00FF00",
+              "#0000FF"
+            ],
+            "stepTime": 0.3,
+            "tail": 2,
+            "direction": "Bounce",
+            "background": 0.05,
+            "displayName": "Chase",
+            "swatchColor": "#FF0000",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 1,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [
+            {
+              "id": "a-pan",
+              "target": "Role",
+              "role": "Pan",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.1,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 2,
+                  "value": 0.9,
+                  "easing": "Hold"
+                },
+                {
+                  "time": 4,
+                  "value": 0.3,
+                  "easing": "EaseIn"
+                },
+                {
+                  "time": 6,
+                  "value": 0.7,
+                  "easing": "EaseOut"
+                },
+                {
+                  "time": 8,
+                  "value": 0.2,
+                  "easing": "EaseInOut"
+                },
+                {
+                  "time": 12,
+                  "value": 0.6,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-tilt",
+              "target": "Role",
+              "role": "Tilt",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.2,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 12,
+                  "value": 0.8,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-panfine",
+              "target": "Role",
+              "role": "PanFine",
+              "channel": 1,
+              "enabled": true,
+              "animated": false,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.4,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-zoom",
+              "target": "Role",
+              "role": "Zoom",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 12,
+                  "value": 1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-ch5",
+              "target": "Channel",
+              "role": "Strobe",
+              "channel": 5,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 12,
+                  "value": 0,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-ch99",
+              "target": "Channel",
+              "role": "Strobe",
+              "channel": 99,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-ch0",
+              "target": "Channel",
+              "role": "Strobe",
+              "channel": 0,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.5,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-strobe-off",
+              "target": "Role",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": false,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            }
+          ],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-chase-bounce",
+          "name": "Chase bounce",
+          "start": 0,
+          "duration": 12
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "chase",
+            "colors": [
+              "#FFFFFF",
+              "#FF8800"
+            ],
+            "stepTime": 0.4,
+            "tail": 0,
+            "direction": "Backward",
+            "background": 0,
+            "displayName": "Chase",
+            "swatchColor": "#FFFFFF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "Crossfade",
+            "duration": 2,
+            "easing": "EaseInOut"
+          },
+          "automation": [
+            {
+              "id": "a-pan2",
+              "target": "Role",
+              "role": "Pan",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.5,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 12,
+                  "value": 0.1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-strobe",
+              "target": "Role",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.2,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 6,
+                  "value": 0.6,
+                  "easing": "Hold"
+                },
+                {
+                  "time": 12,
+                  "value": 0,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            }
+          ],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-chase-back",
+          "name": "Chase back",
+          "start": 12,
+          "duration": 12
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "cycle",
+            "colors": [
+              "#FF0000",
+              "#FFFF00",
+              "#00FFFF",
+              "#FF00FF"
+            ],
+            "stepTime": 0.75,
+            "fadeRatio": 0.3,
+            "fixtureOffset": 0.5,
+            "displayName": "Color Cycle",
+            "swatchColor": "#FF0000",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "Crossfade",
+            "duration": 1,
+            "easing": "Hold"
+          },
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-cycle",
+          "name": "Cycle",
+          "start": 24,
+          "duration": 10
+        }
+      ]
+    },
+    {
+      "id": "t-washes",
+      "name": "Washes",
+      "kind": "Light",
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Normal",
+      "order": "OutsideIn",
+      "fixtureIds": [
+        "hex1"
+      ],
+      "groupIds": [
+        "g-pars",
+        "g-dim"
+      ],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "solid",
+            "color": "#FF8C3A",
+            "displayName": "Solid Color",
+            "swatchColor": "#FF8C3A",
+            "intensity": 0.9
+          },
+          "fadeIn": 1.5,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [
+            {
+              "id": "a-white",
+              "target": "White",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 5,
+                  "value": 0.8,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-red",
+              "target": "Red",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.2,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 5,
+                  "value": 1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-green",
+              "target": "Green",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 1,
+                  "value": 0.5,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-blue",
+              "target": "Blue",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": false,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.3,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 5,
+                  "value": 1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-none",
+              "target": "Intensity",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [],
+              "defaultValue": 1
+            },
+            {
+              "id": "a-dimmer",
+              "target": "Role",
+              "role": "Dimmer",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 2,
+                  "value": 0.25,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 4,
+                  "value": 0.75,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            }
+          ],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-solid",
+          "name": "Solid",
+          "start": 0,
+          "duration": 5
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "fade",
+            "from": "#00FF00",
+            "to": "#FF00FF",
+            "offset": 0.3,
+            "easing": "EaseIn",
+            "displayName": "Color Fade",
+            "swatchColor": "#00FF00",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 1,
+          "effectSpan": 12,
+          "id": "c-fade",
+          "name": "Fade",
+          "start": 5,
+          "duration": 10
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "rainbow",
+            "speed": 0.3,
+            "spread": 0.8,
+            "saturation": 0.7,
+            "startHue": 0.1,
+            "displayName": "Rainbow",
+            "swatchColor": "#FF00FF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 3,
+          "fadeEasing": "EaseIn",
+          "transitionIn": null,
+          "automation": [
+            {
+              "id": "a-int",
+              "target": "Intensity",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 5,
+                  "value": 0.3,
+                  "easing": "EaseInOut"
+                },
+                {
+                  "time": 10,
+                  "value": 1.4,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 1
+            },
+            {
+              "id": "a-op",
+              "target": "Opacity",
+              "role": "Strobe",
+              "channel": 1,
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 10,
+                  "value": 0.4,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 1
+            }
+          ],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-rainbow",
+          "name": "Rainbow",
+          "start": 15,
+          "duration": 10
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "pulse",
+            "color": "#33FF99",
+            "rate": 1.5,
+            "minimum": 0.2,
+            "wave": "Square",
+            "phase": 0.2,
+            "displayName": "Pulse",
+            "swatchColor": "#33FF99",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-pulse",
+          "name": "Pulse",
+          "start": 25,
+          "duration": 10
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "pulse",
+            "color": "#9933FF",
+            "rate": 2,
+            "minimum": 0,
+            "wave": "Saw",
+            "phase": 0,
+            "displayName": "Pulse",
+            "swatchColor": "#9933FF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": {
+            "kind": "Wipe",
+            "duration": 1,
+            "easing": "EaseOut"
+          },
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-pulse-saw",
+          "name": "Pulse saw",
+          "start": 35,
+          "duration": 5
+        }
+      ]
+    },
+    {
+      "id": "t-muted",
+      "name": "Muted",
+      "kind": "Light",
+      "muted": true,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Normal",
+      "order": "AsListed",
+      "fixtureIds": [
+        "par1"
+      ],
+      "groupIds": [],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "solid",
+            "color": "#FF0000",
+            "displayName": "Solid Color",
+            "swatchColor": "#FF0000",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-muted",
+          "name": "Muted red",
+          "start": 0,
+          "duration": 40
+        }
+      ]
+    },
+    {
+      "id": "t-bottom",
+      "name": "Bottom",
+      "kind": "Light",
+      "muted": false,
+      "solo": false,
+      "locked": true,
+      "expanded": true,
+      "blend": "Normal",
+      "order": "AsListed",
+      "fixtureIds": [
+        "dimmer2",
+        "dimmer1",
+        "strobe1",
+        "white1",
+        "custom2",
+        "noprofile",
+        "ghost",
+        "dimmer2",
+        "custom1",
+        "rgb1"
+      ],
+      "groupIds": [],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "solid",
+            "color": "#405060",
+            "displayName": "Solid Color",
+            "swatchColor": "#405060",
+            "intensity": 0.6
+          },
+          "fadeIn": 3,
+          "fadeOut": 0,
+          "fadeEasing": "EaseOut",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-base",
+          "name": "Base",
+          "start": 0,
+          "duration": 40
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "chase",
+            "colors": [],
+            "stepTime": 0.5,
+            "tail": 1,
+            "direction": "Forward",
+            "background": 0,
+            "displayName": "Chase",
+            "swatchColor": "#FFFFFF",
+            "intensity": 1
+          },
+          "fadeIn": 1,
+          "fadeOut": 1,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-empty-chase",
+          "name": "Empty chase",
+          "start": 8,
+          "duration": 6
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "chase",
+            "colors": [
+              "#FFAA00"
+            ],
+            "stepTime": 0.2,
+            "tail": 3,
+            "direction": "Forward",
+            "background": 0,
+            "displayName": "Chase",
+            "swatchColor": "#FFAA00",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-forward",
+          "name": "Forward chase",
+          "start": 20,
+          "duration": 8
+        }
+      ]
+    },
+    {
+      "id": "t-empty",
+      "name": "No targets",
+      "kind": "Light",
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Normal",
+      "order": "AsListed",
+      "fixtureIds": [],
+      "groupIds": [],
+      "clips": [
+        {
+          "kind": "light",
+          "effect": {
+            "type": "solid",
+            "color": "#FFFFFF",
+            "displayName": "Solid Color",
+            "swatchColor": "#FFFFFF",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-orphan",
+          "name": "Orphan",
+          "start": 0,
+          "duration": 10
+        }
+      ]
+    },
+    {
+      "id": "t-audio",
+      "name": "Audio",
+      "kind": "Audio",
+      "muted": false,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Normal",
+      "order": "AsListed",
+      "fixtureIds": [],
+      "groupIds": [],
+      "clips": [
+        {
+          "kind": "media",
+          "path": "media/song.mp3",
+          "mediaOffset": 0.5,
+          "sourceDuration": 200,
+          "volume": 0.8,
+          "id": "m-song",
+          "name": "Song",
+          "start": 0,
+          "duration": 38
+        }
+      ]
+    },
+    {
+      "id": "t-video",
+      "name": "Video",
+      "kind": "Video",
+      "muted": true,
+      "solo": false,
+      "locked": false,
+      "expanded": false,
+      "blend": "Normal",
+      "order": "AsListed",
+      "fixtureIds": [],
+      "groupIds": [],
+      "clips": [
+        {
+          "kind": "media",
+          "path": "media/loop.mp4",
+          "mediaOffset": 0,
+          "sourceDuration": null,
+          "volume": 1,
+          "id": "m-clip",
+          "name": "Clip",
+          "start": 4,
+          "duration": 20
+        }
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "id": "mk-drop",
+      "time": 14,
+      "label": "Drop"
+    },
+    {
+      "id": "mk-end",
+      "time": 30,
+      "label": "Outro"
+    }
+  ],
+  "allClips": [
+    {
+      "kind": "light",
+      "effect": {
+        "type": "strobe",
+        "color": "#FFEEDD",
+        "rate": 5,
+        "duty": 0.4,
+        "displayName": "Strobe",
+        "swatchColor": "#FFEEDD",
+        "intensity": 0.8
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-strobe",
+      "name": "Strobe",
+      "start": 0,
+      "duration": 6
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "sparkle",
+        "color": "#AACCFF",
+        "rate": 3,
+        "decay": 0.25,
+        "seed": 42,
+        "displayName": "Sparkle",
+        "swatchColor": "#AACCFF",
+        "intensity": 1
+      },
+      "fadeIn": 1,
+      "fadeOut": 2,
+      "fadeEasing": "EaseInOut",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-sparkle",
+      "name": "Sparkle",
+      "start": 6,
+      "duration": 8
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "lightning",
+        "color": "#E8F0FF",
+        "rate": 1.5,
+        "decay": 0.2,
+        "mode": "Scattered",
+        "seed": 5,
+        "displayName": "Lightning",
+        "swatchColor": "#E8F0FF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "Wipe",
+        "duration": 2,
+        "easing": "Linear"
+      },
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-lightning-s",
+      "name": "Lightning scattered",
+      "start": 14,
+      "duration": 8
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "lightning",
+        "color": "#FFFFFF",
+        "rate": 1,
+        "decay": 0.12,
+        "mode": "Together",
+        "seed": 11,
+        "displayName": "Lightning",
+        "swatchColor": "#FFFFFF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "DipToBlack",
+        "duration": 3,
+        "easing": "EaseIn"
+      },
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-lightning-t",
+      "name": "Lightning together",
+      "start": 22,
+      "duration": 8
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "fire",
+        "ember": "#B31200",
+        "flame": "#FFB238",
+        "rate": 6,
+        "minimum": 0.2,
+        "seed": 9,
+        "displayName": "Fire",
+        "swatchColor": "#FFB238",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-fire",
+      "name": "Fire",
+      "start": 0,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "hit",
+        "color": "#FF00FF",
+        "decay": 0.3,
+        "interval": 0.5,
+        "offset": 0.1,
+        "displayName": "Hit",
+        "swatchColor": "#FF00FF",
+        "intensity": 1
+      },
+      "fadeIn": 0.5,
+      "fadeOut": 0,
+      "fadeEasing": "EaseOut",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-hit",
+      "name": "Hit",
+      "start": 5,
+      "duration": 4
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "gradient",
+        "colors": [
+          "#FF2A6D",
+          "#05D9E8",
+          "#F9F871"
+        ],
+        "repeat": 2,
+        "speed": 0.3,
+        "displayName": "Gradient",
+        "swatchColor": "#FF2A6D",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "Crossfade",
+        "duration": 2,
+        "easing": "Linear"
+      },
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-gradient",
+      "name": "Gradient",
+      "start": 10,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "wave",
+        "color": "#00E5FF",
+        "base": "#3A00FF",
+        "rate": 0.7,
+        "wavelength": 3,
+        "wave": "Triangle",
+        "displayName": "Color Wave",
+        "swatchColor": "#00E5FF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "Crossfade",
+        "duration": 1.5,
+        "easing": "EaseOut"
+      },
+      "automation": [
+        {
+          "id": "a-hue",
+          "target": "HueShift",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0,
+              "easing": "EaseInOut"
+            },
+            {
+              "time": 10,
+              "value": 2.5,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-sat",
+          "target": "Saturation",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "EaseIn"
+            },
+            {
+              "time": 5,
+              "value": 0.2,
+              "easing": "EaseOut"
+            },
+            {
+              "time": 10,
+              "value": 1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 1
+        },
+        {
+          "id": "a-gobo",
+          "target": "Role",
+          "role": "Gobo",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.1,
+              "easing": "Linear"
+            },
+            {
+              "time": 10,
+              "value": 0.9,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-wheel",
+          "target": "Role",
+          "role": "ColorWheel",
+          "channel": 1,
+          "enabled": true,
+          "animated": false,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.33,
+              "easing": "Linear"
+            },
+            {
+              "time": 5,
+              "value": 0.9,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        }
+      ],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-wave",
+      "name": "Wave",
+      "start": 20,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "heartbeat",
+        "color": "#FF1744",
+        "rate": 1.4,
+        "minimum": 0.1,
+        "phase": 0.15,
+        "displayName": "Heartbeat",
+        "swatchColor": "#FF1744",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-heart",
+      "name": "Heartbeat",
+      "start": 30,
+      "duration": 8
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "cycle",
+        "colors": [],
+        "stepTime": 1,
+        "fadeRatio": 0.5,
+        "fixtureOffset": 0,
+        "displayName": "Color Cycle",
+        "swatchColor": "#FFFFFF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-empty-cycle",
+      "name": "Empty cycle",
+      "start": 31,
+      "duration": 3
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "chase",
+        "colors": [
+          "#FF0000",
+          "#00FF00",
+          "#0000FF"
+        ],
+        "stepTime": 0.3,
+        "tail": 2,
+        "direction": "Bounce",
+        "background": 0.05,
+        "displayName": "Chase",
+        "swatchColor": "#FF0000",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 1,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [
+        {
+          "id": "a-pan",
+          "target": "Role",
+          "role": "Pan",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.1,
+              "easing": "Linear"
+            },
+            {
+              "time": 2,
+              "value": 0.9,
+              "easing": "Hold"
+            },
+            {
+              "time": 4,
+              "value": 0.3,
+              "easing": "EaseIn"
+            },
+            {
+              "time": 6,
+              "value": 0.7,
+              "easing": "EaseOut"
+            },
+            {
+              "time": 8,
+              "value": 0.2,
+              "easing": "EaseInOut"
+            },
+            {
+              "time": 12,
+              "value": 0.6,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-tilt",
+          "target": "Role",
+          "role": "Tilt",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.2,
+              "easing": "Linear"
+            },
+            {
+              "time": 12,
+              "value": 0.8,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-panfine",
+          "target": "Role",
+          "role": "PanFine",
+          "channel": 1,
+          "enabled": true,
+          "animated": false,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.4,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-zoom",
+          "target": "Role",
+          "role": "Zoom",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0,
+              "easing": "Linear"
+            },
+            {
+              "time": 12,
+              "value": 1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-ch5",
+          "target": "Channel",
+          "role": "Strobe",
+          "channel": 5,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "Linear"
+            },
+            {
+              "time": 12,
+              "value": 0,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-ch99",
+          "target": "Channel",
+          "role": "Strobe",
+          "channel": 99,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-ch0",
+          "target": "Channel",
+          "role": "Strobe",
+          "channel": 0,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.5,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-strobe-off",
+          "target": "Role",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": false,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        }
+      ],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-chase-bounce",
+      "name": "Chase bounce",
+      "start": 0,
+      "duration": 12
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "chase",
+        "colors": [
+          "#FFFFFF",
+          "#FF8800"
+        ],
+        "stepTime": 0.4,
+        "tail": 0,
+        "direction": "Backward",
+        "background": 0,
+        "displayName": "Chase",
+        "swatchColor": "#FFFFFF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "Crossfade",
+        "duration": 2,
+        "easing": "EaseInOut"
+      },
+      "automation": [
+        {
+          "id": "a-pan2",
+          "target": "Role",
+          "role": "Pan",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.5,
+              "easing": "Linear"
+            },
+            {
+              "time": 12,
+              "value": 0.1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-strobe",
+          "target": "Role",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.2,
+              "easing": "Linear"
+            },
+            {
+              "time": 6,
+              "value": 0.6,
+              "easing": "Hold"
+            },
+            {
+              "time": 12,
+              "value": 0,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        }
+      ],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-chase-back",
+      "name": "Chase back",
+      "start": 12,
+      "duration": 12
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "cycle",
+        "colors": [
+          "#FF0000",
+          "#FFFF00",
+          "#00FFFF",
+          "#FF00FF"
+        ],
+        "stepTime": 0.75,
+        "fadeRatio": 0.3,
+        "fixtureOffset": 0.5,
+        "displayName": "Color Cycle",
+        "swatchColor": "#FF0000",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "Crossfade",
+        "duration": 1,
+        "easing": "Hold"
+      },
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-cycle",
+      "name": "Cycle",
+      "start": 24,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "solid",
+        "color": "#FF8C3A",
+        "displayName": "Solid Color",
+        "swatchColor": "#FF8C3A",
+        "intensity": 0.9
+      },
+      "fadeIn": 1.5,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [
+        {
+          "id": "a-white",
+          "target": "White",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0,
+              "easing": "Linear"
+            },
+            {
+              "time": 5,
+              "value": 0.8,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-red",
+          "target": "Red",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.2,
+              "easing": "Linear"
+            },
+            {
+              "time": 5,
+              "value": 1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-green",
+          "target": "Green",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 1,
+              "value": 0.5,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-blue",
+          "target": "Blue",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": false,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.3,
+              "easing": "Linear"
+            },
+            {
+              "time": 5,
+              "value": 1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-none",
+          "target": "Intensity",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [],
+          "defaultValue": 1
+        },
+        {
+          "id": "a-dimmer",
+          "target": "Role",
+          "role": "Dimmer",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 2,
+              "value": 0.25,
+              "easing": "Linear"
+            },
+            {
+              "time": 4,
+              "value": 0.75,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        }
+      ],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-solid",
+      "name": "Solid",
+      "start": 0,
+      "duration": 5
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "fade",
+        "from": "#00FF00",
+        "to": "#FF00FF",
+        "offset": 0.3,
+        "easing": "EaseIn",
+        "displayName": "Color Fade",
+        "swatchColor": "#00FF00",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 1,
+      "effectSpan": 12,
+      "id": "c-fade",
+      "name": "Fade",
+      "start": 5,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "rainbow",
+        "speed": 0.3,
+        "spread": 0.8,
+        "saturation": 0.7,
+        "startHue": 0.1,
+        "displayName": "Rainbow",
+        "swatchColor": "#FF00FF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 3,
+      "fadeEasing": "EaseIn",
+      "transitionIn": null,
+      "automation": [
+        {
+          "id": "a-int",
+          "target": "Intensity",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "Linear"
+            },
+            {
+              "time": 5,
+              "value": 0.3,
+              "easing": "EaseInOut"
+            },
+            {
+              "time": 10,
+              "value": 1.4,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 1
+        },
+        {
+          "id": "a-op",
+          "target": "Opacity",
+          "role": "Strobe",
+          "channel": 1,
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "Linear"
+            },
+            {
+              "time": 10,
+              "value": 0.4,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 1
+        }
+      ],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-rainbow",
+      "name": "Rainbow",
+      "start": 15,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "pulse",
+        "color": "#33FF99",
+        "rate": 1.5,
+        "minimum": 0.2,
+        "wave": "Square",
+        "phase": 0.2,
+        "displayName": "Pulse",
+        "swatchColor": "#33FF99",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-pulse",
+      "name": "Pulse",
+      "start": 25,
+      "duration": 10
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "pulse",
+        "color": "#9933FF",
+        "rate": 2,
+        "minimum": 0,
+        "wave": "Saw",
+        "phase": 0,
+        "displayName": "Pulse",
+        "swatchColor": "#9933FF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": {
+        "kind": "Wipe",
+        "duration": 1,
+        "easing": "EaseOut"
+      },
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-pulse-saw",
+      "name": "Pulse saw",
+      "start": 35,
+      "duration": 5
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "solid",
+        "color": "#FF0000",
+        "displayName": "Solid Color",
+        "swatchColor": "#FF0000",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-muted",
+      "name": "Muted red",
+      "start": 0,
+      "duration": 40
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "solid",
+        "color": "#405060",
+        "displayName": "Solid Color",
+        "swatchColor": "#405060",
+        "intensity": 0.6
+      },
+      "fadeIn": 3,
+      "fadeOut": 0,
+      "fadeEasing": "EaseOut",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-base",
+      "name": "Base",
+      "start": 0,
+      "duration": 40
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "chase",
+        "colors": [],
+        "stepTime": 0.5,
+        "tail": 1,
+        "direction": "Forward",
+        "background": 0,
+        "displayName": "Chase",
+        "swatchColor": "#FFFFFF",
+        "intensity": 1
+      },
+      "fadeIn": 1,
+      "fadeOut": 1,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-empty-chase",
+      "name": "Empty chase",
+      "start": 8,
+      "duration": 6
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "chase",
+        "colors": [
+          "#FFAA00"
+        ],
+        "stepTime": 0.2,
+        "tail": 3,
+        "direction": "Forward",
+        "background": 0,
+        "displayName": "Chase",
+        "swatchColor": "#FFAA00",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-forward",
+      "name": "Forward chase",
+      "start": 20,
+      "duration": 8
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "solid",
+        "color": "#FFFFFF",
+        "displayName": "Solid Color",
+        "swatchColor": "#FFFFFF",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-orphan",
+      "name": "Orphan",
+      "start": 0,
+      "duration": 10
+    },
+    {
+      "kind": "media",
+      "path": "media/song.mp3",
+      "mediaOffset": 0.5,
+      "sourceDuration": 200,
+      "volume": 0.8,
+      "id": "m-song",
+      "name": "Song",
+      "start": 0,
+      "duration": 38
+    },
+    {
+      "kind": "media",
+      "path": "media/loop.mp4",
+      "mediaOffset": 0,
+      "sourceDuration": null,
+      "volume": 1,
+      "id": "m-clip",
+      "name": "Clip",
+      "start": 4,
+      "duration": 20
+    }
+  ],
+  "contentEnd": 40
+}

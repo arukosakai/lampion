@@ -1,11 +1,14 @@
 using Avalonia.Media;
-using Lampion.Core.Model;
+using Lampion.Core.Model.Rig;
 
 namespace Lampion.App.Views;
 
 /// <summary>How each channel role is shown in the UI: a colour for its chip and a readable name.</summary>
 internal static class ChannelRoleStyle
 {
+    private static readonly IBrush[] RoleBrushes = BuildBrushes();
+
+    /// <summary>The chip colour for <paramref name="role"/>; unknown roles are grey.</summary>
     public static Color ColorOf(ChannelRole role) =>
         role switch
         {
@@ -27,8 +30,14 @@ internal static class ChannelRoleStyle
             _ => Color.FromRgb(0x8A, 0x8A, 0x8A),
         };
 
-    public static IBrush BrushOf(ChannelRole role) => new SolidColorBrush(ColorOf(role));
+    /// <summary>A brush of <see cref="ColorOf"/>. Shared per role, so don't mutate it.</summary>
+    public static IBrush BrushOf(ChannelRole role)
+    {
+        var index = (int)role;
+        return (uint)index < (uint)RoleBrushes.Length ? RoleBrushes[index] : new SolidColorBrush(ColorOf(role));
+    }
 
+    /// <summary>The role's name as shown in lists and tooltips, e.g. "Pan/tilt speed".</summary>
     public static string NameOf(ChannelRole role) =>
         role switch
         {
@@ -44,4 +53,13 @@ internal static class ChannelRoleStyle
 
     /// <summary>A sensible name for a fresh channel of this role, so picking a role can fill the name in.</summary>
     public static string DefaultName(ChannelRole role) => role == ChannelRole.Generic ? "Channel" : NameOf(role);
+
+    private static IBrush[] BuildBrushes()
+    {
+        var roles = Enum.GetValues<ChannelRole>();
+        var brushes = new IBrush[roles.Max(r => (int)r) + 1];
+        for (var i = 0; i < brushes.Length; i++)
+            brushes[i] = new SolidColorBrush(ColorOf((ChannelRole)i));
+        return brushes;
+    }
 }

@@ -1,31 +1,29 @@
 using System.Text.Json;
 using Lampion.Core.Model;
+using Lampion.Core.Model.Timeline;
 
 namespace Lampion.Core.Persistence;
 
+/// <summary>Reads and writes <c>.lampion</c> project files. Thread-safe; file methods do blocking I/O.</summary>
 public static class ProjectSerializer
 {
+    /// <summary>File extension, including the dot.</summary>
     public const string Extension = ".lampion";
 
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        AllowOutOfOrderMetadataProperties = true,
-    };
+    /// <summary>The project as JSON, indented for files or compact for undo snapshots and deep copies.</summary>
+    public static string Serialize(Project project, bool indented = true) => JsonSerializer.Serialize(project, indented ? LampionJson.Indented : LampionJson.Compact);
 
-    private static readonly JsonSerializerOptions Compact = new(Options) { WriteIndented = false };
-
-    public static string Serialize(Project project, bool indented = true) => JsonSerializer.Serialize(project, indented ? Options : Compact);
-
+    /// <summary>A project from JSON, with clips and keys sorted (see <see cref="Normalize"/>).</summary>
+    /// <exception cref="JsonException">The text is not a project.</exception>
+    /// <exception cref="InvalidDataException">The text is empty or damaged.</exception>
     public static Project Deserialize(string json)
     {
-        var project = JsonSerializer.Deserialize<Project>(json, Options) ?? throw new InvalidDataException("The project file is empty.");
+        var project = LampionJson.Read<Project>(json, "The project file is empty.");
         Normalize(project);
         return project;
     }
 
-    /// <summary>Saves with media paths relative to the project file, so a show folder can be moved as a whole.</summary>
+    /// <summary>Saves with media paths relative to the project file, so a show folder can be moved as a whole. Writes a temp file first, then replaces.</summary>
     public static void Save(Project project, string path)
     {
         var directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
@@ -37,6 +35,10 @@ public static class ProjectSerializer
         File.Move(temp, path, overwrite: true);
     }
 
+    /// <summary>Loads a project, resolving relative media paths against the file's folder.</summary>
+    /// <exception cref="IOException">The file can't be read.</exception>
+    /// <exception cref="JsonException">The file is not a project.</exception>
+    /// <exception cref="InvalidDataException">The file is empty or damaged.</exception>
     public static Project Load(string path)
     {
         var project = Deserialize(File.ReadAllText(path));
@@ -55,7 +57,7 @@ public static class ProjectSerializer
         return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative.Replace('\\', '/');
     }
 
-    /// <summary>Restores invariants the editor relies on (sorted clips and keys) after loading.</summary>
+    /// <summary>Restores invariants the editor relies on (clips sorted by start, keys by time) after loading.</summary>
     public static void Normalize(Project project)
     {
         foreach (var track in project.Tracks)

@@ -1,4 +1,6 @@
-using Lampion.Core.Model;
+using Lampion.Core.Model.Animation;
+using Lampion.Core.Model.Effects;
+using Lampion.Core.Model.Timeline;
 using Lampion.Core.Persistence;
 
 namespace Lampion.Core.Tests;
@@ -8,9 +10,9 @@ public class EffectTests
     [Fact]
     public void EveryCatalogEntryCreatesItsOwnKindAndSurvivesJson()
     {
-        foreach (var (kind, name, _) in Effect.Catalog)
+        foreach (var (kind, name, _) in EffectCatalog.Entries)
         {
-            var effect = Effect.Create(kind);
+            var effect = EffectCatalog.Create(kind);
             Assert.Equal(name, effect.DisplayName);
             Assert.Equal(kind, effect.Kind);
 
@@ -25,7 +27,7 @@ public class EffectTests
     {
         foreach (var kind in new[] { "gradient", "wave", "fire", "lightning", "heartbeat", "hit" })
         {
-            var effect = Effect.Create(kind);
+            var effect = EffectCatalog.Create(kind);
             for (var t = 0.0; t < 20; t += 0.037)
                 for (var i = 0; i < 6; i++)
                 {
@@ -75,7 +77,7 @@ public class EffectTests
             FadeIn = 1,
             FadeEasing = Easing.EaseOut,
             Effect = new ChaseEffect { Colors = ["#00FF00", "#FF00FF"], StepTime = 0.1 },
-            Automation = [new AutomationLane { Target = AutomationTarget.HueShift, Animated = true, Keys = [new Keyframe { Time = 0 }, new Keyframe { Time = 6, Value = 1 }] }],
+            Automation = { new AutomationLane { Target = AutomationTarget.HueShift, Animated = true, Keys = { new Keyframe { Time = 0 }, new Keyframe { Time = 6, Value = 1 } } } },
         };
         var preset = EffectPreset.Deserialize(EffectPreset.Serialize(EffectPreset.From(source, "Neon chase")));
 

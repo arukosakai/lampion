@@ -2,78 +2,87 @@ using Lampion.Core.Model;
 
 namespace Lampion.Core.Engine;
 
-/// <summary>Full DMX output at one instant: 512 channels per used universe (keys are 1-based).</summary>
-public sealed class DmxFrame
+/// <summary>
+/// Renders the show to DMX: evaluates every fixture and maps it onto its profile's channels. Owns its
+/// evaluator and output buffers and allocates nothing in steady state. Not thread-safe: use one per thread.
+/// </summary>
+public sealed class ShowRenderer
 {
-    public SortedDictionary<int, byte[]> Universes { get; } = [];
+    private readonly ShowEvaluator _evaluator;
+    private readonly DmxFrame _frame = new();
+    private readonly FixtureFrame _fixtures = new();
+    private byte[] _scratch = new byte[DmxFrame.UniverseSize];
 
-    public byte[] Universe(int number)
-    {
-        if (!Universes.TryGetValue(number, out var data))
-            Universes[number] = data = new byte[512];
-        return data;
-    }
+    /// <summary>A renderer for <paramref name="project"/>.</summary>
+    public ShowRenderer(Project project) => _evaluator = new ShowEvaluator(project);
 
-    /// <summary>The fixture's channels as they ended up in the frame (overlapping fixtures included).</summary>
-    public ReadOnlySpan<byte> Slice(Fixture fixture, int channelCount)
-    {
-        if (!Universes.TryGetValue(fixture.Universe, out var data))
-            return ReadOnlySpan<byte>.Empty;
-        var start = Math.Clamp(fixture.Address - 1, 0, 512);
-        return data.AsSpan(start, Math.Clamp(channelCount, 0, 512 - start));
-    }
-
-    /// <summary>A copy with <paramref name="values"/> written over each fixture's channels; this frame is untouched.</summary>
-    public DmxFrame With(IEnumerable<Fixture> fixtures, ReadOnlySpan<byte> values)
-    {
-        var copy = new DmxFrame();
-        foreach (var (universe, data) in Universes)
-            copy.Universes[universe] = (byte[])data.Clone();
-        foreach (var fixture in fixtures)
-        {
-            var start = Math.Clamp(fixture.Address - 1, 0, 512);
-            var count = Math.Min(values.Length, 512 - start);
-            values[..count].CopyTo(copy.Universe(fixture.Universe).AsSpan(start, count));
-        }
-        return copy;
-    }
-}
-
-public sealed class ShowRenderer(Project project)
-{
-    private readonly ShowEvaluator _evaluator = new(project);
-
+    /// <summary>The rendered project.</summary>
     public Project Project => _evaluator.Project;
 
+    /// <summary>
+    /// The DMX output at <paramref name="time"/> seconds, in a frame this renderer owns and reuses: the same
+    /// instance comes back every call, overwritten. Copy it (<see cref="DmxFrame.CopyTo"/>) to keep a result.
+    /// </summary>
     public DmxFrame Render(double time)
     {
-        var frame = new DmxFrame();
-        var states = _evaluator.Evaluate(time);
-        foreach (var fixture in Project.Fixtures)
-        {
-            var profile = Project.ProfileOf(fixture);
-            if (profile is null)
-                continue;
-            var universe = frame.Universe(fixture.Universe);
-            var values = DmxMapper.Map(fixture, profile, states[fixture.Id]);
-            for (var i = 0; i < values.Length; i++)
-            {
-                var address = fixture.Address - 1 + i;
-                if (address is >= 0 and < 512)
-                    universe[address] = values[i];
-            }
-        }
-        return frame;
+        Render(time, _frame);
+        return _frame;
     }
 
-    /// <summary>Per-fixture channel values without going through universes, keyed by fixture id.</summary>
-    public Dictionary<string, byte[]> RenderFixtures(double time)
+    /// <summary>
+    /// Renders the DMX output at <paramref name="time"/> seconds into <paramref name="frame"/>, replacing its
+    /// contents. Every universe used by a fixture with a profile is present; later fixtures win where
+    /// footprints overlap, and channels past 512 are dropped.
+    /// </summary>
+    public void Render(double time, DmxFrame frame)
     {
         var states = _evaluator.Evaluate(time);
-        var result = new Dictionary<string, byte[]>(Project.Fixtures.Count);
-        foreach (var fixture in Project.Fixtures)
-            if (Project.ProfileOf(fixture) is { } profile)
-                result[fixture.Id] = DmxMapper.Map(fixture, profile, states[fixture.Id]);
-        return result;
+        var index = _evaluator.Index;
+        var fixtures = Project.Fixtures;
+        frame.Clear();
+        for (var i = 0; i < states.Length; i++)
+        {
+            if (index.ProfileOf(i) is not { } profile)
+                continue;
+            var fixture = fixtures[i];
+            var universe = frame.Universe(fixture.Universe);
+            var values = Scratch(profile.Channels.Count);
+            DmxMapper.Map(fixture, profile, in index.LayoutOf(i), in states[i], values);
+            for (var c = 0; c < values.Length; c++)
+            {
+                var address = fixture.Address - 1 + c;
+                if (address is >= 0 and < DmxFrame.UniverseSize)
+                    universe[address] = values[c];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Per-fixture channel values at <paramref name="time"/> seconds, without going through universes, in a
+    /// frame this renderer owns and reuses (the same instance every call, overwritten).
+    /// </summary>
+    public FixtureFrame RenderFixtures(double time)
+    {
+        RenderFixtures(time, _fixtures);
+        return _fixtures;
+    }
+
+    /// <summary>Renders per-fixture channel values at <paramref name="time"/> seconds into <paramref name="frame"/>, replacing its contents.</summary>
+    public void RenderFixtures(double time, FixtureFrame frame)
+    {
+        var states = _evaluator.Evaluate(time);
+        var index = _evaluator.Index;
+        var fixtures = Project.Fixtures;
+        frame.Reset(states.Length);
+        for (var i = 0; i < states.Length; i++)
+            if (index.ProfileOf(i) is { } profile)
+                DmxMapper.Map(fixtures[i], profile, in index.LayoutOf(i), in states[i], frame.Reserve(i, profile.Channels.Count));
+    }
+
+    private Span<byte> Scratch(int length)
+    {
+        if (_scratch.Length < length)
+            _scratch = new byte[Math.Max(length, _scratch.Length * 2)];
+        return _scratch.AsSpan(0, length);
     }
 }

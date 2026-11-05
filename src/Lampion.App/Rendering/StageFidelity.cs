@@ -10,16 +10,31 @@ namespace Lampion.App.Rendering;
 /// <param name="MaxLights">How many of the brightest fixtures light each surface.</param>
 public sealed record StageFidelity(double RenderScale, int Samples, int HazeSteps, int MaxLights)
 {
+    /// <summary>Half resolution, no anti-aliasing, coarse haze, 8 lights: for integrated GPUs.</summary>
     public static readonly StageFidelity Performance = new(0.5, 0, 8, 8);
+
+    /// <summary>Three-quarter resolution, 2× MSAA, medium haze, 24 lights.</summary>
     public static readonly StageFidelity Balanced = new(0.75, 2, 16, 24);
+
+    /// <summary>Full resolution, 4× MSAA, the finest haze and every light the shader takes.</summary>
     public static readonly StageFidelity Quality = new(1, 4, Shaders.MaxHazeSteps, Shaders.MaxLights);
 
+    /// <summary>The named presets, in the order the quality menu lists them.</summary>
     public static IReadOnlyList<(string Name, StageFidelity Preset)> Presets { get; } =
         [("Performance", Performance), ("Balanced", Balanced), ("Quality", Quality)];
 
     /// <summary>The preset these settings match, or null when they were tuned by hand.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public string? PresetName => Presets.FirstOrDefault(p => p.Preset == this).Name;
+    public string? PresetName
+    {
+        get
+        {
+            for (var i = 0; i < Presets.Count; i++)
+                if (Presets[i].Preset == this)
+                    return Presets[i].Name;
+            return null;
+        }
+    }
 
     /// <summary>Clamps values read from a settings file into what the renderer supports.</summary>
     public StageFidelity Sanitised() =>

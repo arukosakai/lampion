@@ -14,7 +14,7 @@
 
 </div>
 
-You patch your DMX fixtures, build the venue in metres, and lay your lights out on a Premiere-style timeline next to the music and video. Lampion previews the show live in GPU-rendered 3D, works out every DMX value itself, and exports a ready-to-run QLC+ workspace.
+You patch your DMX fixtures, build the venue in metres, and lay your lights out on an After Effects-style timeline next to the music and video. Lampion previews the show live in GPU-rendered 3D, works out every DMX value itself, and exports a ready-to-run QLC+ workspace.
 
 ---
 
@@ -128,6 +128,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 | <kbd>=</kbd> / <kbd>-</kbd> / <kbd>\\</kbd> | Zoom in / out / fit | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save |
 | <kbd>1</kbd>–<kbd>5</kbd> | Persp / top / front / right / toggle ortho | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
 | <kbd>Q</kbd> / <kbd>W</kbd> / <kbd>A</kbd> | Hand / move / aim tool | <kbd>F</kbd> | Frame selection |
+| | | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | Project settings |
 
 **Stage:** right-drag to orbit, middle-drag to pan, scroll to zoom, <kbd>Alt</kbd>+drag to change height.
 **Timeline:** double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.

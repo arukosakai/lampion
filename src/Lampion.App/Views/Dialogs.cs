@@ -3,25 +3,26 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Lampion.Core.Export;
+using Lampion.App.Editor;
 using Lampion.Core.Model;
 
 namespace Lampion.App.Views;
 
+/// <summary>
+/// Modal dialogs and file pickers, each awaited on the UI thread. Every dialog is modal to
+/// <c>owner</c> and returns once it closes.
+/// </summary>
 internal static class Dialogs
 {
     /// <summary>A small modal with a message and buttons; returns the label pressed, or null if closed.</summary>
+    /// <param name="owner">The window the dialog is modal to.</param>
+    /// <param name="title">Window title.</param>
+    /// <param name="message">The question or explanation, in plain words.</param>
+    /// <param name="buttons">Button labels, left to right.</param>
     public static async Task<string?> Ask(Window owner, string title, string message, params string[] buttons)
     {
         string? result = null;
-        var window = new Window
-        {
-            Title = title,
-            Width = 460,
-            SizeToContent = SizeToContent.Height,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-        };
+        var window = Modal(title, 460);
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right };
         foreach (var label in buttons)
         {
@@ -47,72 +48,25 @@ internal static class Dialogs
         return result;
     }
 
-    /// <summary>Premiere's Project Settings: show-wide values that belong to no clip. Changes apply live.</summary>
-    public static async Task ProjectSettings(Window owner, Editor.EditorState state)
-    {
-        var project = state.Project;
-        var stage = project.Stage;
-        var window = new Window
-        {
-            Title = "Project Settings",
-            Width = 440,
-            SizeToContent = SizeToContent.Height,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-        };
-        Grid Row(string label, Control editor) => Ui.Field(label, editor, 120);
-        var bounce = new CheckBox { IsChecked = stage.LightBounce };
-        bounce.IsCheckedChanged += (_, _) =>
-        {
-            stage.LightBounce = bounce.IsChecked == true;
-            state.Touch();
-        };
-        var close = new Button { Content = "Done", MinWidth = 90, HorizontalAlignment = HorizontalAlignment.Right, IsDefault = true };
-        close.Click += (_, _) => window.Close();
-        window.Content = new StackPanel
-        {
-            Margin = new Thickness(18),
-            Spacing = 6,
-            Children =
-            {
-                Ui.Section("Show"),
-                Row("Name", Ui.Text(project.Name, v => { project.Name = v; state.Touch(); })),
-                Row("Length (s)", Ui.Number(project.Duration, v => { project.Duration = v; state.Touch(); }, 1, 36000, 1, "0.#")),
-                Row("Tempo (BPM)", Ui.Number(project.Bpm, v => { project.Bpm = v; state.Touch(); }, 20, 300, 1, "0.#")),
-                Row("First beat (s)", Ui.Number(project.BeatOffset, v => { project.BeatOffset = v; state.Touch(); }, 0, 60, 0.01, "0.00")),
-                Ui.Section("Stage look"),
-                Row("Haze", Ui.Slider(stage.Haze, 0, 1, v => { stage.Haze = v; state.Touch(); })),
-                Row("House light", Ui.Slider(stage.Ambient, 0, 1, v => { stage.Ambient = v; state.Touch(); })),
-                Row("Light bounce", bounce),
-                Row("Snap step", Ui.Combo([0.05, 0.1, 0.25, 0.5, 1.0], stage.GridStep, v => { stage.GridStep = v; state.Touch(); }, v => $"{v:0.##} m")),
-                close,
-            },
-        };
-        await window.ShowDialog(owner);
-        // One undo step for everything changed while the dialog was open.
-        state.Commit();
-    }
+    /// <summary>After Effects-style Project Settings: show-wide values that belong to no clip. Changes apply live, as one undo step.</summary>
+    public static Task ProjectSettings(Window owner, EditorState state) => ProjectSettingsDialog.Show(owner, state);
 
     /// <summary>Asks for one line of text; null if cancelled.</summary>
+    /// <param name="owner">The window the dialog is modal to.</param>
+    /// <param name="title">Window title.</param>
+    /// <param name="label">What to type, shown above the box.</param>
+    /// <param name="initial">The text the box starts with, selected.</param>
     public static async Task<string?> Prompt(Window owner, string title, string label, string initial)
     {
         string? result = null;
         var box = new TextBox { Text = initial };
-        var window = new Window
-        {
-            Title = title,
-            Width = 420,
-            SizeToContent = SizeToContent.Height,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-        };
-        void Accept()
+        var window = Modal(title, 420);
+        var ok = new Button { Content = "OK", MinWidth = 80, IsDefault = true };
+        ok.Click += (_, _) =>
         {
             result = box.Text;
             window.Close();
-        }
-        var ok = new Button { Content = "OK", MinWidth = 80, IsDefault = true };
-        ok.Click += (_, _) => Accept();
+        };
         var cancel = new Button { Content = "Cancel", MinWidth = 80, IsCancel = true };
         cancel.Click += (_, _) => window.Close();
         window.Content = new StackPanel
@@ -135,6 +89,10 @@ internal static class Dialogs
         return result;
     }
 
+    /// <summary>The system open-file picker for one file; returns its local path, or null if cancelled or not a local file.</summary>
+    /// <param name="owner">The window the picker belongs to.</param>
+    /// <param name="title">Picker title.</param>
+    /// <param name="types">File type filters: a name and glob patterns such as "*.lampion".</param>
     public static async Task<string?> PickOpen(Window owner, string title, params (string Name, string[] Patterns)[] types)
     {
         var files = await owner.StorageProvider.OpenFilePickerAsync(
@@ -148,6 +106,12 @@ internal static class Dialogs
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 
+    /// <summary>The system save-file picker, confirming overwrites; returns the local path, or null if cancelled.</summary>
+    /// <param name="owner">The window the picker belongs to.</param>
+    /// <param name="title">Picker title.</param>
+    /// <param name="suggested">Suggested file name, with extension.</param>
+    /// <param name="extension">Default extension without the dot, e.g. "lampion".</param>
+    /// <param name="typeName">The file type's name in the picker.</param>
     public static async Task<string?> PickSave(Window owner, string title, string suggested, string extension, string typeName)
     {
         var file = await owner.StorageProvider.SaveFilePickerAsync(
@@ -164,74 +128,19 @@ internal static class Dialogs
     }
 
     /// <summary>Options, file choice and the warnings report for a QLC+ export.</summary>
-    public static async Task ExportQlc(Window owner, Project project, string? projectPath)
-    {
-        var options = new QlcExportOptions { ProjectDirectory = projectPath is null ? null : Path.GetDirectoryName(projectPath) };
-        var window = new Window
+    /// <param name="owner">The window the dialog is modal to.</param>
+    /// <param name="project">The show to export.</param>
+    /// <param name="projectPath">The show's file, so media paths can be made relative; null while unsaved.</param>
+    public static Task ExportQlc(Window owner, Project project, string? projectPath) => QlcExportDialog.Show(owner, project, projectPath);
+
+    /// <summary>A fixed-size modal window, centred on its owner and as tall as its content.</summary>
+    internal static Window Modal(string title, double width) =>
+        new()
         {
-            Title = "Export to QLC+",
-            Width = 520,
+            Title = title,
+            Width = width,
             SizeToContent = SizeToContent.Height,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
-        var baseLabel = new TextBlock { Text = "None — build a new workspace", Foreground = Brushes.Gray, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-        var rate = Ui.Combo([10.0, 20.0, 25.0, 40.0, 50.0], options.SampleRate, v => options.SampleRate = v, v => $"{v:0} Hz");
-        var tolerance = Ui.Number(options.Tolerance, v => options.Tolerance = (int)v, 0, 10, 1, "0");
-        var chooseBase = Ui.Button("Choose…", async () =>
-        {
-            var path = await PickOpen(window, "Base QLC+ workspace", ("QLC+ workspace", ["*.qxw"]));
-            options.BaseWorkspacePath = path;
-            baseLabel.Text = path ?? "None — build a new workspace";
-        });
-        var clearBase = Ui.Button("✕", () =>
-        {
-            options.BaseWorkspacePath = null;
-            baseLabel.Text = "None — build a new workspace";
-        });
-        var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.Gray };
-        var export = new Button { Content = "Export…", MinWidth = 100, HorizontalAlignment = HorizontalAlignment.Right };
-        export.Click += async (_, _) =>
-        {
-            var target = await PickSave(window, "Save QLC+ workspace", (options.BaseWorkspacePath is { } b ? Path.GetFileNameWithoutExtension(b) : project.Name) + ".qxw", "qxw", "QLC+ workspace");
-            if (target is null)
-                return;
-            options.OutputDirectory = Path.GetDirectoryName(target);
-            try
-            {
-                status.Text = "Rendering show…";
-                var result = await Task.Run(() => new QlcExporter(project, options).Export());
-                await File.WriteAllTextAsync(target, result.Xml);
-                var warnings = result.Warnings.Count == 0 ? "No warnings." : string.Join("\n", result.Warnings.Select(w => "⚠ " + w));
-                status.Foreground = Brushes.Gainsboro;
-                status.Text = $"Saved {Path.GetFileName(target)}: {result.FixtureCount} fixtures, {result.StepCount} sequence steps.\n{warnings}\n\nIn QLC+, open the workspace and play the show from the Show Manager. Media files are referenced relative to the .qxw.";
-            }
-            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
-            {
-                status.Foreground = Brushes.OrangeRed;
-                status.Text = "Export failed: " + ex.Message;
-            }
-        };
-        window.Content = new StackPanel
-        {
-            Margin = new Thickness(16),
-            Spacing = 8,
-            Children =
-            {
-                new TextBlock
-                {
-                    Text = "Every fixture becomes a QLC+ fixture at its DMX address (RGB/RGBW profiles as RGB panels). Each group gets a Sequence of the exact DMX Lampion computes, reduced to linear fades, all played by one Show with the audio and video.",
-                    TextWrapping = TextWrapping.Wrap,
-                },
-                Ui.Field("Sample rate", rate, 130),
-                Ui.Field("Fade tolerance (DMX)", tolerance, 130),
-                Ui.Field("Merge into", new DockPanel { Children = { clearBase, chooseBase, baseLabel } }, 130),
-                export,
-                status,
-            },
-        };
-        DockPanel.SetDock(clearBase, Dock.Right);
-        DockPanel.SetDock(chooseBase, Dock.Right);
-        await window.ShowDialog(owner);
-    }
 }

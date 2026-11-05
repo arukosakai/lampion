@@ -1,0 +1,942 @@
+{
+  "formatVersion": 1,
+  "name": "Everything venue",
+  "stage": {
+    "objects": [
+      {
+        "id": "so-deck",
+        "name": "Deck",
+        "kind": "Platform",
+        "position": {
+          "x": 0,
+          "y": 0.5,
+          "z": -1,
+          "length": 1.118033988749895
+        },
+        "size": {
+          "x": 10,
+          "y": 1,
+          "z": 6,
+          "length": 11.704699910719626
+        },
+        "yaw": 0,
+        "color": "#2B2622"
+      },
+      {
+        "id": "so-truss",
+        "name": "Truss",
+        "kind": "Truss",
+        "position": {
+          "x": 0,
+          "y": 6,
+          "z": 1,
+          "length": 6.082762530298219
+        },
+        "size": {
+          "x": 12,
+          "y": 0.3,
+          "z": 0.3,
+          "length": 12.007497657713701
+        },
+        "yaw": 15,
+        "color": "#B8BCC4"
+      },
+      {
+        "id": "so-screen",
+        "name": "Screen",
+        "kind": "Screen",
+        "position": {
+          "x": 0,
+          "y": 3,
+          "z": -4,
+          "length": 5
+        },
+        "size": {
+          "x": 6,
+          "y": 3.4,
+          "z": 0.1,
+          "length": 6.897100840208152
+        },
+        "yaw": 0,
+        "color": "#050505"
+      },
+      {
+        "id": "so-wall",
+        "name": "Wall",
+        "kind": "Wall",
+        "position": {
+          "x": 0,
+          "y": 4,
+          "z": -5,
+          "length": 6.4031242374328485
+        },
+        "size": {
+          "x": 12,
+          "y": 8,
+          "z": 0.2,
+          "length": 14.423591785682234
+        },
+        "yaw": 0,
+        "color": "#1E1E24"
+      }
+    ],
+    "haze": 0.4,
+    "ambient": 0.2,
+    "lightBounce": true,
+    "gridStep": 0.5
+  },
+  "profiles": [
+    {
+      "id": "builtin-rgb-par",
+      "manufacturer": "Generic",
+      "model": "RGB Par",
+      "mode": "3 Channel",
+      "beam": "Par",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-rgbw-par",
+      "manufacturer": "Generic",
+      "model": "RGBW Par",
+      "mode": "4 Channel",
+      "beam": "Par",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-drgb-par",
+      "manufacturer": "Generic",
+      "model": "Dimmer RGB Par",
+      "mode": "4 Channel",
+      "beam": "Par",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-hex-par",
+      "manufacturer": "Generic",
+      "model": "RGBWA\u002BUV Par",
+      "mode": "8 Channel",
+      "beam": "Wash",
+      "beamAngle": 30,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        },
+        {
+          "name": "Amber",
+          "role": "Amber",
+          "default": 0
+        },
+        {
+          "name": "UV",
+          "role": "UV",
+          "default": 0
+        },
+        {
+          "name": "Strobe",
+          "role": "Strobe",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-moving-head",
+      "manufacturer": "Generic",
+      "model": "Moving Head Spot",
+      "mode": "12 Channel",
+      "beam": "Spot",
+      "beamAngle": 14,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Pan",
+          "role": "Pan",
+          "default": 128
+        },
+        {
+          "name": "Pan fine",
+          "role": "PanFine",
+          "default": 0
+        },
+        {
+          "name": "Tilt",
+          "role": "Tilt",
+          "default": 128
+        },
+        {
+          "name": "Tilt fine",
+          "role": "TiltFine",
+          "default": 0
+        },
+        {
+          "name": "Speed",
+          "role": "PanTiltSpeed",
+          "default": 0
+        },
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Strobe",
+          "role": "Strobe",
+          "default": 0
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        },
+        {
+          "name": "Gobo",
+          "role": "Gobo",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": true
+    },
+    {
+      "id": "builtin-led-bar",
+      "manufacturer": "Generic",
+      "model": "LED Bar",
+      "mode": "3 Channel",
+      "beam": "Bar",
+      "beamAngle": 60,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-strobe",
+      "manufacturer": "Generic",
+      "model": "Strobe",
+      "mode": "2 Channel",
+      "beam": "Strobe",
+      "beamAngle": 90,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        },
+        {
+          "name": "Rate",
+          "role": "Strobe",
+          "default": 0
+        }
+      ],
+      "hasColor": false,
+      "hasPanTilt": false
+    },
+    {
+      "id": "builtin-dimmer",
+      "manufacturer": "Generic",
+      "model": "Dimmer (1ch)",
+      "mode": "1 Channel",
+      "beam": "Par",
+      "beamAngle": 30,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "Dimmer",
+          "role": "Dimmer",
+          "default": 0
+        }
+      ],
+      "hasColor": false,
+      "hasPanTilt": false
+    },
+    {
+      "id": "custom-odd",
+      "manufacturer": "Acme",
+      "model": "Odd Wash",
+      "mode": "12ch",
+      "beam": "Wash",
+      "beamAngle": 40,
+      "panRange": 360,
+      "tiltRange": 180,
+      "channels": [
+        {
+          "name": "Zoom",
+          "role": "Zoom",
+          "default": 128
+        },
+        {
+          "name": "Red",
+          "role": "Red",
+          "default": 0
+        },
+        {
+          "name": "Green",
+          "role": "Green",
+          "default": 0
+        },
+        {
+          "name": "Blue",
+          "role": "Blue",
+          "default": 0
+        },
+        {
+          "name": "Amber",
+          "role": "Amber",
+          "default": 0
+        },
+        {
+          "name": "UV",
+          "role": "UV",
+          "default": 0
+        },
+        {
+          "name": "Macro",
+          "role": "Generic",
+          "default": 10
+        },
+        {
+          "name": "Wheel",
+          "role": "ColorWheel",
+          "default": 0
+        },
+        {
+          "name": "Gobo",
+          "role": "Gobo",
+          "default": 5
+        },
+        {
+          "name": "FX",
+          "role": "Effect",
+          "default": 0
+        },
+        {
+          "name": "Tilt",
+          "role": "Tilt",
+          "default": 128
+        },
+        {
+          "name": "Speed",
+          "role": "PanTiltSpeed",
+          "default": 0
+        }
+      ],
+      "hasColor": true,
+      "hasPanTilt": true
+    },
+    {
+      "id": "custom-white",
+      "manufacturer": "Generic",
+      "model": "White Blinder",
+      "mode": "Default",
+      "beam": "Blinder",
+      "beamAngle": 25,
+      "panRange": 540,
+      "tiltRange": 270,
+      "channels": [
+        {
+          "name": "White",
+          "role": "White",
+          "default": 0
+        },
+        {
+          "name": "Strobe",
+          "role": "Strobe",
+          "default": 0
+        }
+      ],
+      "hasColor": false,
+      "hasPanTilt": false
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "par1",
+      "name": "PAR1",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 1,
+      "position": {
+        "x": -3,
+        "y": 5.5,
+        "z": 1,
+        "length": 6.34428877022476
+      },
+      "yaw": -9,
+      "pitch": -47,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "par2",
+      "name": "PAR2",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 5,
+      "position": {
+        "x": -1,
+        "y": 5.5,
+        "z": 1,
+        "length": 5.678908345800274
+      },
+      "yaw": -3,
+      "pitch": -49,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "par3",
+      "name": "PAR3",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 9,
+      "position": {
+        "x": 1,
+        "y": 5.5,
+        "z": 1,
+        "length": 5.678908345800274
+      },
+      "yaw": 3,
+      "pitch": -51,
+      "gelColor": "#FFD080",
+      "extractWhite": false
+    },
+    {
+      "id": "par4",
+      "name": "PAR4",
+      "profileId": "builtin-rgbw-par",
+      "universe": 1,
+      "address": 13,
+      "position": {
+        "x": 3,
+        "y": 5.5,
+        "z": 1,
+        "length": 6.34428877022476
+      },
+      "yaw": 9,
+      "pitch": -53,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "head1",
+      "name": "HEAD1",
+      "profileId": "builtin-moving-head",
+      "universe": 1,
+      "address": 20,
+      "position": {
+        "x": -4,
+        "y": 6,
+        "z": -2,
+        "length": 7.483314773547883
+      },
+      "yaw": -12,
+      "pitch": -46,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "head2",
+      "name": "HEAD2",
+      "profileId": "builtin-moving-head",
+      "universe": 1,
+      "address": 32,
+      "position": {
+        "x": 0,
+        "y": 6,
+        "z": -2,
+        "length": 6.324555320336759
+      },
+      "yaw": 0,
+      "pitch": -50,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "head3",
+      "name": "HEAD3",
+      "profileId": "builtin-moving-head",
+      "universe": 1,
+      "address": 44,
+      "position": {
+        "x": 4,
+        "y": 6,
+        "z": -2,
+        "length": 7.483314773547883
+      },
+      "yaw": 12,
+      "pitch": -54,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "hex1",
+      "name": "HEX1",
+      "profileId": "builtin-hex-par",
+      "universe": 1,
+      "address": 60,
+      "position": {
+        "x": -2,
+        "y": 0.5,
+        "z": 2,
+        "length": 2.8722813232690143
+      },
+      "yaw": -6,
+      "pitch": -48,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "hex2",
+      "name": "HEX2",
+      "profileId": "builtin-hex-par",
+      "universe": 1,
+      "address": 68,
+      "position": {
+        "x": 2,
+        "y": 0.5,
+        "z": 2,
+        "length": 2.8722813232690143
+      },
+      "yaw": 6,
+      "pitch": -52,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "overlap",
+      "name": "OVERLAP",
+      "profileId": "builtin-rgb-par",
+      "universe": 1,
+      "address": 61,
+      "position": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 2,
+        "length": 2.1213203435596424
+      },
+      "yaw": 1.5,
+      "pitch": -50.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "dimrgb1",
+      "name": "DIMRGB1",
+      "profileId": "builtin-drgb-par",
+      "universe": 1,
+      "address": 80,
+      "position": {
+        "x": 5,
+        "y": 5.5,
+        "z": 1,
+        "length": 7.5
+      },
+      "yaw": 15,
+      "pitch": -55,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "strobe1",
+      "name": "STROBE1",
+      "profileId": "builtin-strobe",
+      "universe": 1,
+      "address": 90,
+      "position": {
+        "x": 0,
+        "y": 7,
+        "z": 1,
+        "length": 7.0710678118654755
+      },
+      "yaw": 0,
+      "pitch": -50,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "dimmer1",
+      "name": "DIMMER1",
+      "profileId": "builtin-dimmer",
+      "universe": 1,
+      "address": 95,
+      "position": {
+        "x": -6,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.200609733428363
+      },
+      "yaw": -18,
+      "pitch": -44,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "dimmer2",
+      "name": "DIMMER2",
+      "profileId": "builtin-dimmer",
+      "universe": 1,
+      "address": 96,
+      "position": {
+        "x": -6,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.200609733428363
+      },
+      "yaw": -18,
+      "pitch": -44,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "custom1",
+      "name": "CUSTOM1",
+      "profileId": "custom-odd",
+      "universe": 1,
+      "address": 100,
+      "position": {
+        "x": 6,
+        "y": 4,
+        "z": 1,
+        "length": 7.280109889280518
+      },
+      "yaw": 18,
+      "pitch": -56,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "bar1",
+      "name": "BAR1",
+      "profileId": "builtin-led-bar",
+      "universe": 2,
+      "address": 1,
+      "position": {
+        "x": -1.5,
+        "y": 0.2,
+        "z": 3,
+        "length": 3.3600595232822883
+      },
+      "yaw": -4.5,
+      "pitch": -48.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "bar2",
+      "name": "BAR2",
+      "profileId": "builtin-led-bar",
+      "universe": 2,
+      "address": 4,
+      "position": {
+        "x": 1.5,
+        "y": 0.2,
+        "z": 3,
+        "length": 3.3600595232822883
+      },
+      "yaw": 4.5,
+      "pitch": -51.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "rgb1",
+      "name": "RGB1",
+      "profileId": "builtin-rgb-par",
+      "universe": 2,
+      "address": 7,
+      "position": {
+        "x": 7,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.958236433584458
+      },
+      "yaw": 21,
+      "pitch": -57,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "edge",
+      "name": "EDGE",
+      "profileId": "builtin-moving-head",
+      "universe": 2,
+      "address": 505,
+      "position": {
+        "x": -7,
+        "y": 5.5,
+        "z": 1,
+        "length": 8.958236433584458
+      },
+      "yaw": -21,
+      "pitch": -43,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "noprofile",
+      "name": "NOPROFILE",
+      "profileId": "nope",
+      "universe": 3,
+      "address": 1,
+      "position": {
+        "x": 0,
+        "y": 5.5,
+        "z": 1,
+        "length": 5.5901699437494745
+      },
+      "yaw": 0,
+      "pitch": -50,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "custom2",
+      "name": "CUSTOM2",
+      "profileId": "custom-odd",
+      "universe": 3,
+      "address": 10,
+      "position": {
+        "x": -5,
+        "y": 5.5,
+        "z": 1,
+        "length": 7.5
+      },
+      "yaw": -15,
+      "pitch": -45,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "white1",
+      "name": "WHITE1",
+      "profileId": "custom-white",
+      "universe": 3,
+      "address": 30,
+      "position": {
+        "x": 2.5,
+        "y": 5.5,
+        "z": 1,
+        "length": 6.123724356957945
+      },
+      "yaw": 7.5,
+      "pitch": -52.5,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    },
+    {
+      "id": "zero",
+      "name": "ZERO",
+      "profileId": "builtin-rgb-par",
+      "universe": 0,
+      "address": 1,
+      "position": {
+        "x": 8,
+        "y": 5.5,
+        "z": 1,
+        "length": 9.759610647971568
+      },
+      "yaw": 24,
+      "pitch": -58,
+      "gelColor": "#FFD080",
+      "extractWhite": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "g-pars",
+      "name": "Pars",
+      "color": "#E6A23A",
+      "fixtureIds": [
+        "par1",
+        "par2",
+        "par3",
+        "par4",
+        "ghost"
+      ]
+    },
+    {
+      "id": "g-heads",
+      "name": "Heads",
+      "color": "#3AA0E6",
+      "fixtureIds": [
+        "head1",
+        "head2",
+        "head3"
+      ]
+    },
+    {
+      "id": "g-mixed",
+      "name": "Mixed",
+      "color": "#A03AE6",
+      "fixtureIds": [
+        "hex1",
+        "hex2",
+        "dimrgb1",
+        "custom1",
+        "bar1",
+        "bar2",
+        "rgb1",
+        "edge",
+        "zero",
+        "overlap"
+      ]
+    },
+    {
+      "id": "g-dim",
+      "name": "Dimmers",
+      "color": "#E63A5A",
+      "fixtureIds": [
+        "dimmer1",
+        "dimmer2",
+        "strobe1",
+        "white1",
+        "custom2",
+        "noprofile"
+      ]
+    },
+    {
+      "id": "g-front",
+      "name": "Front two",
+      "color": "#3AE6A0",
+      "fixtureIds": [
+        "par2",
+        "par1"
+      ]
+    }
+  ],
+  "hasRig": true
+}

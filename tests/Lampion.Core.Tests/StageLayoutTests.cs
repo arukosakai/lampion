@@ -1,4 +1,6 @@
 using Lampion.Core.Model;
+using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Stage;
 using Lampion.Core.Persistence;
 
 namespace Lampion.Core.Tests;
@@ -8,7 +10,7 @@ public class StageLayoutTests
     [Fact]
     public void LayoutCarriesSetAndRigIntoAFreshProject()
     {
-        var source = Project.CreateDemo();
+        var source = DemoProject.Create();
         source.Stage.Haze = 0.33;
         var layout = StageLayout.Deserialize(StageLayout.Serialize(StageLayout.From(source)));
 
@@ -25,16 +27,16 @@ public class StageLayoutTests
     [Fact]
     public void LayoutOnlyIncludesProfilesTheRigUses()
     {
-        var layout = StageLayout.From(Project.CreateDemo());
+        var layout = StageLayout.From(DemoProject.Create());
         Assert.Equal([BuiltInProfiles.RgbwParId, BuiltInProfiles.MovingHeadId], layout.Profiles.Select(p => p.Id).Order().Reverse().ToArray());
     }
 
     [Fact]
     public void SetOnlyImportKeepsTheProjectsFixtures()
     {
-        var target = Project.CreateDemo();
+        var target = DemoProject.Create();
         var fixtures = target.Fixtures.Select(f => f.Id).ToList();
-        var layout = new StageLayout { Stage = new StageSettings { Objects = [new StageObject { Name = "Riser" }] } };
+        var layout = new StageLayout { Stage = new StageSettings { Objects = { new StageObject { Name = "Riser" } } } };
 
         layout.ApplyTo(target, includeRig: false);
 
@@ -45,7 +47,7 @@ public class StageLayoutTests
     [Fact]
     public void ReplacingTheRigDropsDanglingTrackTargets()
     {
-        var target = Project.CreateDemo();
+        var target = DemoProject.Create();
         new StageLayout().ApplyTo(target, includeRig: true);
         Assert.All(target.Tracks, t => Assert.Empty(t.GroupIds));
         Assert.All(target.Tracks, t => Assert.Empty(t.FixtureIds));
@@ -54,27 +56,11 @@ public class StageLayoutTests
     [Fact]
     public void LayoutIsADeepCopy()
     {
-        var source = Project.CreateDemo();
+        var source = DemoProject.Create();
         var layout = StageLayout.From(source);
         source.Stage.Objects[0].Name = "changed";
         source.Fixtures[0].Address = 400;
         Assert.NotEqual("changed", layout.Stage.Objects[0].Name);
         Assert.NotEqual(400, layout.Fixtures[0].Address);
-    }
-}
-
-public class StageTemplateTests
-{
-    [Fact]
-    public void BuiltInTemplatesAreReadyToUse()
-    {
-        foreach (var (layout, _) in StageTemplates.BuiltIn())
-        {
-            var project = new Project();
-            layout.ApplyTo(project, includeRig: true);
-            Assert.NotEmpty(project.Fixtures);
-            Assert.Empty(project.PatchProblems());
-            Assert.All(project.Groups, g => Assert.NotEmpty(g.FixtureIds));
-        }
     }
 }

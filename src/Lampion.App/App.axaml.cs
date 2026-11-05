@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -8,10 +9,16 @@ using Lampion.Core.Persistence;
 
 namespace Lampion.App;
 
+/// <summary>
+/// The Avalonia application: loads the theme from App.axaml, then opens the show passed on the command
+/// line, or the start screen when there is none (or it can't be read).
+/// </summary>
 public partial class App : Application
 {
+    /// <inheritdoc />
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
+    /// <inheritdoc />
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -42,7 +49,7 @@ public partial class App : Application
         {
             return File.Exists(path) ? ProjectSerializer.Load(path) : null;
         }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or UnauthorizedAccessException)
         {
             return null;
         }

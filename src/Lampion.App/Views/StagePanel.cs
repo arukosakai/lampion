@@ -6,18 +6,22 @@ using Avalonia.Media;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Rendering;
-using Lampion.Core.Model;
+using Lampion.Core.Model.Stage;
 
 namespace Lampion.App.Views;
 
 /// <summary>
 /// The 3D viewport with a slim Unity-style tool strip above it and the scene gizmo in its top-right corner.
 /// </summary>
-public sealed class StagePanel : DockPanel
+internal sealed class StagePanel : DockPanel
 {
+    private static readonly double[] SnapSteps = [0.05, 0.1, 0.25, 0.5, 1.0];
+
     private readonly EditorState _state;
     private readonly Dictionary<BuilderTool, ToggleButton> _tools = [];
+    private readonly Button _snapButton;
 
+    /// <summary>A stage panel over <paramref name="state"/>.</summary>
     public StagePanel(EditorState state)
     {
         _state = state;
@@ -30,18 +34,17 @@ public sealed class StagePanel : DockPanel
         tools.Children.Add(Tool(BuilderTool.Move, "✥", "Move (W) — drag fixtures and set pieces; Alt+drag for height"));
         tools.Children.Add(Tool(BuilderTool.Aim, "◎", "Aim (A) — click the stage to point the selected fixtures there"));
 
-        var snap = new Button { Content = SnapLabel(), Padding = new Thickness(8, 1), Flyout = SnapMenu() };
-        ToolTip.SetTip(snap, "Snap step for moving things");
-        _snapButton = snap;
+        _snapButton = new Button { Content = SnapLabel(), Padding = new Thickness(8, 1), Flyout = SnapMenu() };
+        ToolTip.SetTip(_snapButton, "Snap step for moving things");
 
         var add = new Button { Content = "＋", Padding = new Thickness(8, 1), Flyout = AddMenu() };
         ToolTip.SetTip(add, "Add a set piece: truss, riser, wall or screen");
 
-        var viewMenu = new Button { Content = "View ▾", Padding = new Thickness(8, 1), Flyout = new Flyout { Content = ViewOptions(), Placement = PlacementMode.BottomEdgeAlignedRight } };
+        var viewMenu = new Button { Content = "View ▾", Padding = new Thickness(8, 1), Flyout = new Flyout { Content = new StageViewOptions(View, state), Placement = PlacementMode.BottomEdgeAlignedRight } };
         ToolTip.SetTip(viewMenu, "Labels, light bounce, haze and stage quality");
 
         var bar = new DockPanel { Height = 30, Background = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x26)), LastChildFill = false };
-        var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { tools, Divider(), snap, add } };
+        var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { tools, Divider(), _snapButton, add } };
         var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { GizmoToggle(gizmo), viewMenu } };
         SetDock(left, Dock.Left);
         SetDock(right, Dock.Right);
@@ -59,9 +62,19 @@ public sealed class StagePanel : DockPanel
         state.ProjectReplaced += () => _snapButton.Content = SnapLabel();
     }
 
-    private readonly Button _snapButton;
-
+    /// <summary>The 3D view; the main window drives its scene and camera.</summary>
     public StageView View { get; }
+
+    /// <summary>Jumps to a named view (keys 1–5).</summary>
+    public void SetPreset(ViewPreset preset) => View.ApplyPreset(preset);
+
+    /// <summary>Switches tool and lights its button (Q, W, A).</summary>
+    public void SetTool(BuilderTool tool)
+    {
+        View.Tool = tool;
+        foreach (var (key, button) in _tools)
+            button.IsChecked = key == tool;
+    }
 
     private ToggleButton Tool(BuilderTool tool, string glyph, string tip)
     {
@@ -79,7 +92,7 @@ public sealed class StagePanel : DockPanel
     private MenuFlyout SnapMenu()
     {
         var menu = new MenuFlyout();
-        foreach (var step in new[] { 0.05, 0.1, 0.25, 0.5, 1.0 })
+        foreach (var step in SnapSteps)
         {
             var item = new MenuItem { Header = $"{step:0.##} m" };
             item.Click += (_, _) =>
@@ -113,9 +126,9 @@ public sealed class StagePanel : DockPanel
 
         var kinds = new StackPanel { Spacing = 4, Width = 180 };
         kinds.Children.Add(new TextBlock { Text = "Viewport gizmos", Foreground = Brushes.Gray, Margin = new Thickness(0, 0, 0, 2) });
-        kinds.Children.Add(GizmoCheck("Navigate", () => View.ShowNavigation, v => View.ShowNavigation = v));
-        kinds.Children.Add(GizmoCheck("Move handles", () => View.ShowMoveHandles, v => View.ShowMoveHandles = v));
-        kinds.Children.Add(GizmoCheck("Measurements", () => View.ShowMeasurements, v => View.ShowMeasurements = v));
+        kinds.Children.Add(GizmoCheck("Navigate", View.ShowNavigation, v => View.ShowNavigation = v));
+        kinds.Children.Add(GizmoCheck("Move handles", View.ShowMoveHandles, v => View.ShowMoveHandles = v));
+        kinds.Children.Add(GizmoCheck("Measurements", View.ShowMeasurements, v => View.ShowMeasurements = v));
         var dropdown = new Button { Content = "▾", Width = 18, MinHeight = 24, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center, Flyout = new Flyout { Content = kinds, Placement = PlacementMode.BottomEdgeAlignedRight } };
         ToolTip.SetTip(dropdown, "Choose which gizmos show");
 
@@ -127,175 +140,18 @@ public sealed class StagePanel : DockPanel
             kinds.Opacity = View.ShowGizmos ? 1 : 0.5;
         }
         toggle.IsCheckedChanged += (_, _) => Apply();
-        foreach (var check in kinds.Children.OfType<CheckBox>())
-            check.IsCheckedChanged += (_, _) => Apply();
+        foreach (var child in kinds.Children)
+            if (child is CheckBox check)
+                check.IsCheckedChanged += (_, _) => Apply();
 
         return new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0, Children = { toggle, dropdown } };
     }
 
-    private static CheckBox GizmoCheck(string label, Func<bool> get, Action<bool> set)
+    private static CheckBox GizmoCheck(string label, bool isChecked, Action<bool> set)
     {
-        var check = new CheckBox { Content = label, IsChecked = get() };
+        var check = new CheckBox { Content = label, IsChecked = isChecked };
         check.IsCheckedChanged += (_, _) => set(check.IsChecked == true);
         return check;
-    }
-
-    /// <summary>The scene view's display options, tucked into one dropdown like Unity's.</summary>
-    private Control ViewOptions()
-    {
-        var labels = new CheckBox { Content = "Labels", IsChecked = View.ShowLabels };
-        labels.IsCheckedChanged += (_, _) => View.ShowLabels = labels.IsChecked == true;
-        var bounce = new CheckBox { Content = "Light bounce", IsChecked = _state.Project.Stage.LightBounce };
-        ToolTip.SetTip(bounce, "Let the lit rig spill a little coloured light into the room");
-        bounce.IsCheckedChanged += (_, _) =>
-        {
-            if (_state.Project.Stage.LightBounce == (bounce.IsChecked == true))
-                return;
-            _state.Project.Stage.LightBounce = bounce.IsChecked == true;
-            _state.Commit();
-        };
-        var haze = Ui.Slider(_state.Project.Stage.Haze, 0, 1, v => _state.Project.Stage.Haze = v, () => _state.Commit());
-        haze.Width = 150;
-        _state.ProjectReplaced += () =>
-        {
-            bounce.IsChecked = _state.Project.Stage.LightBounce;
-            haze.Value = _state.Project.Stage.Haze;
-        };
-        var reset = Ui.Button("Reset view", () => SetPreset(ViewPreset.Free), "Back to the default perspective view (1)");
-        reset.Margin = new Thickness(0, 6, 0, 0);
-        return new StackPanel
-        {
-            Spacing = 4,
-            Width = 250,
-            Children = { labels, bounce, new TextBlock { Text = "Haze", Foreground = Brushes.Gray, Margin = new Thickness(0, 6, 0, 0) }, haze, reset, QualityOptions() },
-        };
-    }
-
-    /// <summary>
-    /// How hard the GPU works on the 3D view. A preset sets every knob; touching one knob makes it "Custom".
-    /// Saved per machine, since the right answer depends on the graphics card, not the show.
-    /// </summary>
-    private Control QualityOptions()
-    {
-        var settings = UserData.LoadSettings();
-        View.Fidelity = settings.Fidelity;
-        View.ShowFps = settings.ShowFps;
-        var syncing = false;
-
-        var resolution = new Knob<double>([(0.5, "50%"), (0.75, "75%"), (1, "100%")], View.Fidelity.RenderScale, v => View.Fidelity = View.Fidelity with { RenderScale = v });
-        var aa = new Knob<int>([(0, "Off"), (2, "2×"), (4, "4×")], View.Fidelity.Samples, v => View.Fidelity = View.Fidelity with { Samples = v });
-        var hazeSteps = new Knob<int>([(8, "Low"), (16, "Medium"), (Shaders.MaxHazeSteps, "High")], View.Fidelity.HazeSteps, v => View.Fidelity = View.Fidelity with { HazeSteps = v });
-        var lights = new Knob<int>([(8, "8"), (24, "24"), (Shaders.MaxLights, $"{Shaders.MaxLights}")], View.Fidelity.MaxLights, v => View.Fidelity = View.Fidelity with { MaxLights = v });
-        ToolTip.SetTip(resolution.Combo, "Renders fewer pixels and scales the picture up: the biggest saving, at the cost of sharpness");
-        ToolTip.SetTip(aa.Combo, "Smooths jagged edges on trusses and beams");
-        ToolTip.SetTip(hazeSteps.Combo, "Detail of the haze inside beams; lower is grainier, not dimmer");
-        ToolTip.SetTip(lights.Combo, "How many of the brightest fixtures light the floor and set");
-
-        var presetNames = StageFidelity.Presets.Select(p => p.Name).Append("Custom").ToList();
-        var preset = new ComboBox { ItemsSource = presetNames, HorizontalAlignment = HorizontalAlignment.Stretch };
-        void ShowPreset() => preset.SelectedItem = View.Fidelity.PresetName ?? "Custom";
-        preset.SelectionChanged += (_, _) =>
-        {
-            if (syncing || preset.SelectedItem is not string name || StageFidelity.Presets.FirstOrDefault(p => p.Name == name).Preset is not { } chosen)
-                return;
-            View.Fidelity = chosen;
-            syncing = true;
-            resolution.Select(chosen.RenderScale);
-            aa.Select(chosen.Samples);
-            hazeSteps.Select(chosen.HazeSteps);
-            lights.Select(chosen.MaxLights);
-            syncing = false;
-            Save();
-        };
-
-        var fps = new CheckBox { Content = "Show frame rate", IsChecked = View.ShowFps };
-        fps.IsCheckedChanged += (_, _) =>
-        {
-            View.ShowFps = fps.IsChecked == true;
-            Save();
-        };
-
-        void Save() => UserData.SaveSettings(new UserSettings { Fidelity = View.Fidelity, ShowFps = View.ShowFps });
-
-        void KnobChanged()
-        {
-            if (syncing)
-                return;
-            syncing = true;
-            ShowPreset();
-            syncing = false;
-            Save();
-        }
-        foreach (var knob in new IKnob[] { resolution, aa, hazeSteps, lights })
-            knob.Changed += KnobChanged;
-        syncing = true;
-        ShowPreset();
-        syncing = false;
-
-        return new StackPanel
-        {
-            Spacing = 4,
-            Margin = new Thickness(0, 10, 0, 0),
-            Children =
-            {
-                new TextBlock { Text = "STAGE QUALITY", Foreground = Brushes.Gray, FontSize = 10.5, FontWeight = FontWeight.SemiBold },
-                Ui.Field("Preset", preset, 110),
-                Ui.Field("Resolution", resolution.Combo, 110),
-                Ui.Field("Anti-aliasing", aa.Combo, 110),
-                Ui.Field("Haze detail", hazeSteps.Combo, 110),
-                Ui.Field("Lights / surface", lights.Combo, 110),
-                fps,
-            },
-        };
-    }
-
-    private interface IKnob
-    {
-        event Action? Changed;
-    }
-
-    /// <summary>A combo over a few fixed values; <see cref="Select"/> moves it without counting as a user change.</summary>
-    private sealed class Knob<T> : IKnob
-        where T : struct
-    {
-        private readonly List<(T Value, string Label)> _options;
-        private bool _quiet;
-
-        public Knob(List<(T Value, string Label)> options, T current, Action<T> apply)
-        {
-            _options = options;
-            Combo = new ComboBox { ItemsSource = options.Select(o => o.Label).ToList(), HorizontalAlignment = HorizontalAlignment.Stretch };
-            Select(current);
-            Combo.SelectionChanged += (_, _) =>
-            {
-                if (_quiet || Combo.SelectedIndex < 0)
-                    return;
-                apply(_options[Combo.SelectedIndex].Value);
-                Changed?.Invoke();
-            };
-        }
-
-        public ComboBox Combo { get; }
-
-        public event Action? Changed;
-
-        public void Select(T value)
-        {
-            _quiet = true;
-            // A value tuned outside these options (an edited settings file) shows as blank rather than lying.
-            Combo.SelectedIndex = _options.FindIndex(o => EqualityComparer<T>.Default.Equals(o.Value, value));
-            _quiet = false;
-        }
-    }
-
-
-    public void SetPreset(ViewPreset preset) => View.ApplyPreset(preset);
-
-    public void SetTool(BuilderTool tool)
-    {
-        View.Tool = tool;
-        foreach (var (key, button) in _tools)
-            button.IsChecked = key == tool;
     }
 
     private void AddObject(StageObjectKind kind)

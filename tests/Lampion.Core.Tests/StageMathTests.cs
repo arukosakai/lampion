@@ -1,4 +1,5 @@
-using Lampion.Core.Model;
+using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Stage;
 
 namespace Lampion.Core.Tests;
 
@@ -18,7 +19,7 @@ public class StageMathTests
     }
 
     private static FixtureProfile MovingHead() =>
-        new() { PanRange = 540, TiltRange = 270, Channels = [new() { Role = ChannelRole.Pan }, new() { Role = ChannelRole.Tilt }] };
+        new() { PanRange = 540, TiltRange = 270, Channels = { new FixtureChannel { Role = ChannelRole.Pan }, new FixtureChannel { Role = ChannelRole.Tilt } } };
 
     [Theory]
     [InlineData(0, 0, 0)]

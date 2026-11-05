@@ -2,34 +2,48 @@ using System.Numerics;
 
 namespace Lampion.App.Rendering;
 
-/// <summary>Named views. <see cref="Free"/> is any orbited angle; the rest look straight down an axis.</summary>
-public enum ViewPreset
-{
-    Free,
-    Top,
-    Bottom,
-    Front,
-    Back,
-    Right,
-    Left,
-}
-
 /// <summary>An orbit camera around <see cref="Target"/>; axis views switch to orthographic for exact placement, like Unity's scene gizmo.</summary>
-public sealed class Camera
+internal sealed class Camera
 {
     private const float NearlyVertical = MathF.PI / 2 - 0.0001f;
+    private const float NearPlane = 0.05f;
+    private const float FarPlane = 400;
 
+    /// <summary>The point orbited around and looked at, in metres.</summary>
     public Vector3 Target { get; set; } = new(0, 2.2f, -1);
+
+    /// <summary>Orbit angle around Y in radians; 0 looks from the audience (+Z).</summary>
     public float Yaw { get; set; } = 0.35f;
+
+    /// <summary>Orbit elevation in radians; <see cref="Orbit"/> keeps it just short of ±π/2.</summary>
     public float Pitch { get; set; } = 0.28f;
+
+    /// <summary>Metres from <see cref="Target"/>; <see cref="Zoom"/> keeps it within 1.5..120.</summary>
     public float Distance { get; set; } = 17;
+
+    /// <summary>Vertical field of view in radians; also sizes the orthographic frustum.</summary>
     public float FieldOfView { get; set; } = 50 * MathF.PI / 180;
+
+    /// <summary>Whether the projection is orthographic rather than perspective.</summary>
     public bool Orthographic { get; private set; }
+
+    /// <summary>The axis view last applied, or <see cref="ViewPreset.Free"/> once orbited.</summary>
     public ViewPreset Preset { get; private set; } = ViewPreset.Free;
 
     /// <summary>What the scene gizmo labels the view: the axis name, or Persp / Iso when orbiting freely.</summary>
-    public string Label => Preset == ViewPreset.Free ? Orthographic ? "Iso" : "Persp" : Preset.ToString();
+    public string Label =>
+        Preset switch
+        {
+            ViewPreset.Top => "Top",
+            ViewPreset.Bottom => "Bottom",
+            ViewPreset.Front => "Front",
+            ViewPreset.Back => "Back",
+            ViewPreset.Right => "Right",
+            ViewPreset.Left => "Left",
+            _ => Orthographic ? "Iso" : "Persp",
+        };
 
+    /// <summary>Swaps perspective and orthographic, keeping the angle.</summary>
     public void ToggleProjection() => Orthographic = !Orthographic;
 
     /// <summary>The default three-quarter perspective view.</summary>
@@ -41,6 +55,7 @@ public sealed class Camera
         Target = new Vector3(0, 2.2f, -1);
     }
 
+    /// <summary>Where the eye is, in metres.</summary>
     public Vector3 Position
     {
         get
@@ -72,6 +87,7 @@ public sealed class Camera
         };
     }
 
+    /// <summary>Turns the view by a pointer movement in pixels.</summary>
     public void Orbit(float dx, float dy)
     {
         // Orbiting leaves the axis view but keeps the projection, as Unity does (an ortho orbit is "Iso").
@@ -80,6 +96,7 @@ public sealed class Camera
         Pitch = Math.Clamp(Pitch + dy * 0.008f, -NearlyVertical, NearlyVertical);
     }
 
+    /// <summary>Slides the target so the stage follows a pointer movement of (dx, dy) pixels.</summary>
     public void Pan(float dx, float dy, float viewportHeight)
     {
         var (right, up, _) = Basis();
@@ -87,34 +104,41 @@ public sealed class Camera
         Target += (-right * dx + up * dy) * metresPerPixel;
     }
 
+    /// <summary>Moves in (positive) or out (negative) by wheel notches.</summary>
     public void Zoom(float steps) => Distance = Math.Clamp(Distance * MathF.Pow(0.88f, steps), 1.5f, 120);
 
     /// <summary>Height of the view at the target, in metres (also the ortho frustum height).</summary>
     public float VisibleHeight() => 2 * Distance * MathF.Tan(FieldOfView / 2);
 
-    public (Vector3 Right, Vector3 Up, Vector3 Forward) Basis()
+    /// <summary>The camera's unit axes in world space: screen right, screen up and the view direction.</summary>
+    public (Vector3 Right, Vector3 Up, Vector3 Forward) Basis() => Basis(Position);
+
+    private (Vector3 Right, Vector3 Up, Vector3 Forward) Basis(Vector3 position)
     {
-        var forward = Vector3.Normalize(Target - Position);
+        var forward = Vector3.Normalize(Target - position);
         var worldUp = MathF.Abs(forward.Y) > 0.999f ? -Vector3.UnitZ : Vector3.UnitY;
         var right = Vector3.Normalize(Vector3.Cross(forward, worldUp));
         var up = Vector3.Cross(right, forward);
         return (right, up, forward);
     }
 
+    /// <summary>World-to-view matrix (System.Numerics row-vector convention).</summary>
     public Matrix4x4 View()
     {
-        var (_, up, _) = Basis();
-        return Matrix4x4.CreateLookAt(Position, Target, up);
+        var position = Position;
+        var (_, up, _) = Basis(position);
+        return Matrix4x4.CreateLookAt(position, Target, up);
     }
 
+    /// <summary>View-to-clip matrix for a viewport with this width / height ratio.</summary>
     public Matrix4x4 Projection(float aspect)
     {
         if (Orthographic)
         {
             var h = VisibleHeight();
-            return Matrix4x4.CreateOrthographic(h * aspect, h, 0.05f, 400);
+            return Matrix4x4.CreateOrthographic(h * aspect, h, NearPlane, FarPlane);
         }
-        return Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, aspect, 0.05f, 400);
+        return Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, aspect, NearPlane, FarPlane);
     }
 
     /// <summary>World-space ray through a viewport point (pixels from the top-left).</summary>
@@ -130,13 +154,10 @@ public sealed class Camera
         return (a, Vector3.Normalize(b - a));
     }
 
+    /// <summary>The current view frozen for projecting many points into a viewport of this size, in pixels.</summary>
+    public ScreenProjector Projector(float width, float height) => new(View() * Projection(width / height), width, height);
+
     /// <summary>Viewport pixel of a world point, or null when it is behind the camera.</summary>
-    public (float X, float Y)? Project(Vector3 world, float width, float height)
-    {
-        var clip = Vector4.Transform(new Vector4(world, 1), View() * Projection(width / height));
-        if (clip.W <= 1e-4f)
-            return null;
-        var ndc = new Vector3(clip.X, clip.Y, clip.Z) / clip.W;
-        return ((ndc.X + 1) / 2 * width, (1 - ndc.Y) / 2 * height);
-    }
+    public (float X, float Y)? Project(Vector3 world, float width, float height) =>
+        Projector(width, height).TryProject(world, out var screen) ? (screen.X, screen.Y) : null;
 }
