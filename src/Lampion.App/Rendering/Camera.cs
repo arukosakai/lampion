@@ -50,7 +50,7 @@ public sealed class Camera
         }
     }
 
-    /// <summary>Looks straight down an axis, orthographic — what clicking a cone on the scene gizmo does.</summary>
+    /// <summary>Looks straight down an axis, orthographic — what clicking a ball on the scene gizmo does.</summary>
     public void Apply(ViewPreset preset)
     {
         if (preset == ViewPreset.Free)
