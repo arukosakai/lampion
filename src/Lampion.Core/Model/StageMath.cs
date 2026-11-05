@@ -30,6 +30,34 @@ public static class StageMath
         return (Math.Atan2(d.X, d.Z) / Deg, Math.Atan2(d.Y, flat) / Deg);
     }
 
+    /// <summary>
+    /// Pan/tilt (0..1) that point a moving head at <paramref name="target"/>, or null when it can't reach.
+    /// Several settings hit the same spot (flip the head, go round once more); the one nearest
+    /// <paramref name="near"/> wins, so dragging a target never makes the head swing all the way round.
+    /// </summary>
+    public static (double Pan, double Tilt)? PanTiltToward(Fixture fixture, FixtureProfile profile, Vec3 target, (double Pan, double Tilt) near)
+    {
+        if (profile.PanRange <= 0 || profile.TiltRange <= 0)
+            return null;
+        var (yaw, pitch) = AimAt(fixture.Position, target);
+        (double Pan, double Tilt)? best = null;
+        var bestDistance = double.MaxValue;
+        // The same direction as (yaw, pitch), seen from a head flipped over the top.
+        foreach (var (y, p) in new[] { (yaw, pitch), (yaw + 180, -180 - pitch) })
+            for (var turnsYaw = -2; turnsYaw <= 2; turnsYaw++)
+                for (var turnsPitch = -1; turnsPitch <= 1; turnsPitch++)
+                {
+                    var pan = (y + 360 * turnsYaw - fixture.Yaw) / profile.PanRange + 0.5;
+                    var tilt = (p + 360 * turnsPitch - fixture.Pitch) / profile.TiltRange + 0.5;
+                    if (pan < -1e-9 || pan > 1 + 1e-9 || tilt < -1e-9 || tilt > 1 + 1e-9)
+                        continue;
+                    var distance = Math.Abs(pan - near.Pan) * profile.PanRange + Math.Abs(tilt - near.Tilt) * profile.TiltRange;
+                    if (distance < bestDistance)
+                        (best, bestDistance) = ((Math.Clamp(pan, 0, 1), Math.Clamp(tilt, 0, 1)), distance);
+                }
+        return best;
+    }
+
     public static void AimAt(Fixture fixture, Vec3 target)
     {
         var (yaw, pitch) = AimAt(fixture.Position, target);
