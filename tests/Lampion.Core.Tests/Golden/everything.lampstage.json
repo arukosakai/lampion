@@ -20,6 +20,8 @@
           "length": 11.704699910719626
         },
         "yaw": 0,
+        "pitch": 0,
+        "roll": 0,
         "color": "#2B2622"
       },
       {
@@ -39,6 +41,29 @@
           "length": 12.007497657713701
         },
         "yaw": 15,
+        "pitch": 0,
+        "roll": 0,
+        "color": "#B8BCC4"
+      },
+      {
+        "id": "so-tower",
+        "name": "Tower",
+        "kind": "Truss",
+        "position": {
+          "x": -6,
+          "y": 2.5,
+          "z": 1,
+          "length": 6.576473218982953
+        },
+        "size": {
+          "x": 5,
+          "y": 0.3,
+          "z": 0.3,
+          "length": 5.017967716117751
+        },
+        "yaw": 10,
+        "pitch": -4,
+        "roll": 90,
         "color": "#B8BCC4"
       },
       {
@@ -58,6 +83,8 @@
           "length": 6.897100840208152
         },
         "yaw": 0,
+        "pitch": 0,
+        "roll": 0,
         "color": "#050505"
       },
       {
@@ -77,6 +104,8 @@
           "length": 14.423591785682234
         },
         "yaw": 0,
+        "pitch": 0,
+        "roll": 0,
         "color": "#1E1E24"
       }
     ],
@@ -497,6 +526,7 @@
       },
       "yaw": -9,
       "pitch": -47,
+      "roll": -21,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -514,6 +544,7 @@
       },
       "yaw": -3,
       "pitch": -49,
+      "roll": -7,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -531,6 +562,7 @@
       },
       "yaw": 3,
       "pitch": -51,
+      "roll": 7,
       "gelColor": "#FFD080",
       "extractWhite": false
     },
@@ -548,6 +580,7 @@
       },
       "yaw": 9,
       "pitch": -53,
+      "roll": 21,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -565,6 +598,7 @@
       },
       "yaw": -12,
       "pitch": -46,
+      "roll": -28,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -582,6 +616,7 @@
       },
       "yaw": 0,
       "pitch": -50,
+      "roll": 0,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -599,6 +634,7 @@
       },
       "yaw": 12,
       "pitch": -54,
+      "roll": 28,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -616,6 +652,7 @@
       },
       "yaw": -6,
       "pitch": -48,
+      "roll": -14,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -633,6 +670,7 @@
       },
       "yaw": 6,
       "pitch": -52,
+      "roll": 14,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -650,6 +688,7 @@
       },
       "yaw": 1.5,
       "pitch": -50.5,
+      "roll": 3.5,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -667,6 +706,7 @@
       },
       "yaw": 15,
       "pitch": -55,
+      "roll": 35,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -684,6 +724,7 @@
       },
       "yaw": 0,
       "pitch": -50,
+      "roll": 0,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -701,6 +742,7 @@
       },
       "yaw": -18,
       "pitch": -44,
+      "roll": -42,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -718,6 +760,7 @@
       },
       "yaw": -18,
       "pitch": -44,
+      "roll": -42,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -735,6 +778,7 @@
       },
       "yaw": 18,
       "pitch": -56,
+      "roll": 42,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -752,6 +796,7 @@
       },
       "yaw": -4.5,
       "pitch": -48.5,
+      "roll": -10.5,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -769,6 +814,7 @@
       },
       "yaw": 4.5,
       "pitch": -51.5,
+      "roll": 10.5,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -786,6 +832,7 @@
       },
       "yaw": 21,
       "pitch": -57,
+      "roll": 49,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -803,6 +850,7 @@
       },
       "yaw": -21,
       "pitch": -43,
+      "roll": -49,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -820,6 +868,7 @@
       },
       "yaw": 0,
       "pitch": -50,
+      "roll": 0,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -837,6 +886,7 @@
       },
       "yaw": -15,
       "pitch": -45,
+      "roll": -35,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -854,6 +904,7 @@
       },
       "yaw": 7.5,
       "pitch": -52.5,
+      "roll": 17.5,
       "gelColor": "#FFD080",
       "extractWhite": true
     },
@@ -871,6 +922,7 @@
       },
       "yaw": 24,
       "pitch": -58,
+      "roll": 56,
       "gelColor": "#FFD080",
       "extractWhite": true
     }

@@ -17,6 +17,7 @@ internal sealed class FixtureEditor
     private static readonly ScrubRange HeightRange = new(-10, 100, 0.01, Unit: " m");
     private static readonly ScrubRange YawRange = new(-360, 360, 0.5, Format: "0.#", Unit: "°");
     private static readonly ScrubRange PitchRange = new(-180, 90, 0.5, Format: "0.#", Unit: "°");
+    private static readonly ScrubRange RollRange = new(-180, 180, 0.5, Format: "0.#", Unit: "°");
 
     private readonly InspectorFields _fields;
     private readonly RigToolsSection _rigTools;
@@ -57,6 +58,7 @@ internal sealed class FixtureEditor
             InspectorLayout.Row(transform, "Height (all)", _fields.Scrub(primary.Position.Y, HeightRange, v => selected.ForEach(f => f.Position = f.Position with { Y = Math.Round(v, 3) })));
         InspectorLayout.Row(transform, "Yaw", _fields.Scrub(primary.Yaw, YawRange, v => selected.ForEach(f => f.Yaw = Math.Round(v, 1))), "0° faces the audience");
         InspectorLayout.Row(transform, "Pitch", _fields.Scrub(primary.Pitch, PitchRange, v => selected.ForEach(f => f.Pitch = Math.Round(v, 1))), "-90° points straight down");
+        InspectorLayout.Row(transform, "Roll", _fields.Scrub(primary.Roll, RollRange, v => selected.ForEach(f => f.Roll = Math.Round(v, 1))), "Spins the fixture around its beam: 90° side-mounts a moving head or stands a batten upright");
 
         _rigTools.Build(root, selected);
 

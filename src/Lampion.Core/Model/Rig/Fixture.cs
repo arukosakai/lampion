@@ -29,6 +29,12 @@ public sealed class Fixture
     /// <summary>Degrees; 0 is horizontal, -90 straight down.</summary>
     public double Pitch { get; set; } = -60;
 
+    /// <summary>
+    /// Degrees the whole fixture is spun around its beam, for side-mounted heads or upright battens. A moving
+    /// head's pan axis turns with it; 0 keeps the pan axis vertical.
+    /// </summary>
+    public double Roll { get; set; }
+
     /// <summary>Tint as <c>#RRGGBB</c> for fixtures with no colour channels (a dimmer behind a gel).</summary>
     public string GelColor { get; set; } = "#FFE6B0";
 
@@ -47,6 +53,7 @@ public sealed class Fixture
             Position = Position,
             Yaw = Yaw,
             Pitch = Pitch,
+            Roll = Roll,
             GelColor = GelColor,
             ExtractWhite = ExtractWhite,
         };

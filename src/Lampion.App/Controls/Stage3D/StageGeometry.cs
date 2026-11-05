@@ -13,6 +13,18 @@ internal static class StageGeometry
     /// <summary>A render vector as a model point.</summary>
     public static Vec3 ToVec(Vector3 v) => new(v.X, v.Y, v.Z);
 
+    /// <summary>A set piece's yaw, pitch and roll as one rotation, matching <see cref="StageMath.LocalToWorld"/>.</summary>
+    public static Quaternion Orientation(StageObject obj) => Quaternion.CreateFromYawPitchRoll(Radians(obj.Yaw), Radians(obj.Pitch), Radians(obj.Roll));
+
+    /// <summary>
+    /// How a fixture's body is spun around its rest aim by <see cref="Core.Model.Rig.Fixture.Roll"/>; matches
+    /// <see cref="StageMath.BeamDirection"/>, so the drawn yoke and the beam agree.
+    /// </summary>
+    public static Quaternion Mount(Core.Model.Rig.Fixture fixture) =>
+        fixture.Roll == 0 ? Quaternion.Identity : Quaternion.CreateFromAxisAngle(ToVector(StageMath.Direction(fixture.Yaw, fixture.Pitch)), Radians(fixture.Roll));
+
+    private static float Radians(double degrees) => (float)(degrees * Math.PI / 180);
+
     /// <summary>A <c>#RRGGBB</c> colour as linear RGB (gamma 2.2 undone); unparseable text gives white.</summary>
     public static Vector3 LinearColor(string hex)
     {

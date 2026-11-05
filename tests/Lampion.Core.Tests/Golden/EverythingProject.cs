@@ -31,6 +31,7 @@ internal static class EverythingProject
                 {
                     new StageObject { Id = "so-deck", Name = "Deck", Kind = StageObjectKind.Platform, Position = new Vec3(0, 0.5, -1), Size = new Vec3(10, 1, 6), Color = "#2B2622" },
                     new StageObject { Id = "so-truss", Name = "Truss", Kind = StageObjectKind.Truss, Position = new Vec3(0, 6, 1), Size = new Vec3(12, 0.3, 0.3), Yaw = 15, Color = "#B8BCC4" },
+                    new StageObject { Id = "so-tower", Name = "Tower", Kind = StageObjectKind.Truss, Position = new Vec3(-6, 2.5, 1), Size = new Vec3(5, 0.3, 0.3), Yaw = 10, Pitch = -4, Roll = 90, Color = "#B8BCC4" },
                     new StageObject { Id = "so-screen", Name = "Screen", Kind = StageObjectKind.Screen, Position = new Vec3(0, 3, -4), Size = new Vec3(6, 3.4, 0.1), Color = "#050505" },
                     new StageObject { Id = "so-wall", Name = "Wall", Kind = StageObjectKind.Wall, Position = new Vec3(0, 4, -5), Size = new Vec3(12, 8, 0.2), Color = "#1E1E24" },
                 },
@@ -87,6 +88,7 @@ internal static class EverythingProject
                 Position = new Vec3(x, y, z),
                 Yaw = x * 3,
                 Pitch = -50 - x,
+                Roll = x * 7,
                 ExtractWhite = extractWhite,
                 GelColor = "#FFD080",
             };

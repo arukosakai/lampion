@@ -26,7 +26,7 @@ internal sealed class SelectionReadout(StageView view, EditorState state)
             if (count > 1)
                 _text.Append(" (+").Append(count - 1).Append(" more)");
             Position(fixture.Position);
-            Line().Append("Yaw ").Append(fixture.Yaw, "0.#").Append("°   Pitch ").Append(fixture.Pitch, "0.#").Append("°   DMX ").Append(fixture.Universe).Append(".").Append(fixture.Address);
+            Line().Append("Yaw ").Append(fixture.Yaw, "0.#").Append("°   Pitch ").Append(fixture.Pitch, "0.#").Append("°   Roll ").Append(fixture.Roll, "0.#").Append("°   DMX ").Append(fixture.Universe).Append(".").Append(fixture.Address);
             if (FindVisual(scene, fixture.Id, out var visual))
             {
                 var spot = 2 * visual.BeamLength * MathF.Tan(visual.BeamAngle * 0.5f * MathF.PI / 180);
@@ -37,8 +37,10 @@ internal sealed class SelectionReadout(StageView view, EditorState state)
         {
             Line().Append(obj.Name).Append(" (").Append(KindName(obj.Kind)).Append(")");
             Position(obj.Position);
-            Line().Append("W ").AppendMetres(obj.Size.X).Append("   H ").AppendMetres(obj.Size.Y).Append("   D ").AppendMetres(obj.Size.Z).Append("   Yaw ").Append(obj.Yaw, "0.#").Append("°");
-            Line().Append("Top at ").AppendMetres(obj.Position.Y + obj.Size.Y / 2).Append("   bottom at ").AppendMetres(obj.Position.Y - obj.Size.Y / 2);
+            Line().Append("W ").AppendMetres(obj.Size.X).Append("   H ").AppendMetres(obj.Size.Y).Append("   D ").AppendMetres(obj.Size.Z);
+            Line().Append("Yaw ").Append(obj.Yaw, "0.#").Append("°   Pitch ").Append(obj.Pitch, "0.#").Append("°   Roll ").Append(obj.Roll, "0.#").Append("°");
+            var halfHeight = StageMath.HalfHeight(obj);
+            Line().Append("Top at ").AppendMetres(obj.Position.Y + halfHeight).Append("   bottom at ").AppendMetres(obj.Position.Y - halfHeight);
         }
         if (view.BuildMode)
         {

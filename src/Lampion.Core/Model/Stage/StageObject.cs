@@ -18,8 +18,14 @@ public sealed class StageObject
     /// <summary>Width (local X), height (Y) and depth (Z) in metres. A truss runs along its width.</summary>
     public Vec3 Size { get; set; } = new(2, 0.3, 0.3);
 
-    /// <summary>Degrees around Y.</summary>
+    /// <summary>Degrees around the vertical; positive turns the +X end away from the audience.</summary>
     public double Yaw { get; set; }
+
+    /// <summary>Degrees around the object's own X axis, applied before yaw; positive tips the top toward the audience.</summary>
+    public double Pitch { get; set; }
+
+    /// <summary>Degrees around the object's own Z axis, applied first; 90 stands a truss upright with its +X end on top.</summary>
+    public double Roll { get; set; }
 
     /// <summary>Surface colour as <c>#RRGGBB</c>.</summary>
     public string Color { get; set; } = "#3A3A40";
@@ -33,6 +39,8 @@ public sealed class StageObject
             Position = Position,
             Size = Size,
             Yaw = Yaw,
+            Pitch = Pitch,
+            Roll = Roll,
             Color = Color,
         };
 }

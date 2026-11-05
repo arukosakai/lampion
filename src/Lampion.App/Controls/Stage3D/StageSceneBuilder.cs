@@ -80,7 +80,7 @@ internal sealed partial class StageSceneBuilder
         var beam = StageGeometry.ToVector(direction);
         var lens = position + beam * rig.LensOffset;
         var throwDistance = StageMath.Raycast(objects, new Vec3(lens.X, lens.Y, lens.Z), direction, 40) ?? MaxThrow;
-        return new FixtureVisual(fixture.Id, rig.Kind, position, beam, rig.BeamAngle, light, (float)Math.Min(throwDistance, MaxThrow), rig.MovingHead, rig.Selected);
+        return new FixtureVisual(fixture.Id, rig.Kind, position, beam, rig.BeamAngle, light, (float)Math.Min(throwDistance, MaxThrow), rig.MovingHead, rig.Selected, rig.Mount);
     }
 
     /// <summary>The rig's summed spill, scaled into a gentle room tint that never passes 0.6.</summary>
@@ -108,7 +108,7 @@ internal sealed partial class StageSceneBuilder
         for (var i = 0; i < objects.Count; i++)
         {
             var o = objects[i];
-            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), (float)o.Yaw, StageGeometry.LinearColor(o.Color), o.Id == selected);
+            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), o.Id == selected);
         }
         _scene.SetObjects(_objects);
 

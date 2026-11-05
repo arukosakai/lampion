@@ -1,3 +1,4 @@
+using System.Numerics;
 using Lampion.App.Rendering;
 using Lampion.Core.Model.Stage;
 
@@ -32,7 +33,7 @@ internal sealed class PreviewBeamCache
     private static FixtureVisual Build(in PreviewBeamKey key)
     {
         var position = key.OnFloor ? PreviewSet.FloorPoint : PreviewSet.HangPoint;
-        var visual = new FixtureVisual("preview", key.Kind, position, PreviewSet.ToVector(key.Direction), key.BeamAngle, key.Light, 0, key.MovingHead, false);
+        var visual = new FixtureVisual("preview", key.Kind, position, PreviewSet.ToVector(key.Direction), key.BeamAngle, key.Light, 0, key.MovingHead, false, Quaternion.Identity);
         var lens = visual.Lens;
         var throwDistance = StageMath.Raycast(PreviewSet.Objects(key.OnFloor), new Vec3(lens.X, lens.Y, lens.Z), key.Direction, 40) ?? 30;
         return visual with { BeamLength = (float)Math.Min(throwDistance, 30) };

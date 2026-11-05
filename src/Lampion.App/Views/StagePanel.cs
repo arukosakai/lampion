@@ -109,10 +109,10 @@ internal sealed class StagePanel : DockPanel
     private MenuFlyout AddMenu()
     {
         var menu = new MenuFlyout();
-        foreach (var (kind, label) in new[] { (StageObjectKind.Truss, "Truss"), (StageObjectKind.Platform, "Riser / platform"), (StageObjectKind.Wall, "Wall"), (StageObjectKind.Screen, "LED screen") })
+        foreach (var label in new[] { "Truss", "Truss tower", "Riser / platform", "Wall", "LED screen" })
         {
             var item = new MenuItem { Header = label };
-            item.Click += (_, _) => AddObject(kind);
+            item.Click += (_, _) => AddObject(label);
             menu.Items.Add(item);
         }
         return menu;
@@ -154,16 +154,20 @@ internal sealed class StagePanel : DockPanel
         return check;
     }
 
-    private void AddObject(StageObjectKind kind)
+    private static StageObject NewObject(string label) =>
+        label switch
+        {
+            "Truss" => new StageObject { Name = "Truss", Kind = StageObjectKind.Truss, Size = new Vec3(4, 0.3, 0.3), Position = new Vec3(0, 6, 0), Color = "#B8BCC4" },
+            "Truss tower" => new StageObject { Name = "Truss tower", Kind = StageObjectKind.Truss, Size = new Vec3(5, 0.3, 0.3), Roll = 90, Position = new Vec3(0, 2.5, 1), Color = "#B8BCC4" },
+            "Wall" => new StageObject { Name = "Wall", Kind = StageObjectKind.Wall, Size = new Vec3(4, 3, 0.15), Position = new Vec3(0, 1.5, -4), Color = "#1E1E24" },
+            "LED screen" => new StageObject { Name = "Screen", Kind = StageObjectKind.Screen, Size = new Vec3(3.2, 1.8, 0.08), Position = new Vec3(0, 2.5, -4.5), Color = "#050505" },
+            _ => new StageObject { Name = "Riser", Kind = StageObjectKind.Platform, Size = new Vec3(2, 0.4, 2), Position = new Vec3(0, 1.2, -2), Color = "#2B2622" },
+        };
+
+    private void AddObject(string label)
     {
         var target = View.Camera.Target;
-        var obj = kind switch
-        {
-            StageObjectKind.Truss => new StageObject { Name = "Truss", Kind = kind, Size = new Vec3(4, 0.3, 0.3), Position = new Vec3(0, 6, 0), Color = "#B8BCC4" },
-            StageObjectKind.Wall => new StageObject { Name = "Wall", Kind = kind, Size = new Vec3(4, 3, 0.15), Position = new Vec3(0, 1.5, -4), Color = "#1E1E24" },
-            StageObjectKind.Screen => new StageObject { Name = "Screen", Kind = kind, Size = new Vec3(3.2, 1.8, 0.08), Position = new Vec3(0, 2.5, -4.5), Color = "#050505" },
-            _ => new StageObject { Name = "Riser", Kind = kind, Size = new Vec3(2, 0.4, 2), Position = new Vec3(0, 1.2, -2), Color = "#2B2622" },
-        };
+        var obj = NewObject(label);
         obj.Position = obj.Position with { X = StageMath.Snap(target.X, 0.5) };
         _state.Project.Stage.Objects.Add(obj);
         _state.Commit();

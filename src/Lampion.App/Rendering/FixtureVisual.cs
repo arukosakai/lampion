@@ -13,7 +13,8 @@ namespace Lampion.App.Rendering;
 /// <param name="BeamLength">Metres from the lens to where the beam lands (capped at 30).</param>
 /// <param name="MovingHead">Whether to draw a base and yoke that follow pan and tilt.</param>
 /// <param name="Selected">Whether to draw the selection glow.</param>
-/// <remarks>About 70 bytes: pass it by <c>in</c> or read it from a span rather than copying it around.</remarks>
+/// <param name="Mount">Body rotation around <see cref="Position"/> from the fixture's roll; the beam is already rotated.</param>
+/// <remarks>About 86 bytes: pass it by <c>in</c> or read it from a span rather than copying it around.</remarks>
 internal readonly record struct FixtureVisual(
     string Id,
     BeamKind Kind,
@@ -23,7 +24,8 @@ internal readonly record struct FixtureVisual(
     Vector3 Light,
     float BeamLength,
     bool MovingHead,
-    bool Selected
+    bool Selected,
+    Quaternion Mount
 )
 {
     /// <summary>Front of the lens, where the beam starts.</summary>

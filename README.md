@@ -56,7 +56,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 
 ### 🏟️ Real-time 3D stage
 - OpenGL rendering: per-pixel spotlights, volumetric beams in moving haze, lens flares
-- A stage builder in metres: truss, risers, walls and LED screens that play your video
+- A stage builder in metres: truss (lying or standing as towers), risers, walls and LED screens that play your video; every set piece and fixture can be yawed, pitched and rolled
 - A Unity-style scene gizmo for axis views and ortho, move gizmos, grid snapping, an aim tool, and throw and spot-size readouts
 - Stage layouts you save once and reuse in every project
 
@@ -84,7 +84,7 @@ Every build is self-contained, so there's no .NET to install.
 
 1. **Start:** Lampion opens on a start screen with your recent shows, a blank show, the demo, and templates (built-in venues plus any you save with **Stage → Save layout as template…**).
 2. **Patch:** in the **Project** panel, **＋ New → Fixtures…** opens a New Fixtures dialog: pick a profile, how many, where to hang them, and Lampion addresses and groups them for you.
-3. **Build the stage:** in **Stage 3D**, drag fixtures and set pieces around; **+ Set piece** adds truss, risers, walls or screens. Everything is in metres.
+3. **Build the stage:** in **Stage 3D**, drag fixtures and set pieces around; **+ Set piece** adds truss, truss towers, risers, walls or screens. Everything is in metres; Effect Controls has yaw, pitch and roll for any set piece, and roll for fixtures (90° side-mounts a moving head or stands a batten upright).
 4. **Add music:** **File → Import audio…**, then set the **BPM** and **Offset** so the beat grid lines up with the song.
 5. **Light it:** drag a group from the **Project** panel onto the timeline for a light track, then drag effects and transitions from the **Effects** panel onto it. In **Effect Controls**, scrub the blue values and click a ⏱ stopwatch to keyframe a property at the playhead, just like After Effects.
 6. **Export:** **File → Export to QLC+…** writes a `.qxw` workspace. Open it in QLC+ and play the show from the Show Manager.

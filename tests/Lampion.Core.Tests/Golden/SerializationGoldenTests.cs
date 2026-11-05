@@ -24,10 +24,19 @@ public class SerializationGoldenTests
     public void GoldenProjectLoadsTheSameShow()
     {
         var loaded = ProjectSerializer.Deserialize(GoldenFile.Read(ProjectFile));
-        Assert.Equal(4, loaded.Stage.Objects.Count);
+        Assert.Equal(5, loaded.Stage.Objects.Count);
         Assert.Equal(3, Assert.IsType<GradientEffect>(((LightClip)loaded.Tracks[1].Clips[2]).Effect).Colors.Count);
         Assert.Empty(Assert.IsType<ColorCycleEffect>(((LightClip)loaded.Tracks[1].Clips[5]).Effect).Colors);
         Assert.Equal(["#FF0000", "#00FF00", "#0000FF"], Assert.IsType<ChaseEffect>(((LightClip)loaded.Tracks[2].Clips[0]).Effect).Colors);
+    }
+
+    [Fact]
+    public void FilesFromBeforePitchAndRollLoadUnrotated()
+    {
+        var withoutRoll = string.Join('\n', GoldenFile.Read(ProjectFile).Split('\n').Where(line => !line.Contains("\"roll\"")));
+        var loaded = ProjectSerializer.Deserialize(withoutRoll);
+        Assert.All(loaded.Stage.Objects, o => Assert.Equal(0, o.Roll));
+        Assert.All(loaded.Fixtures, f => Assert.Equal(0, f.Roll));
     }
 
     [Fact]

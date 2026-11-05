@@ -1,3 +1,4 @@
+using System.Numerics;
 using Lampion.App.Rendering;
 using Lampion.Core.Model.Rig;
 
@@ -17,6 +18,7 @@ internal sealed partial class StageSceneBuilder
             MovingHead = profile.HasPanTilt;
             Selected = selected;
             LensOffset = FixtureVisual.LensOffsetOf(Kind);
+            Mount = StageGeometry.Mount(fixture);
             // Wider beams light more of the set, so they spill more back into the room.
             BounceWeight = MathF.Sqrt(Math.Clamp(BeamAngle, 5, 120) / 25f);
         }
@@ -36,5 +38,7 @@ internal sealed partial class StageSceneBuilder
         public float LensOffset { get; }
 
         public float BounceWeight { get; }
+
+        public Quaternion Mount { get; }
     }
 }

@@ -26,7 +26,16 @@ public static class StageMath
     {
         if (profile is null || !profile.HasPanTilt)
             return Direction(fixture.Yaw, fixture.Pitch);
-        return Direction(fixture.Yaw + (pan - 0.5) * profile.PanRange, fixture.Pitch + (tilt - 0.5) * profile.TiltRange);
+        var unrolled = Direction(fixture.Yaw + (pan - 0.5) * profile.PanRange, fixture.Pitch + (tilt - 0.5) * profile.TiltRange);
+        return fixture.Roll == 0 ? unrolled : Rotate(unrolled, Direction(fixture.Yaw, fixture.Pitch), fixture.Roll);
+    }
+
+    /// <summary><paramref name="v"/> turned <paramref name="degrees"/> around the unit <paramref name="axis"/> (right-handed, Rodrigues).</summary>
+    public static Vec3 Rotate(Vec3 v, Vec3 axis, double degrees)
+    {
+        var cos = Math.Cos(degrees * Deg);
+        var sin = Math.Sin(degrees * Deg);
+        return v * cos + Vec3.Cross(axis, v) * sin + axis * (Vec3.Dot(axis, v) * (1 - cos));
     }
 
     /// <summary>Yaw and pitch in degrees that aim from <paramref name="from"/> at <paramref name="target"/>; straight down when they coincide.</summary>
@@ -48,7 +57,10 @@ public static class StageMath
     {
         if (profile.PanRange <= 0 || profile.TiltRange <= 0)
             return null;
-        var (yaw, pitch) = AimAt(fixture.Position, target);
+        var toward = target - fixture.Position;
+        if (fixture.Roll != 0)
+            toward = Rotate(toward, Direction(fixture.Yaw, fixture.Pitch), -fixture.Roll);
+        var (yaw, pitch) = AimAt(new Vec3(0, 0, 0), toward);
         (double Pan, double Tilt)? best = null;
         var bestDistance = double.MaxValue;
         for (var flip = 0; flip < 2; flip++)
@@ -80,30 +92,47 @@ public static class StageMath
     }
 
     /// <summary>A point in an object's local frame (metres from its centre) moved into the world.</summary>
-    public static Vec3 LocalToWorld(StageObject obj, Vec3 local)
+    public static Vec3 LocalToWorld(StageObject obj, Vec3 local) => obj.Position + BasisOf(obj).ToWorld(local);
+
+    /// <summary>How far the object reaches above and below its centre once rotated, in metres.</summary>
+    public static double HalfHeight(StageObject obj)
     {
-        var yaw = obj.Yaw * Deg;
-        var cos = Math.Cos(yaw);
-        var sin = Math.Sin(yaw);
-        return obj.Position + new Vec3(local.X * cos + local.Z * sin, local.Y, -local.X * sin + local.Z * cos);
+        var basis = BasisOf(obj);
+        var half = obj.Size * 0.5;
+        return Math.Abs(basis.X.Y) * half.X + Math.Abs(basis.Y.Y) * half.Y + Math.Abs(basis.Z.Y) * half.Z;
     }
 
+    private static Basis BasisOf(StageObject obj) => Basis.FromYawPitchRoll(obj.Yaw, obj.Pitch, obj.Roll);
+
     /// <summary>
-    /// Spreads fixtures evenly along a truss, hung <paramref name="drop"/> metres below its bottom chord,
-    /// with half a gap at each end so they sit centred like on a real bar.
+    /// Spreads fixtures evenly along a truss with half a gap at each end, like on a real bar. A lying truss
+    /// gets them <paramref name="drop"/> metres below its bottom chord; an upright tower (more than ~45° up)
+    /// gets them clamped that far out on whichever face looks most toward the audience.
     /// </summary>
     public static void DistributeAlong(StageObject truss, IReadOnlyList<Fixture> fixtures, double drop = 0.35)
     {
         if (fixtures.Count == 0)
             return;
+        var basis = BasisOf(truss);
+        var upright = Math.Abs(basis.X.Y) > Math.Sqrt(0.5);
+        var outward = upright ? AudienceFace(basis, truss.Size, drop) : new Vec3(0, -truss.Size.Y / 2 - drop, 0);
         var length = truss.Size.X;
         var gap = length / fixtures.Count;
         for (var i = 0; i < fixtures.Count; i++)
         {
             var along = -length / 2 + gap * (i + 0.5);
-            var p = LocalToWorld(truss, new Vec3(along, -truss.Size.Y / 2 - drop, 0));
-            fixtures[i].Position = Round(p);
+            fixtures[i].Position = Round(truss.Position + basis.ToWorld(outward with { X = along }));
         }
+    }
+
+    /// <summary><paramref name="clearance"/> metres out from whichever side face (±local Y or ±Z) looks most toward the audience, in local metres.</summary>
+    private static Vec3 AudienceFace(in Basis basis, Vec3 size, double clearance)
+    {
+        var yFacing = basis.Y.Z;
+        var zFacing = basis.Z.Z;
+        return Math.Abs(yFacing) > Math.Abs(zFacing)
+            ? new Vec3(0, (yFacing < 0 ? -1 : 1) * (size.Y / 2 + clearance), 0)
+            : new Vec3(0, 0, (zFacing < 0 ? -1 : 1) * (size.Z / 2 + clearance));
     }
 
     /// <summary><paramref name="value"/> rounded to the nearest multiple of <paramref name="step"/>; unchanged when the step is not positive.</summary>
@@ -149,11 +178,9 @@ public static class StageMath
     /// </summary>
     public static double? RayBox(StageObject obj, Vec3 origin, Vec3 direction)
     {
-        var yaw = -obj.Yaw * Deg;
-        var cos = Math.Cos(yaw);
-        var sin = Math.Sin(yaw);
-        var o = ToLocal(origin - obj.Position, cos, sin);
-        var d = ToLocal(direction, cos, sin);
+        var basis = BasisOf(obj);
+        var o = basis.ToLocal(origin - obj.Position);
+        var d = basis.ToLocal(direction);
         var half = obj.Size * 0.5;
         double near = double.NegativeInfinity, far = double.PositiveInfinity;
         if (!Slab(o.X, d.X, half.X, ref near, ref far) || !Slab(o.Y, d.Y, half.Y, ref near, ref far) || !Slab(o.Z, d.Z, half.Z, ref near, ref far))
@@ -162,8 +189,6 @@ public static class StageMath
             return null;
         return near >= 0 ? near : far;
     }
-
-    private static Vec3 ToLocal(Vec3 v, double cos, double sin) => new(v.X * cos + v.Z * sin, v.Y, -v.X * sin + v.Z * cos);
 
     /// <summary>Narrows [near, far] to one axis' slab; false when the ray runs parallel to it from outside.</summary>
     private static bool Slab(double origin, double direction, double half, ref double near, ref double far)

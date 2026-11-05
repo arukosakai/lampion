@@ -20,7 +20,7 @@ internal sealed class SetPiecePass(LitProgram lit, StageMeshes meshes)
 
     private void Draw(in ObjectVisual obj)
     {
-        var place = Matrix4x4.CreateRotationY(obj.Yaw * MathF.PI / 180) * Matrix4x4.CreateTranslation(obj.Position);
+        var place = Matrix4x4.CreateFromQuaternion(obj.Rotation) * Matrix4x4.CreateTranslation(obj.Position);
         var emissive = obj.Selected ? SelectGlow : Vector3.Zero;
         switch (obj.Kind)
         {

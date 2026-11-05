@@ -63,6 +63,78 @@ public class StageMathTests
         Assert.All(fixtures, f => Assert.Equal(1, f.Position.Z, 6));
     }
 
+    [Theory]
+    [InlineData(0, 0, 0)]
+    [InlineData(30, 0, 0)]
+    [InlineData(0, 25, 0)]
+    [InlineData(0, 0, 90)]
+    [InlineData(-40, 15, 70)]
+    public void ObjectRotationMatchesTheRenderer(double yaw, double pitch, double roll)
+    {
+        var obj = new StageObject { Position = new Vec3(1, 2, 3), Yaw = yaw, Pitch = pitch, Roll = roll };
+        var rotation = System.Numerics.Quaternion.CreateFromYawPitchRoll((float)(yaw * Math.PI / 180), (float)(pitch * Math.PI / 180), (float)(roll * Math.PI / 180));
+        var local = new Vec3(0.7, -1.3, 2.1);
+        var expected = System.Numerics.Vector3.Transform(new System.Numerics.Vector3(0.7f, -1.3f, 2.1f), rotation);
+        var actual = StageMath.LocalToWorld(obj, local) - obj.Position;
+        Assert.Equal(expected.X, actual.X, 4);
+        Assert.Equal(expected.Y, actual.Y, 4);
+        Assert.Equal(expected.Z, actual.Z, 4);
+    }
+
+    [Fact]
+    public void RolledTrussStandsUpright()
+    {
+        var tower = new StageObject { Kind = StageObjectKind.Truss, Position = new Vec3(0, 2.5, 0), Size = new Vec3(5, 0.3, 0.3), Roll = 90 };
+        Assert.Equal(2.5, StageMath.HalfHeight(tower), 6);
+        Assert.Equal(5, StageMath.LocalToWorld(tower, new Vec3(2.5, 0, 0)).Y, 6);
+        // A sideways ray at 4 m only hits it if it really stands upright.
+        Assert.Equal(1.85, StageMath.RayBox(tower, new Vec3(-2, 4, 0), new Vec3(1, 0, 0))!.Value, 6);
+        Assert.Null(StageMath.RayBox(tower, new Vec3(-2, 5.5, 0), new Vec3(1, 0, 0)));
+    }
+
+    [Fact]
+    public void DistributeStacksFixturesOnTheAudienceSideOfATower()
+    {
+        var tower = new StageObject { Kind = StageObjectKind.Truss, Position = new Vec3(-4, 2.5, 1), Size = new Vec3(4, 0.3, 0.3), Roll = 90 };
+        var fixtures = Enumerable.Range(0, 4).Select(_ => new Fixture()).ToList();
+        StageMath.DistributeAlong(tower, fixtures, drop: 0.35);
+        Assert.Equal([1, 2, 3, 4], fixtures.Select(f => f.Position.Y).ToArray());
+        Assert.All(fixtures, f => Assert.Equal(-4, f.Position.X, 6));
+        Assert.All(fixtures, f => Assert.Equal(1.5, f.Position.Z, 6));
+    }
+
+    [Fact]
+    public void RollSpinsAMovingHeadsPanAxisButNotItsRestAim()
+    {
+        var profile = MovingHead();
+        var upright = new Fixture { Yaw = 0, Pitch = 0 };
+        var sideways = new Fixture { Yaw = 0, Pitch = 0, Roll = 90 };
+        var rest = StageMath.BeamDirection(sideways, profile, 0.5, 0.5);
+        Assert.Equal(1, rest.Z, 6);
+        var panned = 0.5 + 45.0 / profile.PanRange;
+        Assert.Equal(0, StageMath.BeamDirection(upright, profile, panned, 0.5).Y, 6);
+        var sidewaysPan = StageMath.BeamDirection(sideways, profile, panned, 0.5);
+        Assert.Equal(0, sidewaysPan.X, 6);
+        Assert.Equal(Math.Sqrt(0.5), Math.Abs(sidewaysPan.Y), 6);
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0)]
+    [InlineData(3, 0, -2)]
+    [InlineData(-4, 1.5, 3)]
+    public void PanTiltTowardWorksOnARolledHead(double x, double y, double z)
+    {
+        var profile = MovingHead();
+        var fixture = new Fixture { Position = new Vec3(-5, 3, 0), Yaw = 90, Pitch = 0, Roll = 90 };
+        var target = new Vec3(x, y, z);
+        var (pan, tilt) = StageMath.PanTiltToward(fixture, profile, target, (0.5, 0.5))!.Value;
+        var direction = StageMath.BeamDirection(fixture, profile, pan, tilt);
+        var expected = (target - fixture.Position).Normalized();
+        Assert.Equal(expected.X, direction.X, 3);
+        Assert.Equal(expected.Y, direction.Y, 3);
+        Assert.Equal(expected.Z, direction.Z, 3);
+    }
+
     [Fact]
     public void RaycastHitsTheDeckBeforeTheFloor()
     {

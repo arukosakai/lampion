@@ -21,8 +21,11 @@ internal sealed class FixtureBodyPass(LitProgram lit, StageMeshes meshes)
 
     private void Draw(in FixtureVisual f, in FixtureDrawData data)
     {
-        var face = data.Facing;
-        var at = Matrix4x4.CreateTranslation(f.Position);
+        // The body is modelled unrolled (base up, yoke panning around Y), then the mount spins all of it.
+        var rolled = !f.Mount.IsIdentity;
+        var beam = rolled ? Vector3.Transform(f.BeamDirection, Quaternion.Conjugate(f.Mount)) : f.BeamDirection;
+        var face = rolled ? StageTransforms.Facing(beam) : data.Facing;
+        var at = rolled ? Matrix4x4.CreateFromQuaternion(f.Mount) * Matrix4x4.CreateTranslation(f.Position) : Matrix4x4.CreateTranslation(f.Position);
         var emissive = f.Selected ? SetPiecePass.SelectGlow : Vector3.Zero;
         var lens = f.Light * 6f + LensFloor;
         lit.SetMaterial(Housing, 0.45f, 0.4f, emissive, SurfacePattern.Plain);
@@ -38,7 +41,7 @@ internal sealed class FixtureBodyPass(LitProgram lit, StageMeshes meshes)
         }
 
         if (f.MovingHead)
-            MovingHead(f.BeamDirection, face, at);
+            MovingHead(beam, face, at);
         else
             Can(f.Kind, face, at);
         lit.SetMaterial(Vector3.Zero, 1, 0, lens, SurfacePattern.Plain);
