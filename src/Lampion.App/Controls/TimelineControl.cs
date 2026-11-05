@@ -888,7 +888,7 @@ public sealed class TimelineControl : Control
         var menu = new ContextMenu();
         menu.Items.Add(Item("Split at playhead\tCtrl+K", () => TimelineOps.SplitAtPlayhead(_state)));
         menu.Items.Add(Item("Duplicate\tCtrl+D", () => TimelineOps.Duplicate(_state)));
-        menu.Items.Add(Item("Delete\tDel", () => TimelineOps.DeleteSelection(_state)));
+        menu.Items.Add(Item("Delete\tDelete",() => TimelineOps.DeleteSelection(_state)));
         if (clip is LightClip light)
         {
             menu.Items.Add(new Separator());
