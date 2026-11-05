@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Rendering;
@@ -9,109 +10,140 @@ using Lampion.Core.Model;
 
 namespace Lampion.App.Views;
 
-/// <summary>The 3D viewport with the stage builder toolbar above it.</summary>
+/// <summary>
+/// The 3D viewport with a slim Unity-style tool strip above it and the scene gizmo in its top-right corner.
+/// </summary>
 public sealed class StagePanel : DockPanel
 {
     private readonly EditorState _state;
+    private readonly Dictionary<BuilderTool, ToggleButton> _tools = [];
 
     public StagePanel(EditorState state)
     {
         _state = state;
         View = new StageView(state);
         var overlay = new StageOverlay(View, state);
+        var gizmo = new ViewGizmo(View) { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 8, 10, 0) };
 
-        var presets = new List<ToggleButton>();
-        ToggleButton Preset(string label, ViewPreset preset, string key)
-        {
-            var toggle = new ToggleButton { Content = label, IsChecked = preset == ViewPreset.Perspective };
-            ToolTip.SetTip(toggle, $"{label} view ({key})");
-            toggle.Click += (_, _) => SetPreset(preset);
-            presets.Add(toggle);
-            return toggle;
-        }
+        var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 1 };
+        tools.Children.Add(Tool(BuilderTool.Hand, "✋", "Hand (Q) — look around without editing"));
+        tools.Children.Add(Tool(BuilderTool.Move, "✥", "Move (W) — drag fixtures and set pieces; Alt+drag for height"));
+        tools.Children.Add(Tool(BuilderTool.Aim, "◎", "Aim (A) — click the stage to point the selected fixtures there"));
 
-        var move = new ToggleButton { Content = "Move", IsChecked = true };
-        var aim = new ToggleButton { Content = "Aim" };
-        ToolTip.SetTip(move, "Drag fixtures and set pieces (W)");
-        ToolTip.SetTip(aim, "Click on the stage to point the selected fixtures there (A)");
-        move.Click += (_, _) => SetTool(BuilderTool.Move);
-        aim.Click += (_, _) => SetTool(BuilderTool.Aim);
-        _moveToggle = move;
-        _aimToggle = aim;
-
-        var snap = Ui.Combo([0.05, 0.1, 0.25, 0.5, 1.0], state.Project.Stage.GridStep, v =>
-        {
-            state.Project.Stage.GridStep = v;
-            state.Commit();
-        }, v => $"{v:0.##} m");
-        snap.Width = 86;
+        var snap = new Button { Content = SnapLabel(), Padding = new Thickness(8, 1), Flyout = SnapMenu() };
         ToolTip.SetTip(snap, "Snap step for moving things");
+        _snapButton = snap;
 
-        var addMenu = new MenuFlyout();
-        foreach (var kind in Enum.GetValues<StageObjectKind>())
-        {
-            var item = new MenuItem { Header = $"{kind}" };
-            item.Click += (_, _) => AddObject(kind);
-            addMenu.Items.Add(item);
-        }
-        var add = new Button { Content = "+ Set piece", Flyout = addMenu };
+        var add = new Button { Content = "＋", Padding = new Thickness(8, 1), Flyout = AddMenu() };
+        ToolTip.SetTip(add, "Add a set piece: truss, riser, wall or screen");
 
-        var build = Ui.Toggle("Build", View.BuildMode, on => View.BuildMode = on, "Edit the stage layout; turn off to just watch the show");
-        var labels = Ui.Toggle("Labels", View.ShowLabels, on => View.ShowLabels = on);
-        var bounce = Ui.Toggle("Bounce", state.Project.Stage.LightBounce, on =>
-        {
-            if (state.Project.Stage.LightBounce == on)
-                return;
-            state.Project.Stage.LightBounce = on;
-            state.Commit();
-        }, "Let the lit rig spill a little coloured light into the whole room");
-        state.ProjectReplaced += () => bounce.IsChecked = state.Project.Stage.LightBounce;
-        var haze = Ui.Slider(state.Project.Stage.Haze, 0, 1, v => state.Project.Stage.Haze = v, () => state.Commit());
-        haze.Width = 90;
-        ToolTip.SetTip(haze, "Haze — how visible beams are in the air");
-        state.ProjectReplaced += () => haze.Value = state.Project.Stage.Haze;
+        var viewMenu = new Button { Content = "View ▾", Padding = new Thickness(8, 1), Flyout = new Flyout { Content = ViewOptions(), Placement = PlacementMode.BottomEdgeAlignedRight } };
+        ToolTip.SetTip(viewMenu, "Labels, light bounce and haze");
 
-        var toolbar = new WrapPanel { Margin = new Thickness(6, 4) };
-        foreach (var c in new Control[]
-                 {
-                     Preset("Persp", ViewPreset.Perspective, "1"), Preset("Top", ViewPreset.Top, "2"), Preset("Front", ViewPreset.Front, "3"), Preset("Side", ViewPreset.Side, "4"),
-                     Spacer(), build, move, aim, Spacer(), Ui.Label("Snap"), snap, add, Spacer(), labels, bounce, Ui.Label("Haze"), haze,
-                 })
-        {
-            c.Margin = new Thickness(0, 0, 3, 0);
-            c.VerticalAlignment = VerticalAlignment.Center;
-            toolbar.Children.Add(c);
-        }
-        _presetToggles = presets;
+        var bar = new DockPanel { Height = 30, Background = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x26)), LastChildFill = false };
+        var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { tools, Divider(), snap, add } };
+        viewMenu.Margin = new Thickness(0, 0, 6, 0);
+        viewMenu.VerticalAlignment = VerticalAlignment.Center;
+        SetDock(left, Dock.Left);
+        SetDock(viewMenu, Dock.Right);
+        bar.Children.Add(left);
+        bar.Children.Add(viewMenu);
 
-        SetDock(toolbar, Dock.Top);
-        Children.Add(toolbar);
+        SetDock(bar, Dock.Top);
+        Children.Add(bar);
         var stack = new Panel();
         stack.Children.Add(View);
         stack.Children.Add(overlay);
+        stack.Children.Add(gizmo);
         Children.Add(stack);
+        SetTool(View.Tool);
+        state.ProjectReplaced += () => _snapButton.Content = SnapLabel();
     }
 
-    private readonly List<ToggleButton> _presetToggles;
-    private readonly ToggleButton _moveToggle;
-    private readonly ToggleButton _aimToggle;
+    private readonly Button _snapButton;
 
     public StageView View { get; }
 
-    private static Control Spacer() => new Border { Width = 8 };
-
-    public void SetPreset(ViewPreset preset)
+    private ToggleButton Tool(BuilderTool tool, string glyph, string tip)
     {
-        View.ApplyPreset(preset);
-        for (var i = 0; i < _presetToggles.Count; i++)
-            _presetToggles[i].IsChecked = (int)preset == i;
+        var button = new ToggleButton { Content = glyph, Width = 30, MinHeight = 24, Padding = new Thickness(0), FontSize = 14, HorizontalContentAlignment = HorizontalAlignment.Center };
+        ToolTip.SetTip(button, tip);
+        button.Click += (_, _) => SetTool(tool);
+        _tools[tool] = button;
+        return button;
     }
+
+    private static Control Divider() => new Border { Width = 1, Height = 18, Background = new SolidColorBrush(Color.FromRgb(0x3A, 0x3A, 0x3E)), Margin = new Thickness(2, 0) };
+
+    private string SnapLabel() => $"⊞ {_state.Project.Stage.GridStep:0.##} m";
+
+    private MenuFlyout SnapMenu()
+    {
+        var menu = new MenuFlyout();
+        foreach (var step in new[] { 0.05, 0.1, 0.25, 0.5, 1.0 })
+        {
+            var item = new MenuItem { Header = $"{step:0.##} m" };
+            item.Click += (_, _) =>
+            {
+                _state.Project.Stage.GridStep = step;
+                _state.Commit();
+                _snapButton.Content = SnapLabel();
+            };
+            menu.Items.Add(item);
+        }
+        return menu;
+    }
+
+    private MenuFlyout AddMenu()
+    {
+        var menu = new MenuFlyout();
+        foreach (var (kind, label) in new[] { (StageObjectKind.Truss, "Truss"), (StageObjectKind.Platform, "Riser / platform"), (StageObjectKind.Wall, "Wall"), (StageObjectKind.Screen, "LED screen") })
+        {
+            var item = new MenuItem { Header = label };
+            item.Click += (_, _) => AddObject(kind);
+            menu.Items.Add(item);
+        }
+        return menu;
+    }
+
+    /// <summary>The scene view's display options, tucked into one dropdown like Unity's.</summary>
+    private Control ViewOptions()
+    {
+        var labels = new CheckBox { Content = "Labels", IsChecked = View.ShowLabels };
+        labels.IsCheckedChanged += (_, _) => View.ShowLabels = labels.IsChecked == true;
+        var bounce = new CheckBox { Content = "Light bounce", IsChecked = _state.Project.Stage.LightBounce };
+        ToolTip.SetTip(bounce, "Let the lit rig spill a little coloured light into the room");
+        bounce.IsCheckedChanged += (_, _) =>
+        {
+            if (_state.Project.Stage.LightBounce == (bounce.IsChecked == true))
+                return;
+            _state.Project.Stage.LightBounce = bounce.IsChecked == true;
+            _state.Commit();
+        };
+        var haze = Ui.Slider(_state.Project.Stage.Haze, 0, 1, v => _state.Project.Stage.Haze = v, () => _state.Commit());
+        haze.Width = 150;
+        _state.ProjectReplaced += () =>
+        {
+            bounce.IsChecked = _state.Project.Stage.LightBounce;
+            haze.Value = _state.Project.Stage.Haze;
+        };
+        var reset = Ui.Button("Reset view", () => SetPreset(ViewPreset.Free), "Back to the default perspective view (1)");
+        reset.Margin = new Thickness(0, 6, 0, 0);
+        return new StackPanel
+        {
+            Spacing = 4,
+            Width = 200,
+            Children = { labels, bounce, new TextBlock { Text = "Haze", Foreground = Brushes.Gray, Margin = new Thickness(0, 6, 0, 0) }, haze, reset },
+        };
+    }
+
+    public void SetPreset(ViewPreset preset) => View.ApplyPreset(preset);
 
     public void SetTool(BuilderTool tool)
     {
         View.Tool = tool;
-        _moveToggle.IsChecked = tool == BuilderTool.Move;
-        _aimToggle.IsChecked = tool == BuilderTool.Aim;
+        foreach (var (key, button) in _tools)
+            button.IsChecked = key == tool;
     }
 
     private void AddObject(StageObjectKind kind)
@@ -128,5 +160,6 @@ public sealed class StagePanel : DockPanel
         _state.Project.Stage.Objects.Add(obj);
         _state.Commit();
         _state.SelectObject(obj.Id);
+        SetTool(BuilderTool.Move);
     }
 }

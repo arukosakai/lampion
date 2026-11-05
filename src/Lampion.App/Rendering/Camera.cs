@@ -2,24 +2,44 @@ using System.Numerics;
 
 namespace Lampion.App.Rendering;
 
+/// <summary>Named views. <see cref="Free"/> is any orbited angle; the rest look straight down an axis.</summary>
 public enum ViewPreset
 {
-    Perspective,
+    Free,
     Top,
+    Bottom,
     Front,
-    Side,
+    Back,
+    Right,
+    Left,
 }
 
-/// <summary>An orbit camera around <see cref="Target"/>; the axis presets switch to orthographic for exact placement.</summary>
+/// <summary>An orbit camera around <see cref="Target"/>; axis views switch to orthographic for exact placement, like Unity's scene gizmo.</summary>
 public sealed class Camera
 {
+    private const float NearlyVertical = MathF.PI / 2 - 0.0001f;
+
     public Vector3 Target { get; set; } = new(0, 2.2f, -1);
     public float Yaw { get; set; } = 0.35f;
     public float Pitch { get; set; } = 0.28f;
     public float Distance { get; set; } = 17;
     public float FieldOfView { get; set; } = 50 * MathF.PI / 180;
     public bool Orthographic { get; private set; }
-    public ViewPreset Preset { get; private set; } = ViewPreset.Perspective;
+    public ViewPreset Preset { get; private set; } = ViewPreset.Free;
+
+    /// <summary>What the scene gizmo labels the view: the axis name, or Persp / Iso when orbiting freely.</summary>
+    public string Label => Preset == ViewPreset.Free ? Orthographic ? "Iso" : "Persp" : Preset.ToString();
+
+    public void ToggleProjection() => Orthographic = !Orthographic;
+
+    /// <summary>The default three-quarter perspective view.</summary>
+    public void Reset()
+    {
+        Preset = ViewPreset.Free;
+        Orthographic = false;
+        (Yaw, Pitch, Distance) = (0.35f, 0.28f, 17);
+        Target = new Vector3(0, 2.2f, -1);
+    }
 
     public Vector3 Position
     {
@@ -30,31 +50,34 @@ public sealed class Camera
         }
     }
 
+    /// <summary>Looks straight down an axis, orthographic — what clicking a cone on the scene gizmo does.</summary>
     public void Apply(ViewPreset preset)
     {
+        if (preset == ViewPreset.Free)
+        {
+            Reset();
+            return;
+        }
         Preset = preset;
-        Orthographic = preset != ViewPreset.Perspective;
+        Orthographic = true;
+        // The camera sits on the named side of the stage: Front is the audience at +Z, Right is +X.
         (Yaw, Pitch) = preset switch
         {
-            ViewPreset.Top => (0f, MathF.PI / 2 - 0.0001f),
-            ViewPreset.Front => (0f, 0f),
-            ViewPreset.Side => (MathF.PI / 2, 0f),
-            _ => (0.35f, 0.28f),
+            ViewPreset.Top => (0f, NearlyVertical),
+            ViewPreset.Bottom => (0f, -NearlyVertical),
+            ViewPreset.Back => (MathF.PI, 0f),
+            ViewPreset.Right => (MathF.PI / 2, 0f),
+            ViewPreset.Left => (-MathF.PI / 2, 0f),
+            _ => (0f, 0f),
         };
-        if (preset == ViewPreset.Perspective)
-            Distance = 17;
     }
 
     public void Orbit(float dx, float dy)
     {
-        if (Orthographic)
-        {
-            // Rotating out of an axis view means the user wants to look around again.
-            Preset = ViewPreset.Perspective;
-            Orthographic = false;
-        }
+        // Orbiting leaves the axis view but keeps the projection, as Unity does (an ortho orbit is "Iso").
+        Preset = ViewPreset.Free;
         Yaw -= dx * 0.008f;
-        Pitch = Math.Clamp(Pitch + dy * 0.008f, -0.15f, MathF.PI / 2 - 0.01f);
+        Pitch = Math.Clamp(Pitch + dy * 0.008f, -NearlyVertical, NearlyVertical);
     }
 
     public void Pan(float dx, float dy, float viewportHeight)

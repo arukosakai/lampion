@@ -56,7 +56,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 ### 🏟️ Real-time 3D stage
 - OpenGL rendering: per-pixel spotlights, volumetric beams in moving haze, lens flares
 - A stage builder in metres: truss, risers, walls and LED screens that play your video
-- Gizmos, grid snapping, top/front/side views, an aim tool, and throw and spot-size readouts
+- A Unity-style scene gizmo for axis views and ortho, move gizmos, grid snapping, an aim tool, and throw and spot-size readouts
 - Stage layouts you save once and reuse in every project
 
 </td>
@@ -125,8 +125,8 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 | <kbd>←</kbd> / <kbd>→</kbd> | Step a frame (<kbd>Shift</kbd>: 1 s) | <kbd>Del</kbd> | Delete selection |
 | <kbd>M</kbd> | Add marker | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd> | Undo / redo |
 | <kbd>=</kbd> / <kbd>-</kbd> / <kbd>\\</kbd> | Zoom in / out / fit | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save |
-| <kbd>1</kbd>–<kbd>4</kbd> | Perspective / top / front / side | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
-| <kbd>W</kbd> / <kbd>A</kbd> | Move / aim tool | <kbd>F</kbd> | Frame selection |
+| <kbd>1</kbd>–<kbd>5</kbd> | Persp / top / front / right / toggle ortho | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
+| <kbd>Q</kbd> / <kbd>W</kbd> / <kbd>A</kbd> | Hand / move / aim tool | <kbd>F</kbd> | Frame selection |
 
 **Stage:** right-drag to orbit, middle-drag to pan, scroll to zoom, <kbd>Alt</kbd>+drag to change height.
 **Timeline:** double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.

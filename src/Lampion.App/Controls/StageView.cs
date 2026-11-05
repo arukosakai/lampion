@@ -13,8 +13,10 @@ using Silk.NET.OpenGL;
 
 namespace Lampion.App.Controls;
 
+/// <summary>The stage view's tools, Unity style: Hand only looks around, Move and Aim edit the rig.</summary>
 public enum BuilderTool
 {
+    Hand,
     Move,
     Aim,
 }
@@ -43,7 +45,9 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
 
     public Camera Camera { get; } = new();
     public BuilderTool Tool { get; set; } = BuilderTool.Move;
-    public bool BuildMode { get; set; } = true;
+
+    public bool BuildMode => Tool != BuilderTool.Hand;
+
     public bool ShowLabels { get; set; } = true;
     public VideoFrame? Video { get; set; }
     public string? RendererInfo { get; private set; }
@@ -299,7 +303,8 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
         _lastPointer = point;
         e.Pointer.Capture(this);
 
-        if (props.IsRightButtonPressed || props.IsMiddleButtonPressed)
+        // The Hand tool never edits: every button just moves the camera.
+        if (props.IsRightButtonPressed || props.IsMiddleButtonPressed || (Tool == BuilderTool.Hand && props.IsLeftButtonPressed))
         {
             _drag = new OrbitDrag(point, props.IsMiddleButtonPressed || e.KeyModifiers.HasFlag(KeyModifiers.Shift));
             return;
@@ -470,13 +475,10 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
     public void ApplyPreset(ViewPreset preset)
     {
         Camera.Apply(preset);
-        if (preset != ViewPreset.Perspective)
-        {
-            Camera.Target = new Vector3(0, preset == ViewPreset.Top ? 0 : 3, -1);
-            Camera.Distance = 16;
-        }
-        else
-            Camera.Target = new Vector3(0, 2.2f, -1);
+        if (preset == ViewPreset.Free)
+            return;
+        Camera.Target = new Vector3(0, preset is ViewPreset.Top or ViewPreset.Bottom ? 0 : 3, -1);
+        Camera.Distance = 16;
     }
 
     public void FrameSelection()
