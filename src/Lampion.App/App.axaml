@@ -1,0 +1,84 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Lampion.App.App"
+             RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <Color x:Key="SystemAccentColor">#2D8CEB</Color>
+    <Color x:Key="SystemAccentColorDark1">#2478CC</Color>
+    <Color x:Key="SystemAccentColorDark2">#1C64AD</Color>
+    <Color x:Key="SystemAccentColorDark3">#14508E</Color>
+    <Color x:Key="SystemAccentColorLight1">#4C9FF0</Color>
+    <Color x:Key="SystemAccentColorLight2">#6BB1F3</Color>
+    <Color x:Key="SystemAccentColorLight3">#8AC3F6</Color>
+    <SolidColorBrush x:Key="AppBackground" Color="#1B1B1B" />
+    <SolidColorBrush x:Key="PanelBackground" Color="#232323" />
+    <SolidColorBrush x:Key="PanelHeader" Color="#2B2B2B" />
+    <SolidColorBrush x:Key="PanelBorder" Color="#111111" />
+    <SolidColorBrush x:Key="Accent" Color="#2D8CEB" />
+    <SolidColorBrush x:Key="MutedText" Color="#9A9A9A" />
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{StaticResource AppBackground}" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="{StaticResource PanelBackground}" />
+      <Setter Property="BorderBrush" Value="{StaticResource PanelBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="TextBlock.header">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#D8D8D8" />
+      <Setter Property="Margin" Value="8,5" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#2D8CEB" />
+      <Setter Property="Margin" Value="0,10,0,4" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="{StaticResource MutedText}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TabControl">
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="10,4" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="Padding" Value="8,3" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="ToggleButton">
+      <Setter Property="Padding" Value="8,3" />
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBox">
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="Padding" Value="5,2" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MinHeight" Value="24" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Padding" Value="6,2" />
+    </Style>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="8,3" />
+      <Setter Property="MinHeight" Value="22" />
+    </Style>
+  </Application.Styles>
+</Application>

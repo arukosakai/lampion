@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lampion.App/Lampion.App.csproj" />
+    <Project Path="src/Lampion.Core/Lampion.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lampion.Core.Tests/Lampion.Core.Tests.csproj" />
+  </Folder>
+</Solution>
