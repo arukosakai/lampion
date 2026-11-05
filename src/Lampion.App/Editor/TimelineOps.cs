@@ -205,7 +205,7 @@ public static class TimelineOps
     /// <summary>Clips on a track whose automation lanes the timeline shows, keyed by what they drive.</summary>
     public static List<(string Key, string Label)> LaneKeys(Track track) =>
         track.Clips.OfType<LightClip>()
-            .SelectMany(c => c.Automation)
+            .SelectMany(c => c.Automation.Where(l => l.Animated))
             .Select(l => (Key: LaneKey(l), l.Label))
             .DistinctBy(x => x.Key)
             .ToList();

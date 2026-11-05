@@ -59,6 +59,13 @@ public sealed class AutomationLane
     public int Channel { get; set; } = 1;
 
     public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// The After Effects stopwatch. Off: the lane holds one static value (its first key). On: the keys are
+    /// interpolated over time.
+    /// </summary>
+    public bool Animated { get; set; } = true;
+
     public List<Keyframe> Keys { get; set; } = [];
 
     [JsonIgnore]
@@ -92,7 +99,7 @@ public sealed class AutomationLane
     {
         if (Keys.Count == 0)
             return DefaultValue;
-        if (time <= Keys[0].Time)
+        if (!Animated || time <= Keys[0].Time)
             return Keys[0].Value;
         for (var i = 0; i < Keys.Count - 1; i++)
         {
@@ -125,6 +132,7 @@ public sealed class AutomationLane
             Role = Role,
             Channel = Channel,
             Enabled = Enabled,
+            Animated = Animated,
             Keys = Keys.Select(k => k.Clone()).ToList(),
         };
 }

@@ -82,10 +82,10 @@ Every build is self-contained, so there's no .NET to install.
 ## 🚀 Quick tour
 
 1. **Start:** Lampion opens on a start screen with your recent shows, a blank show, the demo, and templates (built-in venues plus any you save with **Stage → Save layout as template…**).
-2. **Patch:** in **Project → Fixtures**, pick a profile, choose how many, and press **Patch**. Select fixtures, then **+ Group** them.
+2. **Patch:** in the **Project** panel, **＋ New → Fixtures…** opens a New Fixtures dialog: pick a profile, how many, where to hang them, and Lampion addresses and groups them for you.
 3. **Build the stage:** in **Stage 3D**, drag fixtures and set pieces around; **+ Set piece** adds truss, risers, walls or screens. Everything is in metres.
 4. **Add music:** **File → Import audio…**, then set the **BPM** and **Offset** so the beat grid lines up with the song.
-5. **Light it:** drag effects from **Project → Effects** onto a light track. Tweak them in **Effect Controls** and right-click a clip to add transitions or automation.
+5. **Light it:** drag a group from the **Project** panel onto the timeline for a light track, then drag effects and transitions from the **Effects** panel onto it. In **Effect Controls**, scrub the blue values and click a ⏱ stopwatch to keyframe a property at the playhead, just like After Effects.
 6. **Export:** **File → Export to QLC+…** writes a `.qxw` workspace. Open it in QLC+ and play the show from the Show Manager.
 
 > 💡 Templates and **Stage → Use this layout as the default** start new shows with your venue and rig already patched, with a light track for each group. <kbd>Ctrl</kbd>+<kbd>N</kbd> brings the start screen back at any time.

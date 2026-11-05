@@ -10,6 +10,14 @@ using Lampion.Core.Model;
 
 namespace Lampion.App.Controls;
 
+/// <summary>What is being dragged onto the timeline from another panel.</summary>
+public enum DropKind
+{
+    Effect,
+    Targets,
+    Transition,
+}
+
 /// <summary>
 /// Premiere-style timeline: track headers on the left, clips on the right, keyframe lanes under expanded
 /// light tracks, and a ruler with the beat grid. Everything is drawn here; there are no child controls.
@@ -46,7 +54,7 @@ public sealed class TimelineControl : Control
 
     private readonly EditorState _state;
     private Interaction? _interaction;
-    private (Track Track, double Time)? _dropPreview;
+    private Rect? _dropPreview;
 
     public TimelineControl(EditorState state)
     {
@@ -166,11 +174,8 @@ public sealed class TimelineControl : Control
                     DrawLane(ctx, row);
                 ctx.DrawLine(Divider, new Point(HeaderWidth, row.Y + row.Height), new Point(bounds.Width, row.Y + row.Height));
             }
-            if (_dropPreview is { } drop && rows.Find(r => r.Track == drop.Track && r.LaneKey is null) is { } dropRow)
-            {
-                var x = TimeToX(drop.Time);
-                ctx.FillRectangle(DropBrush, new Rect(x, dropRow.Y + 2, _state.SecondsPerBeat * 8 * PixelsPerSecond, dropRow.Height - 4));
-            }
+            if (_dropPreview is { } drop)
+                ctx.DrawRectangle(DropBrush, new Pen(PlayheadBrush, 1.5), drop, 3, 3);
         }
 
         using (ctx.PushClip(new Rect(0, RulerHeight, HeaderWidth, Math.Max(0, bounds.Height - RulerHeight))))
@@ -364,7 +369,7 @@ public sealed class TimelineControl : Control
             }
             ctx.FillRectangle(NameBar, new Rect(rect.Left, rect.Top, rect.Width, 16));
             ctx.FillRectangle(Ui.Brush(clip.Effect.SwatchColor), new Rect(rect.Left, rect.Top, 3, 16));
-            Text(ctx, clip.Name + (clip.Automation.Count > 0 ? $"  ◆{clip.Automation.Count}" : ""), new Point(Math.Max(rect.Left, HeaderWidth) + 6, rect.Top + 1), TextBrush, 10.5);
+            Text(ctx, clip.Name + (clip.Automation.Count(l => l.Animated) is > 0 and var keyed ? $"  ◆{keyed}" : ""), new Point(Math.Max(rect.Left, HeaderWidth) + 6, rect.Top + 1), TextBrush, 10.5);
             DrawFade(ctx, rect, clip.FadeIn * PixelsPerSecond, true);
             DrawFade(ctx, rect, clip.FadeOut * PixelsPerSecond, false);
         }
@@ -435,7 +440,7 @@ public sealed class TimelineControl : Control
     {
         foreach (var clip in row.Track.Clips.OfType<LightClip>())
         {
-            var lane = clip.Automation.Find(l => TimelineOps.LaneKey(l) == row.LaneKey);
+            var lane = clip.Automation.Find(l => l.Animated && TimelineOps.LaneKey(l) == row.LaneKey);
             if (lane is null)
                 continue;
             var x0 = TimeToX(clip.Start);
@@ -671,7 +676,7 @@ public sealed class TimelineControl : Control
     {
         foreach (var clip in row.Track.Clips.OfType<LightClip>())
         {
-            var lane = clip.Automation.Find(l => TimelineOps.LaneKey(l) == row.LaneKey);
+            var lane = clip.Automation.Find(l => l.Animated && TimelineOps.LaneKey(l) == row.LaneKey);
             if (lane is null)
                 continue;
             var x0 = TimeToX(clip.Start);
@@ -861,15 +866,37 @@ public sealed class TimelineControl : Control
         e.Handled = true;
     }
 
-    // ---- Effect drag-and-drop from the Effects panel ----------------------------------------------------
+    // ---- Drag-and-drop from the Project and Effects panels ----------------------------------------------
 
-    /// <summary>Shows where a dragged effect would land; pass null to clear.</summary>
-    public void PreviewDrop(Point? p)
+    /// <summary>Shows where a drag from another panel would land; pass null to clear.</summary>
+    public void PreviewDrop(Point? p, DropKind kind = DropKind.Effect)
     {
-        _dropPreview = p is { } point && point.X > HeaderWidth && RowAt(point.Y) is { LaneKey: null, Track.Kind: TrackKind.Light } row
-            ? (row.Track, _state.Snap(Math.Max(0, XToTime(point.X)), 8 / PixelsPerSecond))
-            : null;
+        _dropPreview = p is { } point ? DropRect(point, kind) : null;
         InvalidateVisual();
+    }
+
+    private Rect? DropRect(Point p, DropKind kind)
+    {
+        var row = RowAt(p.Y);
+        var width = Math.Max(0, Bounds.Width - HeaderWidth);
+        switch (kind)
+        {
+            case DropKind.Effect when p.X > HeaderWidth && row is { LaneKey: null, Track.Kind: TrackKind.Light }:
+                var x = TimeToX(_state.Snap(Math.Max(0, XToTime(p.X)), 8 / PixelsPerSecond));
+                return new Rect(x, row.Y + 2, _state.SecondsPerBeat * 8 * PixelsPerSecond, row.Height - 4);
+            case DropKind.Targets when row is { Track.Kind: TrackKind.Light }:
+                return new Rect(0, row.Y + 1, Bounds.Width, TrackHeight(row.Track) - 2);
+            case DropKind.Targets when p.Y > RulerHeight:
+                // Below the tracks (or on a media track): a new light track will be made.
+                var bottom = Rows().LastOrDefault(r => r.Track.Kind == TrackKind.Light) is { } last ? last.Y + last.Height : RulerHeight;
+                return new Rect(0, bottom - 2, Bounds.Width, 4);
+            case DropKind.Transition when p.X > HeaderWidth && row is { LaneKey: null } && HitClip(row, p) is { Clip: LightClip clip }:
+                var start = TimeToX(clip.Start);
+                var half = Math.Max(10, _state.SecondsPerBeat * PixelsPerSecond);
+                return new Rect(start - half, row.Y + 2, Math.Min(half * 2, width), row.Height - 4);
+            default:
+                return null;
+        }
     }
 
     public bool Drop(string effectKind, Point p)
@@ -878,6 +905,39 @@ public sealed class TimelineControl : Control
         if (p.X <= HeaderWidth || RowAt(p.Y) is not { LaneKey: null } row || row.Track.Kind != TrackKind.Light)
             return false;
         TimelineOps.AddEffectClip(_state, row.Track, effectKind, _state.Snap(Math.Max(0, XToTime(p.X)), 8 / PixelsPerSecond));
+        return true;
+    }
+
+    /// <summary>
+    /// Fixtures or groups dropped from the Project panel: onto a light track they join its targets,
+    /// anywhere else they get a new light track of their own, like dropping a clip in Premiere.
+    /// </summary>
+    public bool DropTargets(IReadOnlyCollection<string> fixtureIds, IReadOnlyCollection<string> groupIds, string trackName, Point p)
+    {
+        PreviewDrop(null);
+        if (p.Y <= RulerHeight || p.Y > Bounds.Height || p.X < 0 || p.X > Bounds.Width || fixtureIds.Count + groupIds.Count == 0)
+            return false;
+        if (RowAt(p.Y) is { Track.Kind: TrackKind.Light } row)
+        {
+            row.Track.FixtureIds.AddRange(fixtureIds.Except(row.Track.FixtureIds));
+            row.Track.GroupIds.AddRange(groupIds.Except(row.Track.GroupIds));
+            _state.Commit();
+            _state.SelectTrack(row.Track.Id);
+            return true;
+        }
+        var track = TimelineOps.AddLightTrack(_state, fixtureIds, groupIds);
+        track.Name = trackName;
+        _state.Commit();
+        return true;
+    }
+
+    public bool DropTransition(TransitionKind kind, Point p)
+    {
+        PreviewDrop(null);
+        if (p.X <= HeaderWidth || RowAt(p.Y) is not { LaneKey: null } row || HitClip(row, p) is not { Clip: LightClip clip })
+            return false;
+        TimelineOps.SetTransition(_state, clip, kind);
+        _state.SelectClip(clip.Id);
         return true;
     }
 

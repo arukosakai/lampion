@@ -45,7 +45,7 @@ public sealed class MainWindow : Window
         _timeline = new TimelinePanel(_state);
         _videoMonitor = new VideoMonitor(_media.Video) { Message = _media.Error };
         var project_ = new ProjectPanel(_state, _timeline.Timeline, () => ImportMedia(TrackKind.Audio), () => ImportMedia(TrackKind.Video));
-        var inspector = new InspectorPanel(_state);
+        var inspector = new InspectorPanel(_state) { OpenProjectSettings = () => _ = Dialogs.ProjectSettings(this, _state) };
         var dmx = new DmxMonitor(_state);
 
         var universePicker = Ui.Number(1, v =>
@@ -72,7 +72,7 @@ public sealed class MainWindow : Window
         };
 
         var center = new Grid { ColumnDefinitions = new ColumnDefinitions("310,4,*,4,370") };
-        center.Children.Add(Panel("Project", project_, 0));
+        center.Children.Add(TabbedPanel(0, ("Project", project_), ("Effects", new EffectsPanel(_state, _timeline.Timeline))));
         center.Children.Add(Splitter(1, vertical: true));
         center.Children.Add(Panel("Program", monitors, 2));
         center.Children.Add(Splitter(3, vertical: true));
@@ -154,6 +154,17 @@ public sealed class MainWindow : Window
         return border;
     }
 
+    /// <summary>A panel frame whose tabs are its header, like Premiere's Project / Effects group.</summary>
+    private static Border TabbedPanel(int column, params (string Title, Control Content)[] tabs)
+    {
+        var tabControl = new TabControl();
+        foreach (var (title, content) in tabs)
+            tabControl.Items.Add(new TabItem { Header = title, Content = content });
+        var border = new Border { Child = tabControl, Classes = { "panel" }, Margin = new Thickness(0, 2) };
+        Grid.SetColumn(border, column);
+        return border;
+    }
+
     private static GridSplitter Splitter(int index, bool vertical)
     {
         var splitter = new GridSplitter
@@ -199,6 +210,8 @@ public sealed class MainWindow : Window
                         Item("Open…", () => _ = OpenProject(), "Ctrl+O"),
                         Item("Save", () => _ = Save(false), "Ctrl+S"),
                         Item("Save as…", () => _ = Save(true), "Ctrl+Shift+S"),
+                        new Separator(),
+                        Item("Project settings…", () => _ = Dialogs.ProjectSettings(this, _state), "Ctrl+Shift+P"),
                         new Separator(),
                         Item("Import audio…", () => _ = ImportMedia(TrackKind.Audio), "Ctrl+I"),
                         Item("Import video…", () => _ = ImportMedia(TrackKind.Video)),
