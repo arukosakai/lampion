@@ -62,3 +62,19 @@ public class StageLayoutTests
         Assert.NotEqual(400, layout.Fixtures[0].Address);
     }
 }
+
+public class StageTemplateTests
+{
+    [Fact]
+    public void BuiltInTemplatesAreReadyToUse()
+    {
+        foreach (var (layout, _) in StageTemplates.BuiltIn())
+        {
+            var project = new Project();
+            layout.ApplyTo(project, includeRig: true);
+            Assert.NotEmpty(project.Fixtures);
+            Assert.Empty(project.PatchProblems());
+            Assert.All(project.Groups, g => Assert.NotEmpty(g.FixtureIds));
+        }
+    }
+}

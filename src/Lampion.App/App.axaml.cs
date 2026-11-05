@@ -1,7 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Lampion.App.Editor;
 using Lampion.App.Views;
+using Lampion.Core.Model;
+using Lampion.Core.Persistence;
 
 namespace Lampion.App;
 
@@ -12,7 +15,36 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            desktop.MainWindow = new MainWindow(desktop.Args?.FirstOrDefault());
+        {
+            var path = desktop.Args?.FirstOrDefault();
+            if (path is not null && TryLoad(path) is { } project)
+            {
+                UserData.AddRecent(path);
+                desktop.MainWindow = new MainWindow(project, path);
+            }
+            else
+            {
+                // The editor opens before the start screen closes, so the app never runs out of windows in between.
+                desktop.MainWindow = new StartWindow(choice =>
+                {
+                    var main = new MainWindow(choice.Project, choice.Path);
+                    desktop.MainWindow = main;
+                    main.Show();
+                });
+            }
+        }
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static Project? TryLoad(string path)
+    {
+        try
+        {
+            return File.Exists(path) ? ProjectSerializer.Load(path) : null;
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 }

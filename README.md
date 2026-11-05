@@ -81,13 +81,14 @@ Every build is self-contained, so there's no .NET to install.
 
 ## 🚀 Quick tour
 
-1. **Patch:** in **Project → Fixtures**, pick a profile, choose how many, and press **Patch**. Select fixtures, then **+ Group** them.
-2. **Build the stage:** in **Stage 3D**, drag fixtures and set pieces around; **+ Set piece** adds truss, risers, walls or screens. Everything is in metres.
-3. **Add music:** **File → Import audio…**, then set the **BPM** and **Offset** so the beat grid lines up with the song.
-4. **Light it:** drag effects from **Project → Effects** onto a light track. Tweak them in **Effect Controls** and right-click a clip to add transitions or automation.
-5. **Export:** **File → Export to QLC+…** writes a `.qxw` workspace. Open it in QLC+ and play the show from the Show Manager.
+1. **Start:** Lampion opens on a start screen with your recent shows, a blank show, the demo, and templates (built-in venues plus any you save with **Stage → Save layout as template…**).
+2. **Patch:** in **Project → Fixtures**, pick a profile, choose how many, and press **Patch**. Select fixtures, then **+ Group** them.
+3. **Build the stage:** in **Stage 3D**, drag fixtures and set pieces around; **+ Set piece** adds truss, risers, walls or screens. Everything is in metres.
+4. **Add music:** **File → Import audio…**, then set the **BPM** and **Offset** so the beat grid lines up with the song.
+5. **Light it:** drag effects from **Project → Effects** onto a light track. Tweak them in **Effect Controls** and right-click a clip to add transitions or automation.
+6. **Export:** **File → Export to QLC+…** writes a `.qxw` workspace. Open it in QLC+ and play the show from the Show Manager.
 
-> 💡 **Stage → Use this layout for new projects** makes every new show start with your venue and rig already patched, with a light track for each group.
+> 💡 Templates and **Stage → Use this layout as the default** start new shows with your venue and rig already patched, with a light track for each group. <kbd>Ctrl</kbd>+<kbd>N</kbd> brings the start screen back at any time.
 
 ---
 
@@ -137,7 +138,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```sh
-dotnet run --project src/Lampion.App              # opens a demo show
+dotnet run --project src/Lampion.App              # opens the start screen
 dotnet run --project src/Lampion.App -- my.lampion
 dotnet test                                       # engine tests
 ```

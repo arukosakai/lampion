@@ -34,18 +34,11 @@ public sealed class MainWindow : Window
     private string? _message;
     private bool _closingConfirmed;
 
-    public MainWindow(string? openPath = null)
+    public MainWindow(Project project, string? path)
     {
         Width = 1680;
         Height = 1000;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        var project = Project.CreateDemo();
-        string? path = null;
-        if (openPath is not null && File.Exists(openPath))
-        {
-            project = ProjectSerializer.Load(openPath);
-            path = openPath;
-        }
         _state = new EditorState(project, path);
         _stage = new StagePanel(_state);
         _stage.View.Video = _media.Video;
@@ -202,7 +195,7 @@ public sealed class MainWindow : Window
                     Header = "_File",
                     Items =
                     {
-                        Item("New", () => _ = NewProject(), "Ctrl+N"),
+                        Item("New / start screen…", () => _ = NewProject(), "Ctrl+N"),
                         Item("Open…", () => _ = OpenProject(), "Ctrl+O"),
                         Item("Save", () => _ = Save(false), "Ctrl+S"),
                         Item("Save as…", () => _ = Save(true), "Ctrl+Shift+S"),
@@ -258,7 +251,8 @@ public sealed class MainWindow : Window
                         new Separator(),
                         Item("Export stage layout…", () => _ = ExportLayout()),
                         Item("Import stage layout…", () => _ = ImportLayout()),
-                        Item("Use this layout for new projects", () => _ = SaveDefaultLayout()),
+                        Item("Save layout as template…", () => _ = SaveTemplate()),
+                        Item("Use this layout as the default", () => _ = SaveDefaultLayout()),
                         Item("Forget default layout", ForgetDefaultLayout),
                     },
                 },
@@ -369,41 +363,32 @@ public sealed class MainWindow : Window
     {
         if (!await ConfirmDiscard())
             return;
-        var project = new Project();
-        project.Profiles.AddRange(BuiltInProfiles.All().Select(p => p.Clone(newId: false)));
-        var lightTracks = new List<Track>();
-        if (LoadDefaultLayout() is { } layout)
-        {
-            layout.ApplyTo(project, includeRig: true);
-            // A ready rig deserves ready tracks: one per group, so the first clip can go straight on.
-            lightTracks.AddRange(project.Groups.Select(g => new Track { Name = g.Name, GroupIds = [g.Id], Order = FixtureOrder.LeftToRight }));
-            _message = $"New project from your default stage layout \"{layout.Name}\"";
-        }
-        if (lightTracks.Count == 0)
-            lightTracks.Add(new Track { Name = "Lights 1" });
-        project.Tracks.AddRange(lightTracks);
-        project.Tracks.AddRange([new Track { Name = "Audio", Kind = TrackKind.Audio }, new Track { Name = "Video", Kind = TrackKind.Video }]);
+        var start = new StartWindow();
+        await start.ShowDialog(this);
+        if (start.Result is not { } choice)
+            return;
         _media.StopAll();
-        _state.Load(project, null);
+        _state.Load(choice.Project, choice.Path);
+        _timeline.Timeline.ZoomToFit();
     }
 
     // ---- Stage layouts ---------------------------------------------------------------------------------
 
-    private static string DefaultLayoutPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Lampion", "default" + StageLayout.Extension);
+    private static string DefaultLayoutPath => UserData.DefaultLayoutPath;
 
-    private StageLayout? LoadDefaultLayout()
+    private async Task SaveTemplate()
     {
-        if (!File.Exists(DefaultLayoutPath))
-            return null;
+        var name = await Dialogs.Prompt(this, "Save layout as template", "Template name", _state.Project.Name);
+        if (string.IsNullOrWhiteSpace(name))
+            return;
         try
         {
-            return StageLayout.Load(DefaultLayoutPath);
+            UserData.SaveTemplate(StageLayout.From(_state.Project), name.Trim());
+            _message = $"Saved template \"{name.Trim()}\" — it's on the start screen now";
         }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _message = "Default stage layout could not be read: " + ex.Message;
-            return null;
+            await Dialogs.Ask(this, "Could not save template", ex.Message, "OK");
         }
     }
 
@@ -466,7 +451,7 @@ public sealed class MainWindow : Window
         {
             Directory.CreateDirectory(Path.GetDirectoryName(DefaultLayoutPath)!);
             StageLayout.From(_state.Project).Save(DefaultLayoutPath);
-            _message = "File → New will now start from this stage and rig";
+            _message = "The start screen now offers this stage and rig as your default";
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -492,6 +477,7 @@ public sealed class MainWindow : Window
         {
             _media.StopAll();
             _state.Load(ProjectSerializer.Load(path), path);
+            UserData.AddRecent(path);
             _timeline.Timeline.ZoomToFit();
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException or UnauthorizedAccessException)
@@ -511,6 +497,7 @@ public sealed class MainWindow : Window
         {
             ProjectSerializer.Save(_state.Project, path);
             _state.MarkSaved(path);
+            UserData.AddRecent(path);
             _message = $"Saved {Path.GetFileName(path)}";
             return true;
         }

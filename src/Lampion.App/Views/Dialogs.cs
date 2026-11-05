@@ -47,6 +47,48 @@ internal static class Dialogs
         return result;
     }
 
+    /// <summary>Asks for one line of text; null if cancelled.</summary>
+    public static async Task<string?> Prompt(Window owner, string title, string label, string initial)
+    {
+        string? result = null;
+        var box = new TextBox { Text = initial };
+        var window = new Window
+        {
+            Title = title,
+            Width = 420,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        };
+        void Accept()
+        {
+            result = box.Text;
+            window.Close();
+        }
+        var ok = new Button { Content = "OK", MinWidth = 80, IsDefault = true };
+        ok.Click += (_, _) => Accept();
+        var cancel = new Button { Content = "Cancel", MinWidth = 80, IsCancel = true };
+        cancel.Click += (_, _) => window.Close();
+        window.Content = new StackPanel
+        {
+            Margin = new Thickness(16),
+            Spacing = 10,
+            Children =
+            {
+                new TextBlock { Text = label },
+                box,
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Right, Children = { ok, cancel } },
+            },
+        };
+        window.Opened += (_, _) =>
+        {
+            box.Focus();
+            box.SelectAll();
+        };
+        await window.ShowDialog(owner);
+        return result;
+    }
+
     public static async Task<string?> PickOpen(Window owner, string title, params (string Name, string[] Patterns)[] types)
     {
         var files = await owner.StorageProvider.OpenFilePickerAsync(
