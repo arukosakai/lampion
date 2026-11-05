@@ -1,56 +1,165 @@
-# Lampion
+<div align="center">
 
-A cross-platform (Windows / macOS / Linux) light show editor in C#. You patch DMX fixtures, build the stage in metres, lay out lights on a Premiere-style timeline next to your music and video, preview everything in real-time 3D, and export the show to QLC+.
+# 🏮 Lampion
 
-## Build & run
+**Design light shows on a timeline, see them in real 3D, and send them to QLC+.**
+
+[![Release](https://github.com/arukosakai/lampion/actions/workflows/release.yml/badge.svg)](https://github.com/arukosakai/lampion/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/arukosakai/lampion?include_prereleases&sort=semver)](https://github.com/arukosakai/lampion/releases)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2D8CEB)
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-lightgrey)](LICENSE)
+
+<img src="docs/screenshot.png" alt="Lampion: fixtures on the left, the 3D stage in the middle, effect controls on the right and the timeline below" width="900">
+
+</div>
+
+You patch your DMX fixtures, build the venue in metres, and lay your lights out on a Premiere-style timeline next to the music and video. Lampion previews the show live in GPU-rendered 3D, works out every DMX value itself, and exports a ready-to-run QLC+ workspace.
+
+---
+
+## ✨ Highlights
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎬 Timeline editing
+- Light, audio and video tracks, with a beat grid driven by BPM and offset
+- Drag, trim, split (<kbd>Ctrl</kbd>+<kbd>K</kbd>), duplicate, copy and paste clips
+- Fade handles and transitions: crossfade, dip to black, wipe across the rig
+- Audio waveforms, markers, and snapping to beats, clip edges and the playhead
+
+</td>
+<td width="50%" valign="top">
+
+### 🌈 Effects & automation
+- Solid, colour fade, rainbow, colour cycle, chase, strobe, pulse, sparkle
+- Keyframe lanes for hue shift, saturation, intensity, opacity and white
+- …or drive any channel directly: pan, tilt, strobe, gobo, or a raw channel number
+- Tracks stack with Normal, HTP or Add blending
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 💡 Fixtures & DMX
+- Profiles where each channel has a role: dimmer, R/G/B, white, amber, UV, strobe, pan/tilt (16-bit)…
+- Lampion maps colour onto whatever channels each fixture actually has
+- Auto-addressing, overlap warnings, groups, and a live 512-channel monitor
+- Art-Net output so a real rig follows along
+
+</td>
+<td valign="top">
+
+### 🏟️ Real-time 3D stage
+- OpenGL rendering: per-pixel spotlights, volumetric beams in moving haze, lens flares
+- A stage builder in metres: truss, risers, walls and LED screens that play your video
+- Gizmos, grid snapping, top/front/side views, an aim tool, and throw and spot-size readouts
+- Stage layouts you save once and reuse in every project
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📦 Download
+
+Grab the latest build from **[Releases](https://github.com/arukosakai/lampion/releases)**:
+
+| Platform | File | Notes |
+| --- | --- | --- |
+| Windows (x64 / ARM64) | `Lampion-*-win-x64.zip` / `win-arm64.zip` | Unzip and run `Lampion.exe` |
+| macOS (Apple Silicon / Intel) | `Lampion-*-osx-arm64.zip` / `osx-x64.zip` | Not notarized: right-click → **Open** the first time, or run `xattr -cr Lampion.app` |
+| Linux (x64) | `Lampion-*-linux-x64.tar.gz` | Needs the system libvlc for audio/video (`sudo apt install vlc`) |
+
+Every build is self-contained, so there's no .NET to install.
+
+---
+
+## 🚀 Quick tour
+
+1. **Patch:** in **Project → Fixtures**, pick a profile, choose how many, and press **Patch**. Select fixtures, then **+ Group** them.
+2. **Build the stage:** in **Stage 3D**, drag fixtures and set pieces around; **+ Set piece** adds truss, risers, walls or screens. Everything is in metres.
+3. **Add music:** **File → Import audio…**, then set the **BPM** and **Offset** so the beat grid lines up with the song.
+4. **Light it:** drag effects from **Project → Effects** onto a light track. Tweak them in **Effect Controls** and right-click a clip to add transitions or automation.
+5. **Export:** **File → Export to QLC+…** writes a `.qxw` workspace. Open it in QLC+ and play the show from the Show Manager.
+
+> 💡 **Stage → Use this layout for new projects** makes every new show start with your venue and rig already patched, with a light track for each group.
+
+---
+
+## 🧠 How colour becomes DMX
+
+Effects and colour automation produce *light* (colour × intensity). Each fixture's profile decides how that lands on its channels:
+
+| Fixture has… | Lampion sends |
+| --- | --- |
+| R, G, B | the colour, scaled by intensity |
+| a dimmer | full-saturation RGB, with the dimmer carrying the level |
+| a white channel | the part R, G and B share, moved onto white (can be switched off per fixture) |
+| no colour channels | brightness on the dimmer; the preview shows the fixture's gel colour |
+
+The 3D preview is drawn **from the computed DMX**, decoded back into light, so what you see is exactly what gets sent.
+
+---
+
+## 🎛️ QLC+ export
+
+- Each fixture is patched at its address. RGB/RGBW profiles become QLC+ **RGB panels**; everything else becomes **Generic**.
+- Each group gets a **Sequence** holding the exact rendered DMX, reduced to linear fades within a tolerance you choose.
+- One **Show** plays the sequences alongside **Audio** and **Video** functions at their timeline positions.
+- It can **merge into an existing workspace**: fixtures at the same address are reused, overlaps are skipped with a warning, and IDs and names never collide.
+
+---
+
+## ⌨️ Shortcuts
+
+| Keys | Action | Keys | Action |
+| --- | --- | --- | --- |
+| <kbd>Space</kbd> | Play / pause | <kbd>Ctrl</kbd>+<kbd>K</kbd> | Split at playhead |
+| <kbd>Home</kbd> / <kbd>End</kbd> | Start / end | <kbd>Ctrl</kbd>+<kbd>D</kbd> | Duplicate |
+| <kbd>←</kbd> / <kbd>→</kbd> | Step a frame (<kbd>Shift</kbd>: 1 s) | <kbd>Del</kbd> | Delete selection |
+| <kbd>M</kbd> | Add marker | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd> | Undo / redo |
+| <kbd>=</kbd> / <kbd>-</kbd> / <kbd>\\</kbd> | Zoom in / out / fit | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save |
+| <kbd>1</kbd>–<kbd>4</kbd> | Perspective / top / front / side | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
+| <kbd>W</kbd> / <kbd>A</kbd> | Move / aim tool | <kbd>F</kbd> | Frame selection |
+
+**Stage:** right-drag to orbit, middle-drag to pan, scroll to zoom, <kbd>Alt</kbd>+drag to change height.
+**Timeline:** double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.
+
+---
+
+## 🛠️ Building from source
+
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```sh
-dotnet run --project src/Lampion.App            # opens a demo show
-dotnet run --project src/Lampion.App -- show.lampion
-dotnet test                                     # core engine tests
+dotnet run --project src/Lampion.App              # opens a demo show
+dotnet run --project src/Lampion.App -- my.lampion
+dotnet test                                       # engine tests
 ```
 
-Requires the .NET 10 SDK. Audio/video playback uses LibVLC: Windows and macOS get native binaries from NuGet, and on Linux you install `vlc` / `libvlc-dev` from the distro. The 3D view needs OpenGL 3.3, or GLES 3.0 through ANGLE on Windows.
-
-## Layout
-
-| Panel | What it does |
+| Project | Contents |
 | --- | --- |
-| **Project** (left) | Patch fixtures (auto-addressing, overlap warnings), groups, the fixture profile editor, media import, and the effects library (drag effects onto the timeline) |
-| **Program** (centre) | **Stage 3D**: GPU preview and stage builder. **Video**: program monitor. **DMX output**: live 512-channel view per universe |
-| **Effect Controls** (right) | Properties of whatever is selected: clip, effect parameters, transition, automation keyframes, track targets, fixture placement, set pieces |
-| **Timeline** (bottom) | Light/audio/video tracks, beat grid from BPM + offset, markers, snapping, fades, transitions, keyframe lanes, waveforms |
+| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net, stage layouts. No UI dependencies. |
+| `src/Lampion.App` | Avalonia UI, the OpenGL stage renderer and LibVLC media playback |
+| `tests/Lampion.Core.Tests` | xUnit tests for the engine and the exporter |
 
-## How lights become DMX
+### Releasing
 
-- A **fixture profile** lists its channels, and each channel has a role: `Dimmer, Red, Green, Blue, White, Amber, UV, Strobe, Pan(+Fine), Tilt(+Fine), Zoom, Gobo, Effect, Generic…` plus a default value.
-- Effects and colour automation produce *light* (colour × intensity). Lampion maps that onto each fixture's own channels:
-  - with a dimmer: full-saturation RGB, and the dimmer carries the level
-  - with a white channel: the shared part of R/G/B moves to white (per-fixture toggle)
-  - with no colour channels: the dimmer follows brightness and the preview uses the fixture's gel
-- **Automation lanes** can target semantic values (Hue shift, Saturation, Intensity, Opacity, White, R/G/B) that are mapped per fixture, or write channels directly by **role** (e.g. Pan on every head) or by **channel number**.
-- Tracks stack top-over-bottom with Normal / HTP / Add blending. Clips have fades and transitions (crossfade, dip to black, wipe across the fixtures).
+Push a version tag and GitHub Actions takes care of the rest:
 
-The 3D preview is drawn from the computed DMX, decoded back to light, so what you see is what gets sent. **Output → Send Art-Net** broadcasts it live.
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
 
-## Stage builder
+The [release workflow](.github/workflows/release.yml) runs the tests, then builds self-contained packages for Windows, macOS and Linux and attaches them to a GitHub release. Tags with a suffix like `v0.2.0-beta.1` become pre-releases.
 
-Everything is in metres: X across (audience right is +), Y up, Z toward the audience.
+---
 
-- Set pieces: truss (real lattice geometry), platforms, walls, LED screens (these play the video track)
-- Drag on the floor plane, Alt+drag for height, or drag a gizmo arrow to lock an axis. Snaps to 0.05–1 m
-- Aim tool: click the stage to point the selected fixtures there. The readout shows throw distance and spot diameter
-- Top / Front / Side views are orthographic, for exact placement
-- Inspector helpers: aim at an XYZ point, distribute fixtures evenly along a truss
-- **Stage → Export / Import stage layout** saves the venue as a `.lampstage` file: set pieces and stage look, plus the rig (fixtures with patch and positions, groups, the profiles they use). On import you choose set only or set + rig, and Ctrl+Z undoes it. **Use this layout for new projects** makes File → New start from it, with one light track per group ready to go.
-
-Rendering covers per-pixel spotlights with hot-spots on the set, ray-marched volumetric beams through animated haze, lens flares, ACES tone mapping and 4× MSAA. Optional *Bounce* lets the lit rig tint the room's ambient light.
-
-## QLC+ export
-
-**File → Export to QLC+** writes a QLC+ 4 workspace (`.qxw`). It can build a new one or merge into an existing project:
-
-- Each fixture is patched at its address: RGB/RGBW profiles become QLC+ RGB panels, everything else Generic.
-- Each group (or loose fixture) gets a Sequence bound to a hidden Scene. The steps hold the exact DMX Lampion renders, sampled and reduced to linear fades within a DMX tolerance.
-- A single Show plays the sequences next to Audio/Video functions at their timeline positions, and fixtures are placed in the fixture monitor.
-- When merging, fixtures at the same address are reused, partial overlaps are skipped with a warning, and IDs and show names never collide.
+<div align="center">
+<sub>Released into the public domain under the <a href="LICENSE">Unlicense</a>.</sub>
+</div>
