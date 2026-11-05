@@ -38,7 +38,7 @@ public sealed class StagePanel : DockPanel
         ToolTip.SetTip(add, "Add a set piece: truss, riser, wall or screen");
 
         var viewMenu = new Button { Content = "View ▾", Padding = new Thickness(8, 1), Flyout = new Flyout { Content = ViewOptions(), Placement = PlacementMode.BottomEdgeAlignedRight } };
-        ToolTip.SetTip(viewMenu, "Labels, light bounce and haze");
+        ToolTip.SetTip(viewMenu, "Labels, light bounce, haze and stage quality");
 
         var bar = new DockPanel { Height = 30, Background = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x26)), LastChildFill = false };
         var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center, Children = { tools, Divider(), snap, add } };
@@ -166,10 +166,128 @@ public sealed class StagePanel : DockPanel
         return new StackPanel
         {
             Spacing = 4,
-            Width = 200,
-            Children = { labels, bounce, new TextBlock { Text = "Haze", Foreground = Brushes.Gray, Margin = new Thickness(0, 6, 0, 0) }, haze, reset },
+            Width = 250,
+            Children = { labels, bounce, new TextBlock { Text = "Haze", Foreground = Brushes.Gray, Margin = new Thickness(0, 6, 0, 0) }, haze, reset, QualityOptions() },
         };
     }
+
+    /// <summary>
+    /// How hard the GPU works on the 3D view. A preset sets every knob; touching one knob makes it "Custom".
+    /// Saved per machine, since the right answer depends on the graphics card, not the show.
+    /// </summary>
+    private Control QualityOptions()
+    {
+        var settings = UserData.LoadSettings();
+        View.Fidelity = settings.Fidelity;
+        View.ShowFps = settings.ShowFps;
+        var syncing = false;
+
+        var resolution = new Knob<double>([(0.5, "50%"), (0.75, "75%"), (1, "100%")], View.Fidelity.RenderScale, v => View.Fidelity = View.Fidelity with { RenderScale = v });
+        var aa = new Knob<int>([(0, "Off"), (2, "2×"), (4, "4×")], View.Fidelity.Samples, v => View.Fidelity = View.Fidelity with { Samples = v });
+        var hazeSteps = new Knob<int>([(8, "Low"), (16, "Medium"), (Shaders.MaxHazeSteps, "High")], View.Fidelity.HazeSteps, v => View.Fidelity = View.Fidelity with { HazeSteps = v });
+        var lights = new Knob<int>([(8, "8"), (24, "24"), (Shaders.MaxLights, $"{Shaders.MaxLights}")], View.Fidelity.MaxLights, v => View.Fidelity = View.Fidelity with { MaxLights = v });
+        ToolTip.SetTip(resolution.Combo, "Renders fewer pixels and scales the picture up: the biggest saving, at the cost of sharpness");
+        ToolTip.SetTip(aa.Combo, "Smooths jagged edges on trusses and beams");
+        ToolTip.SetTip(hazeSteps.Combo, "Detail of the haze inside beams; lower is grainier, not dimmer");
+        ToolTip.SetTip(lights.Combo, "How many of the brightest fixtures light the floor and set");
+
+        var presetNames = StageFidelity.Presets.Select(p => p.Name).Append("Custom").ToList();
+        var preset = new ComboBox { ItemsSource = presetNames, HorizontalAlignment = HorizontalAlignment.Stretch };
+        void ShowPreset() => preset.SelectedItem = View.Fidelity.PresetName ?? "Custom";
+        preset.SelectionChanged += (_, _) =>
+        {
+            if (syncing || preset.SelectedItem is not string name || StageFidelity.Presets.FirstOrDefault(p => p.Name == name).Preset is not { } chosen)
+                return;
+            View.Fidelity = chosen;
+            syncing = true;
+            resolution.Select(chosen.RenderScale);
+            aa.Select(chosen.Samples);
+            hazeSteps.Select(chosen.HazeSteps);
+            lights.Select(chosen.MaxLights);
+            syncing = false;
+            Save();
+        };
+
+        var fps = new CheckBox { Content = "Show frame rate", IsChecked = View.ShowFps };
+        fps.IsCheckedChanged += (_, _) =>
+        {
+            View.ShowFps = fps.IsChecked == true;
+            Save();
+        };
+
+        void Save() => UserData.SaveSettings(new UserSettings { Fidelity = View.Fidelity, ShowFps = View.ShowFps });
+
+        void KnobChanged()
+        {
+            if (syncing)
+                return;
+            syncing = true;
+            ShowPreset();
+            syncing = false;
+            Save();
+        }
+        foreach (var knob in new IKnob[] { resolution, aa, hazeSteps, lights })
+            knob.Changed += KnobChanged;
+        syncing = true;
+        ShowPreset();
+        syncing = false;
+
+        return new StackPanel
+        {
+            Spacing = 4,
+            Margin = new Thickness(0, 10, 0, 0),
+            Children =
+            {
+                new TextBlock { Text = "STAGE QUALITY", Foreground = Brushes.Gray, FontSize = 10.5, FontWeight = FontWeight.SemiBold },
+                Ui.Field("Preset", preset, 110),
+                Ui.Field("Resolution", resolution.Combo, 110),
+                Ui.Field("Anti-aliasing", aa.Combo, 110),
+                Ui.Field("Haze detail", hazeSteps.Combo, 110),
+                Ui.Field("Lights / surface", lights.Combo, 110),
+                fps,
+            },
+        };
+    }
+
+    private interface IKnob
+    {
+        event Action? Changed;
+    }
+
+    /// <summary>A combo over a few fixed values; <see cref="Select"/> moves it without counting as a user change.</summary>
+    private sealed class Knob<T> : IKnob
+        where T : struct
+    {
+        private readonly List<(T Value, string Label)> _options;
+        private bool _quiet;
+
+        public Knob(List<(T Value, string Label)> options, T current, Action<T> apply)
+        {
+            _options = options;
+            Combo = new ComboBox { ItemsSource = options.Select(o => o.Label).ToList(), HorizontalAlignment = HorizontalAlignment.Stretch };
+            Select(current);
+            Combo.SelectionChanged += (_, _) =>
+            {
+                if (_quiet || Combo.SelectedIndex < 0)
+                    return;
+                apply(_options[Combo.SelectedIndex].Value);
+                Changed?.Invoke();
+            };
+        }
+
+        public ComboBox Combo { get; }
+
+        public event Action? Changed;
+
+        public void Select(T value)
+        {
+            _quiet = true;
+            // A value tuned outside these options (an edited settings file) shows as blank rather than lying.
+            Combo.SelectedIndex = _options.FindIndex(o => EqualityComparer<T>.Default.Equals(o.Value, value));
+            _quiet = false;
+        }
+    }
+
 
     public void SetPreset(ViewPreset preset) => View.ApplyPreset(preset);
 

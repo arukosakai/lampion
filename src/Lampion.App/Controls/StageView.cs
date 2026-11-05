@@ -55,6 +55,14 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
     public bool ShowNavigation { get; set; } = true;
     public bool ShowMoveHandles { get; set; } = true;
     public bool ShowMeasurements { get; set; } = true;
+
+    public StageFidelity Fidelity { get; set; } = StageFidelity.Quality;
+    public bool ShowFps { get; set; }
+
+    /// <summary>Frames actually drawn per second, smoothed over about half a second.</summary>
+    public double FramesPerSecond { get; private set; }
+
+    private long _lastFrame;
     public VideoFrame? Video { get; set; }
     public string? RendererInfo { get; private set; }
     public string? Error { get; private set; }
@@ -101,7 +109,7 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
         {
             try
             {
-                _renderer.Render(_scene, Camera, fb, width, height);
+                _renderer.Render(_scene, Camera, fb, width, height, Fidelity);
             }
             catch (Exception ex)
             {
@@ -115,6 +123,13 @@ public sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHit
             _gl.ClearColor(0.05f, 0.05f, 0.06f, 1);
             _gl.Clear(ClearBufferMask.ColorBufferBit);
         }
+        var now = Stopwatch.GetTimestamp();
+        if (_lastFrame != 0)
+        {
+            var instant = Stopwatch.Frequency / (double)Math.Max(1, now - _lastFrame);
+            FramesPerSecond = FramesPerSecond <= 0 ? instant : FramesPerSecond * 0.95 + instant * 0.05;
+        }
+        _lastFrame = now;
         Rendered?.Invoke();
         // Haze drifts even when the show is paused, so the picture is always animating.
         RequestNextFrameRendering();

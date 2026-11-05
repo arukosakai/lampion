@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Lampion.App.Rendering;
 using Lampion.Core.Model;
 using Lampion.Core.Persistence;
 
@@ -16,6 +17,37 @@ public static class UserData
     public static string TemplatesDirectory => Path.Combine(Root, "Templates");
 
     private static string RecentPath => Path.Combine(Root, "recent.json");
+
+    private static string SettingsPath => Path.Combine(Root, "settings.json");
+
+    /// <summary>Machine-level preferences; defaults when the file is missing or unreadable.</summary>
+    public static UserSettings LoadSettings()
+    {
+        try
+        {
+            if (File.Exists(SettingsPath) && JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(SettingsPath)) is { } settings)
+                // JSON can say "Fidelity": null whatever the type claims.
+                return settings with { Fidelity = (settings.Fidelity as StageFidelity)?.Sanitised() ?? StageFidelity.Quality };
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        {
+            // Fall through to defaults: a broken settings file must never stop the app from starting.
+        }
+        return new UserSettings();
+    }
+
+    public static void SaveSettings(UserSettings settings)
+    {
+        try
+        {
+            Directory.CreateDirectory(Root);
+            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Losing a preference is harmless; the session keeps working with what is in memory.
+        }
+    }
 
     public static List<string> RecentProjects()
     {
@@ -83,6 +115,12 @@ public static class UserData
             return null;
         }
     }
+}
+
+public sealed record UserSettings
+{
+    public StageFidelity Fidelity { get; init; } = StageFidelity.Quality;
+    public bool ShowFps { get; init; }
 }
 
 /// <summary>Ways to begin a show: blank, from a stage layout, or the demo.</summary>

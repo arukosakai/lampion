@@ -91,6 +91,16 @@ public sealed class StageOverlay : Control
 
         if (_view.RendererInfo is { } info)
             Text(ctx, info, new Point(8, Bounds.Height - 18), Brushes.DimGray, 10, null);
+
+        if (_view.ShowFps)
+        {
+            var f = _view.Fidelity;
+            var aa = f.Samples < 2 ? "no AA" : $"{f.Samples}× AA";
+            var fps = TextCache.Get($"{_view.FramesPerSecond:0} fps  ·  {f.RenderScale:0%}  ·  {aa}", 11.5, LabelBrush);
+            var corner = new Point(Bounds.Width - fps.Width - 16, Bounds.Height - fps.Height - 14);
+            ctx.DrawRectangle(PanelBrush, null, new Rect(corner.X - 6, corner.Y - 4, fps.Width + 12, fps.Height + 8), 4, 4);
+            ctx.DrawText(fps, corner);
+        }
     }
 
     private void DrawReadout(DrawingContext ctx, SceneSnapshot scene)

@@ -127,9 +127,58 @@ internal sealed unsafe class ShaderProgram : IDisposable
     public void Dispose() => _gl.DeleteProgram(Handle);
 }
 
+/// <summary>A framebuffer of renderbuffers, rebuilt only when its size, sample count or depth need change.</summary>
+internal sealed class OffscreenTarget(GL gl) : IDisposable
+{
+    private uint _color;
+    private uint _depth;
+    private (int W, int H, int Samples, bool Depth) _shape;
+
+    public uint Framebuffer { get; private set; }
+
+    /// <returns>False when the driver refuses this shape; the caller should then draw straight to the surface.</returns>
+    public bool Ensure(int width, int height, int samples, bool withDepth)
+    {
+        if (Framebuffer != 0 && _shape == (width, height, samples, withDepth))
+            return true;
+        Dispose();
+        Framebuffer = gl.GenFramebuffer();
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, Framebuffer);
+        _color = Storage(InternalFormat.Rgba8, FramebufferAttachment.ColorAttachment0, width, height, samples);
+        if (withDepth)
+            _depth = Storage(InternalFormat.Depth24Stencil8, FramebufferAttachment.DepthStencilAttachment, width, height, samples);
+        _shape = (width, height, samples, withDepth);
+        if (gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer) == GLEnum.FramebufferComplete)
+            return true;
+        Dispose();
+        return false;
+    }
+
+    private uint Storage(InternalFormat format, FramebufferAttachment attachment, int width, int height, int samples)
+    {
+        var buffer = gl.GenRenderbuffer();
+        gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, buffer);
+        gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, (uint)samples, format, (uint)width, (uint)height);
+        gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, attachment, RenderbufferTarget.Renderbuffer, buffer);
+        return buffer;
+    }
+
+    public void Dispose()
+    {
+        if (Framebuffer != 0)
+            gl.DeleteFramebuffer(Framebuffer);
+        if (_color != 0)
+            gl.DeleteRenderbuffer(_color);
+        if (_depth != 0)
+            gl.DeleteRenderbuffer(_depth);
+        Framebuffer = _color = _depth = 0;
+    }
+}
+
 /// <summary>
-/// Draws the stage: lit set and fixtures, then additive volumetric beams and lens glows, into a 4×MSAA
-/// framebuffer that is resolved onto the surface Avalonia hands us.
+/// Draws the stage: lit set and fixtures, then additive volumetric beams and lens glows. Depending on the
+/// <see cref="StageFidelity"/> it renders offscreen (multisampled and/or at reduced size) and then resolves
+/// and scales the picture onto the surface Avalonia hands us.
 /// </summary>
 internal sealed unsafe class StageRenderer : IDisposable
 {
@@ -146,11 +195,11 @@ internal sealed unsafe class StageRenderer : IDisposable
     private int _videoVersion = -1;
     private bool _hasVideo;
 
-    private uint _msaaFbo;
-    private uint _msaaColor;
-    private uint _msaaDepth;
-    private (int W, int H) _msaaSize;
-    private readonly int _samples;
+    // Where the scene is drawn when it can't go straight to Avalonia's surface: multisampled, scaled, or both;
+    // plus a plain target to resolve MSAA into before a scaled blit, since a multisampled blit can't resize.
+    private readonly OffscreenTarget _scene;
+    private readonly OffscreenTarget _resolve;
+    private readonly int _maxSamples;
 
     public StageRenderer(GL gl, bool isEmbedded)
     {
@@ -164,18 +213,29 @@ internal sealed unsafe class StageRenderer : IDisposable
         _cylinder = new GpuMesh(gl, MeshBuilder.UnitCylinder());
         _cone = new GpuMesh(gl, MeshBuilder.Cone());
         gl.GetInteger(GLEnum.MaxSamples, out int maxSamples);
-        _samples = Math.Clamp(maxSamples, 0, 4);
-        Info = $"{gl.GetStringS(StringName.Renderer)} · {gl.GetStringS(StringName.Version)} · MSAA {_samples}x";
+        _maxSamples = maxSamples;
+        _scene = new OffscreenTarget(gl);
+        _resolve = new OffscreenTarget(gl);
+        Info = $"{gl.GetStringS(StringName.Renderer)} · {gl.GetStringS(StringName.Version)} · up to MSAA {maxSamples}x";
     }
 
     public string Info { get; }
 
-    public void Render(SceneSnapshot scene, Camera camera, int targetFramebuffer, int width, int height)
+    public void Render(SceneSnapshot scene, Camera camera, int targetFramebuffer, int width, int height, StageFidelity fidelity)
     {
         var gl = _gl;
-        var drawTarget = EnsureMsaa(width, height) ? _msaaFbo : (uint)targetFramebuffer;
+        var samples = Math.Min(fidelity.Samples, _maxSamples);
+        if (samples < 2)
+            samples = 0;
+        var scaledWidth = Math.Max(1, (int)Math.Round(width * fidelity.RenderScale));
+        var scaledHeight = Math.Max(1, (int)Math.Round(height * fidelity.RenderScale));
+        var scaled = scaledWidth != width || scaledHeight != height;
+        var offscreen = (samples > 0 || scaled) && _scene.Ensure(scaledWidth, scaledHeight, samples, withDepth: true);
+        if (!offscreen)
+            (scaledWidth, scaledHeight) = (width, height);
+        var drawTarget = offscreen ? _scene.Framebuffer : (uint)targetFramebuffer;
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, drawTarget);
-        gl.Viewport(0, 0, (uint)width, (uint)height);
+        gl.Viewport(0, 0, (uint)scaledWidth, (uint)scaledHeight);
         gl.ClearColor(0.008f, 0.009f, 0.012f, 1);
         gl.DepthMask(true);
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -188,8 +248,8 @@ internal sealed unsafe class StageRenderer : IDisposable
         var proj = camera.Projection(width / (float)Math.Max(1, height));
         UploadVideo(scene.Video);
 
-        DrawSolids(scene, camera, view, proj);
-        DrawLightEffects(scene, camera, view, proj);
+        DrawSolids(scene, camera, view, proj, fidelity.MaxLights);
+        DrawLightEffects(scene, camera, view, proj, fidelity.HazeSteps);
 
         gl.DepthMask(true);
         gl.Disable(EnableCap.Blend);
@@ -197,16 +257,33 @@ internal sealed unsafe class StageRenderer : IDisposable
         gl.BindVertexArray(0);
         gl.UseProgram(0);
 
-        if (drawTarget != (uint)targetFramebuffer)
-        {
-            gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, _msaaFbo);
-            gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, (uint)targetFramebuffer);
-            gl.BlitFramebuffer(0, 0, width, height, 0, 0, width, height, ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Nearest);
-            gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)targetFramebuffer);
-        }
+        if (offscreen)
+            Present(targetFramebuffer, width, height, scaledWidth, scaledHeight, samples > 0 && scaled);
     }
 
-    private void DrawSolids(SceneSnapshot scene, Camera camera, Matrix4x4 view, Matrix4x4 proj)
+    /// <summary>Copies the offscreen picture onto Avalonia's surface, resolving MSAA and scaling up as needed.</summary>
+    private void Present(int target, int width, int height, int scaledWidth, int scaledHeight, bool resolveFirst)
+    {
+        var gl = _gl;
+        var source = _scene.Framebuffer;
+        if (resolveFirst && _resolve.Ensure(scaledWidth, scaledHeight, samples: 0, withDepth: false))
+        {
+            Blit(source, _resolve.Framebuffer, scaledWidth, scaledHeight, scaledWidth, scaledHeight, BlitFramebufferFilter.Nearest);
+            source = _resolve.Framebuffer;
+        }
+        var filter = scaledWidth == width && scaledHeight == height ? BlitFramebufferFilter.Nearest : BlitFramebufferFilter.Linear;
+        Blit(source, (uint)target, scaledWidth, scaledHeight, width, height, filter);
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, (uint)target);
+    }
+
+    private void Blit(uint from, uint to, int fromWidth, int fromHeight, int toWidth, int toHeight, BlitFramebufferFilter filter)
+    {
+        _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, from);
+        _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, to);
+        _gl.BlitFramebuffer(0, 0, fromWidth, fromHeight, 0, 0, toWidth, toHeight, ClearBufferMask.ColorBufferBit, filter);
+    }
+
+    private void DrawSolids(SceneSnapshot scene, Camera camera, Matrix4x4 view, Matrix4x4 proj, int maxLights)
     {
         var lit = _lit;
         lit.Use();
@@ -222,7 +299,7 @@ internal sealed unsafe class StageRenderer : IDisposable
         lit.Set("uHasVideo", _hasVideo ? 1 : 0);
         _gl.ActiveTexture(TextureUnit.Texture0);
         _gl.BindTexture(TextureTarget.Texture2D, _videoTexture);
-        UploadLights(scene);
+        UploadLights(scene, maxLights);
 
         // House floor, a hair below zero so platform bottoms never fight it.
         Material(new Vector3(0.17f, 0.17f, 0.18f), 0.3f, 0, Vector3.Zero, 2);
@@ -235,9 +312,10 @@ internal sealed unsafe class StageRenderer : IDisposable
             DrawFixture(fixture);
     }
 
-    private void UploadLights(SceneSnapshot scene)
+    private void UploadLights(SceneSnapshot scene, int maxLights)
     {
-        var lights = scene.Fixtures.Where(f => f.Brightness > 0.004f).OrderByDescending(f => f.Brightness).Take(Shaders.MaxLights).ToList();
+        var limit = Math.Clamp(maxLights, 1, Shaders.MaxLights);
+        var lights = scene.Fixtures.Where(f => f.Brightness > 0.004f).OrderByDescending(f => f.Brightness).Take(limit).ToList();
         Span<Vector3> pos = stackalloc Vector3[Shaders.MaxLights];
         Span<Vector3> dir = stackalloc Vector3[Shaders.MaxLights];
         Span<Vector3> col = stackalloc Vector3[Shaders.MaxLights];
@@ -381,7 +459,7 @@ internal sealed unsafe class StageRenderer : IDisposable
         _cylinder.Draw();
     }
 
-    private void DrawLightEffects(SceneSnapshot scene, Camera camera, Matrix4x4 view, Matrix4x4 proj)
+    private void DrawLightEffects(SceneSnapshot scene, Camera camera, Matrix4x4 view, Matrix4x4 proj, int hazeSteps)
     {
         var gl = _gl;
         gl.Enable(EnableCap.Blend);
@@ -396,6 +474,7 @@ internal sealed unsafe class StageRenderer : IDisposable
             _beam.Set("uCamPos", camera.Position);
             _beam.Set("uHaze", scene.Haze);
             _beam.Set("uTime", scene.Time);
+            _beam.Set("uSteps", hazeSteps);
             foreach (var f in scene.Fixtures)
             {
                 if (f.Brightness < 0.01f || f.BeamLength < 0.05f)
@@ -460,48 +539,10 @@ internal sealed unsafe class StageRenderer : IDisposable
         }
     }
 
-    private bool EnsureMsaa(int width, int height)
-    {
-        if (_samples < 2)
-            return false;
-        if (_msaaFbo != 0 && _msaaSize == (width, height))
-            return true;
-        DeleteMsaa();
-        var gl = _gl;
-        _msaaFbo = gl.GenFramebuffer();
-        gl.BindFramebuffer(FramebufferTarget.Framebuffer, _msaaFbo);
-        _msaaColor = gl.GenRenderbuffer();
-        gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _msaaColor);
-        gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, (uint)_samples, InternalFormat.Rgba8, (uint)width, (uint)height);
-        gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, RenderbufferTarget.Renderbuffer, _msaaColor);
-        _msaaDepth = gl.GenRenderbuffer();
-        gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _msaaDepth);
-        gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, (uint)_samples, InternalFormat.Depth24Stencil8, (uint)width, (uint)height);
-        gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment, RenderbufferTarget.Renderbuffer, _msaaDepth);
-        var ok = gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer) == GLEnum.FramebufferComplete;
-        _msaaSize = (width, height);
-        if (!ok)
-        {
-            DeleteMsaa();
-            return false;
-        }
-        return true;
-    }
-
-    private void DeleteMsaa()
-    {
-        if (_msaaFbo != 0)
-            _gl.DeleteFramebuffer(_msaaFbo);
-        if (_msaaColor != 0)
-            _gl.DeleteRenderbuffer(_msaaColor);
-        if (_msaaDepth != 0)
-            _gl.DeleteRenderbuffer(_msaaDepth);
-        _msaaFbo = _msaaColor = _msaaDepth = 0;
-    }
-
     public void Dispose()
     {
-        DeleteMsaa();
+        _scene.Dispose();
+        _resolve.Dispose();
         if (_videoTexture != 0)
             _gl.DeleteTexture(_videoTexture);
         foreach (var mesh in _trusses.Values)

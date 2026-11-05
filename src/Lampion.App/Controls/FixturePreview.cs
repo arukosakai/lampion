@@ -113,7 +113,7 @@ public sealed class FixturePreview : OpenGlControlBase, Avalonia.Rendering.ICust
         {
             try
             {
-                _renderer.Render(_scene, _camera, fb, width, height);
+                _renderer.Render(_scene, _camera, fb, width, height, StageFidelity.Quality);
             }
             catch (Exception ex)
             {

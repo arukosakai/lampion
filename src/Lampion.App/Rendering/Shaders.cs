@@ -7,6 +7,7 @@ namespace Lampion.App.Rendering;
 internal static class Shaders
 {
     public const int MaxLights = 48;
+    public const int MaxHazeSteps = 28;
 
     private const string Common = """
         const float PI = 3.14159265;
@@ -201,7 +202,7 @@ internal static class Shaders
     /// are rasterised; the fragment on the near half of the chord is discarded so each pixel integrates once
     /// whichever way the mesh is wound, and from inside the beam too.
     /// </summary>
-    public static readonly string BeamFragment = Common + """
+    public static readonly string BeamFragment = Common + $$"""
 
         in vec3 vWorld;
         out vec4 fragColor;
@@ -213,6 +214,7 @@ internal static class Shaders
         uniform vec3 uColor;
         uniform float uHaze;
         uniform float uTime;
+        uniform int uSteps;
 
         void main() {
             vec3 ro = uCamPos;
@@ -258,12 +260,15 @@ internal static class Shaders
             if (t1 <= t0) discard;
             if (fragT < 0.5 * (t0 + t1)) discard;
 
-            const int STEPS = 28;
-            float stepLen = (t1 - t0) / float(STEPS);
+            // Fewer steps only make the haze grainier, not dimmer: the sum is scaled by the step length.
+            const int MAX_STEPS = {{MaxHazeSteps}};
+            int steps = clamp(uSteps, 1, MAX_STEPS);
+            float stepLen = (t1 - t0) / float(steps);
             float jitter = hash13(vec3(gl_FragCoord.xy, uTime));
             float tanAngle = sqrt(max(1.0 - cos2, 1e-6)) / uCos;
             float sum = 0.0;
-            for (int i = 0; i < STEPS; i++) {
+            for (int i = 0; i < MAX_STEPS; i++) {
+                if (i >= steps) break;
                 float t = t0 + (float(i) + jitter) * stepLen;
                 vec3 p = ro + rd * t;
                 vec3 q = p - uApex;
