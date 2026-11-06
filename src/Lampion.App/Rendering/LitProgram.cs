@@ -73,7 +73,7 @@ internal sealed class LitProgram : IDisposable
                 float tone = 0.85 + 0.3 * hash13(vec3(sheet, 3.0));
                 float seam = gridLine(p, 1.22, 0.004) * step(0.5, n.y);
                 albedo *= tone * (1.0 - 0.6 * seam);
-                rough = mix(0.35, 0.6, noise3(vec3(p * 6.0, 1.0)));
+                rough = mix(0.35, 0.6, valueNoise(vec3(p * 6.0, 1.0)));
             } else if (uPattern == 2) {
                 // Polished concrete with a metre grid so distances can be read off the floor.
                 vec2 p = vWorld.xz;
@@ -90,7 +90,7 @@ internal sealed class LitProgram : IDisposable
                 albedo *= 0.8 + 0.2 * fold;
                 rough = 0.9;
             } else if (uPattern == 4) {
-                rough = 0.3 + 0.15 * noise3(vWorld * 40.0);
+                rough = 0.3 + 0.15 * valueNoise(vWorld * 40.0);
             }
         }
 

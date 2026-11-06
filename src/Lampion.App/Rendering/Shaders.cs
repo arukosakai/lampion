@@ -29,7 +29,7 @@ internal static class Shaders
             return fract((p.x + p.y) * p.z);
         }
 
-        float noise3(vec3 p) {
+        float valueNoise(vec3 p) {
             vec3 i = floor(p);
             vec3 f = fract(p);
             f = f * f * (3.0 - 2.0 * f);
@@ -42,7 +42,7 @@ internal static class Shaders
         float fbm(vec3 p) {
             float v = 0.0;
             float a = 0.5;
-            for (int i = 0; i < 3; i++) { v += a * noise3(p); p *= 2.03; a *= 0.5; }
+            for (int i = 0; i < 3; i++) { v += a * valueNoise(p); p *= 2.03; a *= 0.5; }
             return v;
         }
         """;
