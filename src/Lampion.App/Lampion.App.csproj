@@ -8,7 +8,7 @@
     <RootNamespace>Lampion.App</RootNamespace>
     <AssemblyName>Lampion</AssemblyName>
     <!-- Release builds override this from the git tag. -->
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
