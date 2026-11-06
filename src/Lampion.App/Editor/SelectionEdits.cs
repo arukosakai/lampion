@@ -31,7 +31,7 @@ internal static class SelectionEdits
                 state.Project.RemoveFixtures(state.SelectedFixtureIds.ToHashSet());
                 break;
             case SelectionKind.StageObject:
-                state.Project.Stage.Objects.RemoveAll(o => o.Id == state.SelectedObjectId);
+                state.Project.Stage.Objects.RemoveAll(o => state.SelectedObjectIds.Contains(o.Id));
                 break;
             case SelectionKind.Track:
                 state.Project.Tracks.RemoveAll(t => t.Id == state.SelectedTrackId);

@@ -93,6 +93,24 @@ public class StageMathTests
     }
 
     [Fact]
+    public void HalfExtentsFollowRotation()
+    {
+        var bar = new StageObject { Position = new Vec3(1, 2, 3), Size = new Vec3(4, 0.3, 0.2) };
+        Assert.Equal(new Vec3(2, 0.15, 0.1), StageMath.HalfExtents(bar));
+
+        bar.Yaw = 90;
+        var turned = StageMath.HalfExtents(bar);
+        Assert.Equal(0.1, turned.X, 6);
+        Assert.Equal(0.15, turned.Y, 6);
+        Assert.Equal(2, turned.Z, 6);
+
+        bar.Yaw = 45;
+        var diagonal = StageMath.HalfExtents(bar);
+        Assert.Equal((2 + 0.1) * Math.Sqrt(0.5), diagonal.X, 6);
+        Assert.Equal(diagonal.X, diagonal.Z, 6);
+    }
+
+    [Fact]
     public void DistributeStacksFixturesOnTheAudienceSideOfATower()
     {
         var tower = new StageObject { Kind = StageObjectKind.Truss, Position = new Vec3(-4, 2.5, 1), Size = new Vec3(4, 0.3, 0.3), Roll = 90 };

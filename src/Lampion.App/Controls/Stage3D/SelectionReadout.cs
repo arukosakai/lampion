@@ -36,6 +36,9 @@ internal sealed class SelectionReadout(StageView view, EditorState state)
         else if (state.SelectionKind == SelectionKind.StageObject && StageSelection.SelectedObject(state) is { } obj)
         {
             Line().Append(obj.Name).Append(" (").Append(KindName(obj.Kind)).Append(")");
+            var count = state.SelectedObjectIds.Count;
+            if (count > 1)
+                _text.Append(" (+").Append(count - 1).Append(" more)");
             if (StructureEdits.Find(state.Project, obj.StructureId) is { } structure)
                 _text.Append(" · part of ").Append(structure.Name).Append(view.BuildMode ? " (Ctrl+drag moves just this piece)" : "");
             Position(obj.Position);
@@ -49,7 +52,7 @@ internal sealed class SelectionReadout(StageView view, EditorState state)
             if (view.Tool == BuilderTool.Aim)
                 Line().Append("Aim: click/drag on the stage to point the selected fixtures");
             else
-                Line().Append("Drag to move · Alt+drag height · arrows lock an axis · snap ").AppendMetres(state.Project.Stage.GridStep);
+                Line().Append("Drag to move · Shift+click multi-select · Alt+drag height · arrows lock an axis · snap ").AppendMetres(state.Project.Stage.GridStep);
         }
         return _lines == 0 ? null : _text.ToText();
     }

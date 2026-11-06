@@ -95,11 +95,17 @@ public static class StageMath
     public static Vec3 LocalToWorld(StageObject obj, Vec3 local) => obj.Position + BasisOf(obj).ToWorld(local);
 
     /// <summary>How far the object reaches above and below its centre once rotated, in metres.</summary>
-    public static double HalfHeight(StageObject obj)
+    public static double HalfHeight(StageObject obj) => HalfExtents(obj).Y;
+
+    /// <summary>Half the size of the world-axis box that holds the object once rotated, in metres from its centre.</summary>
+    public static Vec3 HalfExtents(StageObject obj)
     {
         var basis = BasisOf(obj);
         var half = obj.Size * 0.5;
-        return Math.Abs(basis.X.Y) * half.X + Math.Abs(basis.Y.Y) * half.Y + Math.Abs(basis.Z.Y) * half.Z;
+        return new Vec3(
+            Math.Abs(basis.X.X) * half.X + Math.Abs(basis.Y.X) * half.Y + Math.Abs(basis.Z.X) * half.Z,
+            Math.Abs(basis.X.Y) * half.X + Math.Abs(basis.Y.Y) * half.Y + Math.Abs(basis.Z.Y) * half.Z,
+            Math.Abs(basis.X.Z) * half.X + Math.Abs(basis.Y.Z) * half.Y + Math.Abs(basis.Z.Z) * half.Z);
     }
 
     private static Basis BasisOf(StageObject obj) => Basis.FromYawPitchRoll(obj.Yaw, obj.Pitch, obj.Roll);

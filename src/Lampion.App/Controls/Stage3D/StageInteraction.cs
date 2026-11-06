@@ -69,14 +69,16 @@ internal sealed class StageInteraction
         if (ArrowsGrabbable && TryGrabArrow(point))
             return;
 
-        var additive = modifiers.HasFlag(KeyModifiers.Control) || modifiers.HasFlag(KeyModifiers.Meta);
+        var shift = modifiers.HasFlag(KeyModifiers.Shift);
+        var ctrl = modifiers.HasFlag(KeyModifiers.Control) || modifiers.HasFlag(KeyModifiers.Meta);
         var (rayOrigin, direction) = _view.RayAt(point);
         if (_picker.Pick(rayOrigin, direction) is { } picked)
         {
-            Select(picked, additive);
-            // Set pieces are selected one at a time, so Ctrl on one means "just this piece, not its structure".
-            _editor.PieceOnly = additive && !picked.IsFixture;
-            if (_view.BuildMode && (!additive || _editor.PieceOnly) && _view.GizmoOrigin is { } origin)
+            // Shift toggles anything in or out; Ctrl does on fixtures, but on a set piece it means "just this piece, not its structure".
+            var toggle = shift || (ctrl && picked.IsFixture);
+            Select(picked, toggle);
+            _editor.PieceOnly = ctrl && !toggle;
+            if (_view.BuildMode && !toggle && _view.GizmoOrigin is { } origin)
             {
                 var vertical = modifiers.HasFlag(KeyModifiers.Alt);
                 var grab = vertical ? origin : StageGeometry.IntersectPlaneY(rayOrigin, direction, origin.Y) ?? origin;
@@ -85,7 +87,7 @@ internal sealed class StageInteraction
             }
             return;
         }
-        _click.Begin(point);
+        _click.Begin(point, keepSelection: shift || ctrl);
         _active = _click;
     }
 
@@ -116,15 +118,16 @@ internal sealed class StageInteraction
 
     private bool ArrowsGrabbable => _view.BuildMode && !(_view.Tool == BuilderTool.Aim && _state.SelectedFixtureIds.Count > 0);
 
-    private void Select(StagePick picked, bool additive)
+    // A plain click on something already selected keeps the whole selection, so it can be dragged together.
+    private void Select(StagePick picked, bool toggle)
     {
         if (picked.IsFixture)
         {
-            if (!_state.SelectedFixtureIds.Contains(picked.Id) || additive)
-                _state.SelectFixtures([picked.Id], additive);
+            if (!_state.SelectedFixtureIds.Contains(picked.Id) || toggle)
+                _state.SelectFixtures([picked.Id], toggle);
         }
-        else if (_state.SelectedObjectId != picked.Id)
-            _state.SelectObject(picked.Id);
+        else if (!_state.SelectedObjectIds.Contains(picked.Id) || toggle)
+            _state.SelectObjects([picked.Id], toggle);
     }
 
     /// <summary>The pointer moved to <paramref name="point"/>, button held or not.</summary>

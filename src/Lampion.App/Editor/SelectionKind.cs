@@ -15,6 +15,6 @@ public enum SelectionKind
     /// <summary>One or more patched fixtures (<see cref="EditorState.SelectedFixtureIds"/>).</summary>
     Fixture,
 
-    /// <summary>A set piece on the stage (<see cref="EditorState.SelectedObjectId"/>).</summary>
+    /// <summary>One or more set pieces on the stage (<see cref="EditorState.SelectedObjectIds"/>).</summary>
     StageObject,
 }

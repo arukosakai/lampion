@@ -81,8 +81,11 @@ public sealed class EditorState
     /// <summary>Selected fixture ids. Call <see cref="NotifySelectionChanged"/> after editing it directly.</summary>
     public HashSet<string> SelectedFixtureIds => _selection.FixtureIds;
 
-    /// <summary>The selected stage set piece, or null.</summary>
-    public string? SelectedObjectId => _selection.ObjectId;
+    /// <summary>Selected stage set piece ids. Call <see cref="NotifySelectionChanged"/> after editing it directly.</summary>
+    public HashSet<string> SelectedObjectIds => _selection.ObjectIds;
+
+    /// <summary>One of the selected set pieces' ids (the set is unordered), or null.</summary>
+    public string? SelectedObjectId => _selection.AnyObjectId;
 
     /// <summary>The keyframe the timeline last picked, so Delete removes it rather than the clip.</summary>
     public (string LaneId, Keyframe Key)? SelectedKey
@@ -196,7 +199,7 @@ public sealed class EditorState
     /// <summary>One of the selected fixtures (the set is unordered), or null.</summary>
     public Fixture? PrimaryFixture => _selection.AnyFixtureId is { } id ? Project.FixtureById(id) : null;
 
-    /// <summary>The selected stage set piece, or null.</summary>
+    /// <summary>One of the selected stage set pieces (the set is unordered), or null.</summary>
     public StageObject? SelectedObject => _document.StageObjectById(SelectedObjectId);
 
     /// <summary>The selected track (see <see cref="SelectedTrackId"/>), or null.</summary>
@@ -232,6 +235,13 @@ public sealed class EditorState
     public void SelectObject(string? id)
     {
         _selection.SelectObject(id);
+        SelectionChanged?.Invoke();
+    }
+
+    /// <summary>Selects set pieces; when <paramref name="additive"/>, ids already selected are toggled off instead.</summary>
+    public void SelectObjects(IEnumerable<string> ids, bool additive = false)
+    {
+        _selection.SelectObjects(ids, additive);
         SelectionChanged?.Invoke();
     }
 

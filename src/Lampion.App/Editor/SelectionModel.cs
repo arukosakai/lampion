@@ -3,7 +3,7 @@ using Lampion.Core.Model.Animation;
 namespace Lampion.App.Editor;
 
 /// <summary>
-/// What is selected: clips, a track, fixtures, a set piece or a keyframe. Holds ids only, so it survives
+/// What is selected: clips, a track, fixtures, set pieces or a keyframe. Holds ids only, so it survives
 /// the project instance being replaced; <see cref="Prune"/> drops the ids that no longer resolve.
 /// Raises no events; <see cref="EditorState"/> does.
 /// </summary>
@@ -21,8 +21,8 @@ internal sealed class SelectionModel
     /// <summary>Selected fixture ids. Mutable so drag-selection can edit it in place.</summary>
     public HashSet<string> FixtureIds { get; } = [];
 
-    /// <summary>The selected stage set piece, or null.</summary>
-    public string? ObjectId { get; private set; }
+    /// <summary>Selected stage set piece ids.</summary>
+    public HashSet<string> ObjectIds { get; } = [];
 
     /// <summary>The keyframe the timeline last picked, or null.</summary>
     public (string LaneId, Keyframe Key)? Key { get; set; }
@@ -33,13 +33,16 @@ internal sealed class SelectionModel
     /// <summary>Any one selected fixture id (the set is unordered), or null.</summary>
     public string? AnyFixtureId => First(FixtureIds);
 
+    /// <summary>Any one selected set piece id (the set is unordered), or null.</summary>
+    public string? AnyObjectId => First(ObjectIds);
+
     /// <summary>Selects nothing, except that <see cref="TrackId"/> is kept for whoever needs a current track.</summary>
     public void Clear()
     {
         Kind = SelectionKind.None;
         ClipIds.Clear();
         FixtureIds.Clear();
-        ObjectId = null;
+        ObjectIds.Clear();
         Key = null;
     }
 
@@ -68,7 +71,7 @@ internal sealed class SelectionModel
     /// <summary>Selects fixtures; when <paramref name="additive"/>, ids already selected are toggled off instead.</summary>
     public void SelectFixtures(IEnumerable<string> ids, bool additive)
     {
-        if (!additive)
+        if (!additive || Kind != SelectionKind.Fixture)
             Clear();
         foreach (var id in ids)
             if (!FixtureIds.Add(id) && additive)
@@ -80,8 +83,20 @@ internal sealed class SelectionModel
     public void SelectObject(string? id)
     {
         Clear();
-        ObjectId = id;
+        if (id is not null)
+            ObjectIds.Add(id);
         Kind = id is null ? SelectionKind.None : SelectionKind.StageObject;
+    }
+
+    /// <summary>Selects set pieces; when <paramref name="additive"/>, ids already selected are toggled off instead.</summary>
+    public void SelectObjects(IEnumerable<string> ids, bool additive)
+    {
+        if (!additive || Kind != SelectionKind.StageObject)
+            Clear();
+        foreach (var id in ids)
+            if (!ObjectIds.Add(id) && additive)
+                ObjectIds.Remove(id);
+        Kind = ObjectIds.Count > 0 ? SelectionKind.StageObject : SelectionKind.None;
     }
 
     /// <summary>Drops ids that no longer exist in <paramref name="document"/> and the picked keyframe, then fixes up <see cref="Kind"/>.</summary>
@@ -89,8 +104,7 @@ internal sealed class SelectionModel
     {
         ClipIds.RemoveWhere(id => document.FindClip(id) is null);
         FixtureIds.RemoveWhere(id => document.Project.FixtureById(id) is null);
-        if (document.StageObjectById(ObjectId) is null)
-            ObjectId = null;
+        ObjectIds.RemoveWhere(id => document.StageObjectById(id) is null);
         if (document.TrackById(TrackId) is null)
             TrackId = null;
         Key = null;
@@ -98,7 +112,7 @@ internal sealed class SelectionModel
         {
             SelectionKind.Clip when ClipIds.Count == 0 => SelectionKind.None,
             SelectionKind.Fixture when FixtureIds.Count == 0 => SelectionKind.None,
-            SelectionKind.StageObject when ObjectId is null => SelectionKind.None,
+            SelectionKind.StageObject when ObjectIds.Count == 0 => SelectionKind.None,
             SelectionKind.Track when TrackId is null => SelectionKind.None,
             var kind => kind,
         };

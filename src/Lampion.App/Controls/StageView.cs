@@ -184,14 +184,8 @@ internal sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomH
     /// <summary>The current view frozen for projecting many points this frame (pixels from the view's top-left).</summary>
     public ScreenProjector Projector() => Camera.Projector((float)Bounds.Width, (float)Bounds.Height);
 
-    /// <summary>Where the selection's gizmo sits: the primary fixture or object.</summary>
-    public Vector3? GizmoOrigin =>
-        _state.SelectionKind switch
-        {
-            SelectionKind.Fixture when StageSelection.PrimaryFixture(_state) is { } f => StageGeometry.ToVector(f.Position),
-            SelectionKind.StageObject when StageSelection.SelectedObject(_state) is { } o => StageGeometry.ToVector(o.Position),
-            _ => null,
-        };
+    /// <summary>Where the selection's gizmo sits: the centre of the box around everything selected.</summary>
+    public Vector3? GizmoOrigin => StageSelection.Centre(_state);
 
     /// <summary>The move gizmo on screen, or null when move handles are hidden, nothing is selected or the selection is behind the camera.</summary>
     public GizmoHandles? Gizmo()

@@ -22,6 +22,7 @@ internal sealed partial class StageSceneBuilder
     private RigEntry[] _rig = [];
     private int _rigCount;
     private ObjectVisual[] _objects = [];
+    private readonly HashSet<string> _selectedStructures = [];
     private Project? _builtFor;
     private int _builtVersion = -1;
     private bool _selectionChanged = true;
@@ -92,9 +93,9 @@ internal sealed partial class StageSceneBuilder
         return peak > 0.6f ? bounce * (0.6f / peak) : bounce;
     }
 
-    /// <summary>Full glow for the selected piece, a softer one for the rest of its structure (what a drag will move).</summary>
-    private static float Highlight(StageObject o, string? selected, string? selectedStructure) =>
-        o.Id == selected ? 1 : selectedStructure is not null && o.StructureId == selectedStructure ? StructureGlow : 0;
+    /// <summary>Full glow for selected pieces, a softer one for the rest of their structures (what a drag will move).</summary>
+    private float Highlight(StageObject o) =>
+        _state.SelectedObjectIds.Contains(o.Id) ? 1 : o.StructureId is { } structure && _selectedStructures.Contains(structure) ? StructureGlow : 0;
 
     private void Rebuild(Project project)
     {
@@ -109,12 +110,14 @@ internal sealed partial class StageSceneBuilder
         var objects = project.Stage.Objects;
         if (_objects.Length != objects.Count)
             _objects = new ObjectVisual[objects.Count];
-        var selected = _state.SelectedObjectId;
-        var selectedStructure = selected is null ? null : StageSelection.ObjectById(_state, selected)?.StructureId;
+        _selectedStructures.Clear();
+        foreach (var id in _state.SelectedObjectIds)
+            if (StageSelection.ObjectById(_state, id)?.StructureId is { } structure)
+                _selectedStructures.Add(structure);
         for (var i = 0; i < objects.Count; i++)
         {
             var o = objects[i];
-            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), Highlight(o, selected, selectedStructure));
+            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), Highlight(o));
         }
         _scene.SetObjects(_objects);
 

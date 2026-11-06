@@ -16,23 +16,28 @@ internal sealed class SelectionEditor(EditorState state, StagePicker picker)
     public Vector3? AimTarget { get; private set; }
 
     /// <summary>
-    /// Whether the next captured move takes only the selected set piece rather than its whole structure.
+    /// Whether the next captured move takes only the selected set pieces rather than their whole structures.
     /// Set before a drag begins; the drag reads it when it captures origins.
     /// </summary>
     public bool PieceOnly { get; set; }
 
     /// <summary>
-    /// Remembers where every selected fixture, or the selected set piece, is now; moves are relative to this.
+    /// Remembers where every selected fixture or set piece is now; moves are relative to this.
     /// A piece of a structure brings the rest of it and its hung fixtures along, unless <see cref="PieceOnly"/>.
     /// </summary>
     public void CaptureOrigins()
     {
         _origins.Clear();
-        if (state.SelectionKind == SelectionKind.StageObject && StageSelection.SelectedObject(state) is { } obj)
+        if (state.SelectionKind == SelectionKind.StageObject)
         {
-            _origins[obj.Id] = obj.Position;
-            if (!PieceOnly && obj.StructureId is { } structure)
-                CaptureStructure(structure);
+            foreach (var id in state.SelectedObjectIds)
+            {
+                if (StageSelection.ObjectById(state, id) is not { } obj)
+                    continue;
+                _origins[obj.Id] = obj.Position;
+                if (!PieceOnly && obj.StructureId is { } structure)
+                    CaptureStructure(structure);
+            }
             return;
         }
         foreach (var id in state.SelectedFixtureIds)
