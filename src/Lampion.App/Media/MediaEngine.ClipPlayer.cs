@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Lampion.App.Rendering;
 using LibVLCSharp.Shared;
@@ -13,6 +14,12 @@ internal sealed partial class MediaEngine
         // Paused video re-seeks only when the playhead moved more than this many seconds (about a frame).
         private const double ScrubTolerance = 0.04;
 
+        // Time updates seen since the last seek before drift is trusted; the first ones still reflect buffering.
+        private const int SettleReports = 3;
+
+        // Upper bound on the learned seek lead, so one bad measurement can't throw playback far ahead.
+        private const double MaxSeekLead = 1.0;
+
         private static readonly byte[] Rv32 = "RV32"u8.ToArray();
 
         private readonly MediaPlayer _player;
@@ -21,6 +28,12 @@ internal sealed partial class MediaEngine
         private double _lastSeek = double.NaN;
         private bool _started;
         private bool _rolling;
+
+        private long _reportedMs = long.MinValue;
+        private long _reportedAt;
+        private int _reports;
+        private double _seekLead;
+        private bool _measureLead;
 
         // Native callbacks must stay referenced for as long as LibVLC may call them.
         private readonly MediaPlayer.LibVLCVideoFormatCb? _format;
@@ -86,11 +99,10 @@ internal sealed partial class MediaEngine
                         _player.Play();
                     _started = true;
                     _player.SetPause(false);
-                    Seek(expected);
+                    SeekWhilePlaying(expected, learnLead: false);
                     return;
                 }
-                if (_player.IsPlaying && Math.Abs(_player.Time / 1000.0 - expected) > DriftTolerance)
-                    Seek(expected);
+                CorrectDrift(expected);
                 return;
             }
             // Paused or scrubbing: hold still, but keep video on the frame under the playhead.
@@ -104,6 +116,45 @@ internal sealed partial class MediaEngine
                 }
                 Seek(expected);
             }
+        }
+
+        private void CorrectDrift(double expected)
+        {
+            var position = EstimatePosition();
+            if (!_player.IsPlaying || _reports < SettleReports)
+                return;
+            var behind = expected - position;
+            // A seek resumes late by VLC's start-up latency; the first settled reading after a correction measures it.
+            if (_measureLead)
+            {
+                _measureLead = false;
+                _seekLead = Math.Clamp(_seekLead + behind, 0, MaxSeekLead);
+            }
+            if (Math.Abs(behind) > DriftTolerance)
+                SeekWhilePlaying(expected, learnLead: true);
+        }
+
+        // LibVLC refreshes Time only every ~250 ms, so extrapolate from when the reported value last changed.
+        private double EstimatePosition()
+        {
+            var now = Stopwatch.GetTimestamp();
+            var ms = _player.Time;
+            if (ms != _reportedMs)
+            {
+                _reportedMs = ms;
+                _reportedAt = now;
+                _reports++;
+            }
+            return ms / 1000.0 + Stopwatch.GetElapsedTime(_reportedAt, now).TotalSeconds;
+        }
+
+        // Opening or unpausing is far slower than seeking a running player, so only corrections teach the lead.
+        private void SeekWhilePlaying(double expected, bool learnLead)
+        {
+            Seek(expected + _seekLead);
+            _reportedMs = long.MinValue;
+            _reports = 0;
+            _measureLead = learnLead;
         }
 
         private void Seek(double seconds)
