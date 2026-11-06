@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Lampion.Core.Model.Stage;
 
 /// <summary>A piece of set: an oriented box in metres, centred on <see cref="Position"/>. Edited in place by the stage builder.</summary>
@@ -33,6 +35,14 @@ public sealed class StageObject
     /// <summary>Surface colour as <c>#RRGGBB</c>.</summary>
     public string Color { get; set; } = "#3A3A40";
 
+    /// <summary>
+    /// For <see cref="StageObjectKind.Model"/>: the imported .glb inside the show's assets folder, e.g. <c>Models/Car.glb</c>
+    /// (see <see cref="Meshes.ModelAssets"/>); null for every other kind.
+    /// </summary>
+    // Left out of the file when null, so shows without models save exactly as they did before models existed.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Model { get; set; }
+
     /// <summary>A copy with a new id.</summary>
     public StageObject Clone() =>
         new()
@@ -46,5 +56,6 @@ public sealed class StageObject
             Roll = Roll,
             StructureId = StructureId,
             Color = Color,
+            Model = Model,
         };
 }

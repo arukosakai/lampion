@@ -13,6 +13,9 @@ internal sealed class SurfaceLighting
     private const float Exposure = 1.1f;
     private const int VideoUnit = 0;
 
+    /// <summary>Texture unit imported models bind their colour texture to.</summary>
+    public const int AlbedoMapUnit = 1;
+
     private readonly LitProgram _lit;
     private readonly VideoTexture _video;
     private readonly int[] _chosen = new int[Shaders.MaxLights];
@@ -38,6 +41,8 @@ internal sealed class SurfaceLighting
         _lit.SetRoom(scene.Ambient, scene.Bounce, scene.Haze, Exposure);
         _lit.SetVideo(VideoUnit, _video.HasVideo);
         _video.Bind();
+        _lit.SetAlbedoMapUnit(AlbedoMapUnit);
+        _lit.SetAlbedoMap(false);
         UploadLights(scene.Fixtures, fixtures, Math.Clamp(maxLights, 1, Shaders.MaxLights));
     }
 

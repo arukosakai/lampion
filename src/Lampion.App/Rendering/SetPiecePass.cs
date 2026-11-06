@@ -1,10 +1,12 @@
 using System.Numerics;
+using Lampion.App.Rendering.Models;
 using Lampion.Core.Model.Stage;
+using Silk.NET.OpenGL;
 
 namespace Lampion.App.Rendering;
 
-/// <summary>Trusses, risers, walls and LED screens, lit by <see cref="SurfaceLighting"/>.</summary>
-internal sealed class SetPiecePass(LitProgram lit, StageMeshes meshes)
+/// <summary>Trusses, risers, walls, LED screens and imported models, lit by <see cref="SurfaceLighting"/>.</summary>
+internal sealed class SetPiecePass(GL gl, LitProgram lit, StageMeshes meshes, ModelCache models)
 {
     /// <summary>Emissive tint that marks a selected object or fixture.</summary>
     public static readonly Vector3 SelectGlow = new(0.05f, 0.22f, 0.55f);
@@ -43,11 +45,40 @@ internal sealed class SetPiecePass(LitProgram lit, StageMeshes meshes)
                 lit.SetModel(face * place);
                 meshes.Quad.Draw();
                 break;
+            case StageObjectKind.Model when obj.ModelPath is { } path && models.TryGet(path, out var model):
+                DrawModel(model, obj.Size, in place, emissive);
+                break;
+            case StageObjectKind.Model:
+                // Still loading, or the file is gone: a plain box shows where it stands and how big it is.
+                lit.SetMaterial(obj.Color, 0.8f, 0, emissive, SurfacePattern.Plain);
+                lit.SetModel(Matrix4x4.CreateScale(obj.Size) * place);
+                meshes.Box.Draw();
+                break;
             default:
                 lit.SetMaterial(obj.Color, 0.5f, 0, emissive, SurfacePattern.Deck);
                 lit.SetModel(Matrix4x4.CreateScale(obj.Size) * place);
                 meshes.Box.Draw();
                 break;
         }
+    }
+
+    // The stored model is centred on its box, so stretching it to the object's size and placing it like a box fits it exactly.
+    private void DrawModel(GpuModel model, Vector3 size, in Matrix4x4 place, Vector3 emissive)
+    {
+        lit.SetModel(Matrix4x4.CreateScale(size / model.Size) * place);
+        foreach (ref readonly var part in model.Parts)
+        {
+            var m = part.Material;
+            lit.SetMaterial(m.BaseColor, m.Roughness, m.Metallic, m.Emissive + emissive, SurfacePattern.Plain);
+            var textured = part.Texture != 0;
+            lit.SetAlbedoMap(textured);
+            if (textured)
+            {
+                gl.ActiveTexture(TextureUnit.Texture0 + SurfaceLighting.AlbedoMapUnit);
+                gl.BindTexture(TextureTarget.Texture2D, part.Texture);
+            }
+            part.Mesh.Draw();
+        }
+        lit.SetAlbedoMap(false);
     }
 }

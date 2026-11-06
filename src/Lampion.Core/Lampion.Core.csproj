@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="NLayer" Version="1.16.0" />
+    <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.7" />
     <PackageReference Include="System.IO.Ports" Version="10.0.14" />
   </ItemGroup>
 

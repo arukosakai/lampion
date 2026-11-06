@@ -151,8 +151,9 @@ public static class StageMath
     public static Vec3 Round(Vec3 v, int digits = 3) => new(Math.Round(v.X, digits), Math.Round(v.Y, digits), Math.Round(v.Z, digits));
 
     /// <summary>
-    /// Distance along the ray to the first stage surface hit (objects other than truss, and the floor at
-    /// y = 0), or null when nothing is hit. Allocation-free.
+    /// Distance along the ray to the first stage surface hit (solid set pieces, and the floor at y = 0), or null
+    /// when nothing is hit. Truss is open lattice and an imported model's box only roughly fits its shape, so
+    /// light passes through both. Allocation-free.
     /// </summary>
     /// <param name="objects">Set pieces to test, in any order.</param>
     /// <param name="origin">Ray start, metres.</param>
@@ -170,7 +171,7 @@ public static class StageMath
         for (var i = 0; i < objects.Count; i++)
         {
             var obj = objects[i];
-            if (obj.Kind == StageObjectKind.Truss)
+            if (obj.Kind is StageObjectKind.Truss or StageObjectKind.Model)
                 continue;
             if (RayBox(obj, origin, direction) is { } hit && hit > 1e-4 && (best is null || hit < best))
                 best = hit;

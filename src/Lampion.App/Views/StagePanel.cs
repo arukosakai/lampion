@@ -68,6 +68,9 @@ internal sealed class StagePanel : DockPanel
     /// <summary>Opens the truss structure builder; set by the window, which owns the dialog and status bar.</summary>
     public Action? OpenTrussBuilder { get; set; }
 
+    /// <summary>Opens the 3D model import; set by the window, which owns the file picker and the show's file.</summary>
+    public Action? ImportModel { get; set; }
+
     /// <summary>Jumps to a named view (keys 1–5).</summary>
     public void SetPreset(ViewPreset preset) => View.ApplyPreset(preset);
 
@@ -123,6 +126,10 @@ internal sealed class StagePanel : DockPanel
         ToolTip.SetTip(structure, "Build an arch or a cube with lights hung on it");
         structure.Click += (_, _) => OpenTrussBuilder?.Invoke();
         menu.Items.Add(structure);
+        var model = new MenuItem { Header = "3D model…" };
+        ToolTip.SetTip(model, "Import a glTF (.glb, .gltf) or OBJ model with its textures");
+        model.Click += (_, _) => ImportModel?.Invoke();
+        menu.Items.Add(model);
         return menu;
     }
 

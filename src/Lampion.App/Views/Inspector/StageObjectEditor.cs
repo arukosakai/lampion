@@ -19,18 +19,26 @@ internal sealed class StageObjectEditor(InspectorFields fields)
     private static readonly ScrubRange TiltRange = new(-180, 180, 0.5, Format: "0.#", Unit: "°");
 
     private readonly StructureSection _structure = new(fields);
+    private readonly ModelSection _model = new(fields);
 
     /// <summary>Adds the sections for <paramref name="obj"/> to <paramref name="root"/>.</summary>
     public void Build(Panel root, StageObject obj)
     {
         var context = fields.Context;
-        InspectorLayout.Title(root, obj.Name, $"{obj.Kind} · top at {obj.Position.Y + StageMath.HalfHeight(obj):0.00} m");
+        var isModel = obj.Kind == StageObjectKind.Model;
+        InspectorLayout.Title(root, obj.Name, $"{(isModel ? "3D model" : obj.Kind)} · top at {obj.Position.Y + StageMath.HalfHeight(obj):0.00} m");
         if (StructureEdits.Find(context.State.Project, obj.StructureId) is { } structure)
             _structure.Build(root, structure);
         var section = InspectorLayout.Section(root, "object", "Object");
         InspectorLayout.Row(section, "Name", fields.Text(obj.Name, v => obj.Name = v));
-        InspectorLayout.Row(section, "Kind", fields.Choice(Enum.GetValues<StageObjectKind>(), obj.Kind, v => obj.Kind = v));
-        InspectorLayout.Row(section, "Colour", fields.Color(obj.Color, hex => obj.Color = hex));
+        // A model's look comes from its file, and a box can't become a model, so models skip kind and colour.
+        if (!isModel)
+        {
+            InspectorLayout.Row(section, "Kind", fields.Choice(Enum.GetValues<StageObjectKind>().Where(k => k != StageObjectKind.Model), obj.Kind, v => obj.Kind = v));
+            InspectorLayout.Row(section, "Colour", fields.Color(obj.Color, hex => obj.Color = hex));
+        }
+        else
+            _model.Build(root, obj);
 
         var transform = InspectorLayout.Section(root, "object-transform", "Transform");
         InspectorLayout.Row(transform, "Position X", fields.Scrub(obj.Position.X, HorizontalRange, v => obj.Position = obj.Position with { X = Math.Round(v, 3) }));
@@ -44,7 +52,7 @@ internal sealed class StageObjectEditor(InspectorFields fields)
         InspectorLayout.Row(transform, "Roll", fields.Scrub(obj.Roll, TiltRange, v => obj.Roll = Math.Round(v, 1)), obj.Kind == StageObjectKind.Truss ? "90° stands the truss upright" : "Lean sideways");
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(20, 4, 0, 0) };
-        if (obj.Kind == StageObjectKind.Platform)
+        if (obj.Kind is StageObjectKind.Platform or StageObjectKind.Model)
             actions.Children.Add(Ui.Button("Sit on floor", () =>
             {
                 context.Edit(() => obj.Position = obj.Position with { Y = StageMath.HalfHeight(obj) });

@@ -87,6 +87,7 @@ internal sealed class SelectionReadout(StageView view, EditorState state)
             StageObjectKind.Platform => "Platform",
             StageObjectKind.Wall => "Wall",
             StageObjectKind.Screen => "Screen",
+            StageObjectKind.Model => "3D model",
             _ => kind.ToString(),
         };
 }

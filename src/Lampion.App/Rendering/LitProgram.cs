@@ -22,9 +22,8 @@ internal sealed class LitProgram : IDisposable
         void main() {
             vec4 world = uModel * vec4(aPos, 1.0);
             vWorld = world.xyz;
-            // Only boxes get non-uniform scale, and that keeps their face normals axis-aligned, so
-            // renormalising in the fragment shader stands in for a proper normal matrix.
-            vNormal = mat3(uModel) * aNormal;
+            // Imported models can be stretched on one axis, which tilts their normals; the inverse-transpose keeps them true.
+            vNormal = transpose(inverse(mat3(uModel))) * aNormal;
             vUv = aUv;
             gl_Position = uProj * uView * world;
         }
@@ -57,6 +56,8 @@ internal sealed class LitProgram : IDisposable
         uniform float uGrid;       // builder grid strength
         uniform sampler2D uVideo;
         uniform int uHasVideo;
+        uniform sampler2D uAlbedoMap;
+        uniform int uHasAlbedoMap;    // imported models: colour texture, sRGB
 
         float gridLine(vec2 p, float step, float width) {
             vec2 g = abs(fract(p / step - 0.5) - 0.5) * step;
@@ -101,6 +102,7 @@ internal sealed class LitProgram : IDisposable
             vec3 albedo = uAlbedo;
             float rough = uRoughness;
             surface(albedo, rough, n);
+            if (uHasAlbedoMap == 1) albedo *= pow(texture(uAlbedoMap, vUv).rgb, vec3(2.2));
 
             if (uPattern == 5) {
                 vec3 video = uHasVideo == 1 ? texture(uVideo, vec2(vUv.x, 1.0 - vUv.y)).bgr : vec3(0.02);
@@ -161,6 +163,8 @@ internal sealed class LitProgram : IDisposable
     private readonly int _grid;
     private readonly int _video;
     private readonly int _hasVideo;
+    private readonly int _albedoMap;
+    private readonly int _hasAlbedoMap;
     private readonly int _albedo;
     private readonly int _roughness;
     private readonly int _metallic;
@@ -188,6 +192,8 @@ internal sealed class LitProgram : IDisposable
         _grid = _program.Location("uGrid");
         _video = _program.Location("uVideo");
         _hasVideo = _program.Location("uHasVideo");
+        _albedoMap = _program.Location("uAlbedoMap");
+        _hasAlbedoMap = _program.Location("uHasAlbedoMap");
         _albedo = _program.Location("uAlbedo");
         _roughness = _program.Location("uRoughness");
         _metallic = _program.Location("uMetallic");
@@ -233,6 +239,12 @@ internal sealed class LitProgram : IDisposable
         _program.Set(_video, textureUnit);
         _program.Set(_hasVideo, hasVideo ? 1 : 0);
     }
+
+    /// <summary>Which texture unit imported models' colour textures are bound to; see <see cref="SetAlbedoMap"/>.</summary>
+    public void SetAlbedoMapUnit(int textureUnit) => _program.Set(_albedoMap, textureUnit);
+
+    /// <summary>Whether the next draws multiply their albedo by the colour texture bound to the albedo-map unit.</summary>
+    public void SetAlbedoMap(bool enabled) => _program.Set(_hasAlbedoMap, enabled ? 1 : 0);
 
     /// <summary>Spot lights for the frame; every span must be <see cref="Shaders.MaxLights"/> long, of which the first <paramref name="count"/> are used.</summary>
     public void SetLights(int count, ReadOnlySpan<Vector3> positions, ReadOnlySpan<Vector3> directions, ReadOnlySpan<Vector3> colors, ReadOnlySpan<Vector2> cones)

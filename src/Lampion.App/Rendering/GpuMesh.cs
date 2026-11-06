@@ -14,16 +14,20 @@ internal sealed unsafe class GpuMesh : IDisposable
 
     /// <summary>Uploads <paramref name="source"/> as static geometry; the GL context must be current.</summary>
     public GpuMesh(GL gl, MeshBuilder source)
+        : this(gl, CollectionsMarshal.AsSpan(source.Vertices), CollectionsMarshal.AsSpan(source.Indices)) { }
+
+    /// <summary>Uploads interleaved vertices (position, normal, uv; <see cref="MeshBuilder.FloatsPerVertex"/> floats each) and triangle indices; the GL context must be current.</summary>
+    public GpuMesh(GL gl, ReadOnlySpan<float> vertices, ReadOnlySpan<uint> indices)
     {
         _gl = gl;
         _vao = gl.GenVertexArray();
         gl.BindVertexArray(_vao);
         _vbo = gl.GenBuffer();
         gl.BindBuffer(BufferTargetARB.ArrayBuffer, _vbo);
-        gl.BufferData<float>(BufferTargetARB.ArrayBuffer, CollectionsMarshal.AsSpan(source.Vertices), BufferUsageARB.StaticDraw);
+        gl.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
         _ebo = gl.GenBuffer();
         gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, _ebo);
-        gl.BufferData<uint>(BufferTargetARB.ElementArrayBuffer, CollectionsMarshal.AsSpan(source.Indices), BufferUsageARB.StaticDraw);
+        gl.BufferData(BufferTargetARB.ElementArrayBuffer, indices, BufferUsageARB.StaticDraw);
         const uint stride = MeshBuilder.FloatsPerVertex * sizeof(float);
         gl.EnableVertexAttribArray(0);
         gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, (void*)0);
@@ -32,7 +36,7 @@ internal sealed unsafe class GpuMesh : IDisposable
         gl.EnableVertexAttribArray(2);
         gl.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, (void*)(6 * sizeof(float)));
         gl.BindVertexArray(0);
-        _count = (uint)source.Indices.Count;
+        _count = (uint)indices.Length;
     }
 
     /// <summary>Draws the triangles with whatever program and uniforms are current.</summary>

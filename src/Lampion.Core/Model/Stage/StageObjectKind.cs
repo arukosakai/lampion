@@ -17,4 +17,7 @@ public enum StageObjectKind
 
     /// <summary>A video surface: shows the timeline's video in the 3D preview.</summary>
     Screen,
+
+    /// <summary>An imported 3D model (<see cref="StageObject.Model"/>) drawn with its own materials, scaled to fill its box.</summary>
+    Model,
 }

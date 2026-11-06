@@ -1,4 +1,5 @@
 using System.Numerics;
+using Lampion.App.Rendering.Models;
 using Silk.NET.OpenGL;
 
 namespace Lampion.App.Rendering;
@@ -16,6 +17,7 @@ internal sealed class StageRenderer : IDisposable
     private readonly BeamProgram _beam;
     private readonly GlowProgram _glow;
     private readonly StageMeshes _meshes;
+    private readonly ModelCache _models;
     private readonly VideoTexture _video;
     private readonly FrameTargets _targets;
     private readonly SurfaceLighting _lighting;
@@ -38,11 +40,12 @@ internal sealed class StageRenderer : IDisposable
         _beam = new BeamProgram(gl, header);
         _glow = new GlowProgram(gl, header);
         _meshes = new StageMeshes(gl);
+        _models = new ModelCache(gl);
         _video = new VideoTexture(gl);
         _targets = new FrameTargets(gl);
         _lighting = new SurfaceLighting(_lit, _video);
         _floor = new FloorPass(_lit, _meshes);
-        _setPieces = new SetPiecePass(_lit, _meshes);
+        _setPieces = new SetPiecePass(gl, _lit, _meshes, _models);
         _bodies = new FixtureBodyPass(_lit, _meshes);
         _beams = new BeamPass(_beam, _meshes);
         _glows = new GlowPass(_glow, _meshes);
@@ -97,6 +100,7 @@ internal sealed class StageRenderer : IDisposable
 
         _targets.Present();
         _meshes.EndFrame();
+        _models.EndFrame();
     }
 
     private ReadOnlySpan<FixtureDrawData> PrepareFixtures(ReadOnlySpan<FixtureVisual> fixtures)
@@ -117,6 +121,7 @@ internal sealed class StageRenderer : IDisposable
         _targets.Dispose();
         _video.Dispose();
         _meshes.Dispose();
+        _models.Dispose();
         _lit.Dispose();
         _beam.Dispose();
         _glow.Dispose();

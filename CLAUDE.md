@@ -15,7 +15,7 @@ dotnet run --project src/Lampion.App       # start screen
 
 | Project | What lives there |
 | --- | --- |
-| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net and USB DMX output, persistence. **No UI references, ever.** |
+| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net and USB DMX output, 3D model import (`Meshes`), persistence. **No UI references, ever.** |
 | `src/Lampion.App` | Avalonia shell, panels, custom controls, OpenGL stage renderer, LibVLC media |
 | `tests/Lampion.Core.Tests` | xUnit tests for everything in Core |
 
@@ -94,6 +94,10 @@ reveal detail, drag from a library onto the timeline.
 `.lampion` projects, `.lampfx` presets and stage layouts are user files. Renaming a serialized property, enum
 value or type discriminator breaks people's shows. If the format has to change, bump `Project.FormatVersion`
 and migrate the old shape on load, with a test that loads the old one.
+
+Imported 3D models are part of a show too: they live as `.glb` files in a `<Show> Assets/Models` folder next to the
+`.lampion` file, and `StageObject.Model` is relative to that folder (`ModelAssets`). Anything that moves or copies a
+show (Save As does, via `ModelAssets.CopyAssets`) has to bring that folder along.
 
 ## Performance
 

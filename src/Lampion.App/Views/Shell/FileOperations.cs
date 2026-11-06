@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Media;
+using Lampion.Core.Meshes;
 using Lampion.Core.Model;
 using Lampion.Core.Persistence;
 
@@ -90,18 +91,35 @@ internal sealed class FileOperations
             path = await Dialogs.PickSave(_owner, "Save show", _state.Project.Name + ProjectSerializer.Extension, ProjectSerializer.Extension.TrimStart('.'), "Lampion show");
         if (path is null)
             return false;
+        var previous = _state.FilePath;
         try
         {
             ProjectSerializer.Save(_state.Project, path);
             _state.MarkSaved(path);
             UserData.AddRecent(path);
             _status.Message = $"Saved {Path.GetFileName(path)}";
-            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             await Dialogs.Ask(_owner, "Could not save", ex.Message, "OK");
             return false;
+        }
+        if (previous is not null)
+            await CarryAssets(previous, path);
+        return true;
+    }
+
+    // A show saved somewhere new looks for its models next to the new file, so they have to come along.
+    private async Task CarryAssets(string from, string to)
+    {
+        try
+        {
+            if (await Task.Run(() => ModelAssets.CopyAssets(from, to)) > 0)
+                _status.Message = $"Saved {Path.GetFileName(to)} with its 3D models";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _status.Message = $"Saved {Path.GetFileName(to)}, but its 3D models couldn't be copied next to it ({ex.Message}); they still load from {Path.GetFileName(ModelAssets.AssetsDirectory(from))}.";
         }
     }
 

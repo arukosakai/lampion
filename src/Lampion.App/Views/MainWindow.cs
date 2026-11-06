@@ -40,9 +40,11 @@ internal sealed class MainWindow : Window
         _output = new DmxOutput(status);
         _files = new FileOperations(this, state, _media, status, zoomToFit);
         var import = new MediaImport(this, state, _media, status, zoomToFit);
+        var models = new ModelImport(this, state, _files, status);
         var layouts = new LayoutOperations(this, state, status);
-        var commands = new EditorCommands(this, state, _files, import, layouts, stage, timeline.Timeline, _output);
+        var commands = new EditorCommands(this, state, _files, import, models, layouts, stage, timeline.Timeline, _output);
         stage.OpenTrussBuilder = commands.BuildTruss.Run;
+        stage.ImportModel = commands.ImportModel.Run;
 
         var projectPanel = new ProjectPanel(state, timeline.Timeline, () => import.Import(TrackKind.Audio), () => import.Import(TrackKind.Video));
         var effects = new EffectsPanel(state, timeline.Timeline);
@@ -51,7 +53,7 @@ internal sealed class MainWindow : Window
         Content = Workspace(MainMenu.Build(commands), projectPanel, effects, monitor, inspector, timeline, status.View);
 
         new ShortcutMap(commands).Attach(this);
-        FileDropImport.Attach(this, import, status);
+        FileDropImport.Attach(this, import, models, status);
         _ = new WaveformLoader(state, timeline.Timeline.InvalidateVisual);
         var title = new WindowTitle(this, state);
         title.Refresh();

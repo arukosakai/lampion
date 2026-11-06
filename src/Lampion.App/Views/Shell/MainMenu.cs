@@ -28,6 +28,7 @@ internal static class MainMenu
                     c.FrameSelection,
                     null,
                     c.BuildTruss,
+                    c.ImportModel,
                     null,
                     c.ExportLayout,
                     c.ImportLayout,

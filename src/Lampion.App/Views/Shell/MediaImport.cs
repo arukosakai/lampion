@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Media;
 using Lampion.Core.Media;
+using Lampion.Core.Meshes;
 using Lampion.Core.Model.Timeline;
 
 namespace Lampion.App.Views.Shell;
@@ -123,7 +124,7 @@ internal sealed class MediaImport
     {
         var parts = new List<string>();
         if (skipped.Count > 0)
-            parts.Add($"Skipped {string.Join(", ", skipped)}: only audio ({Extensions(AudioPatterns)}) and video ({Extensions(VideoPatterns)}) can be imported.");
+            parts.Add($"Skipped {string.Join(", ", skipped)}: only audio ({Extensions(AudioPatterns)}), video ({Extensions(VideoPatterns)}) and 3D models ({string.Join(" ", MeshImport.Extensions)}) can be imported.");
         if (unreadable.Count > 0)
             parts.Add($"Could not read the length of {string.Join(", ", unreadable)}; set the clip duration in Effect Controls.");
         return parts.Count == 0 ? null : string.Join(" ", parts);

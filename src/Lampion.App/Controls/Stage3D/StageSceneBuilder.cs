@@ -2,6 +2,7 @@ using System.Numerics;
 using Lampion.App.Editor;
 using Lampion.App.Rendering;
 using Lampion.Core.Engine;
+using Lampion.Core.Meshes;
 using Lampion.Core.Model;
 using Lampion.Core.Model.Stage;
 
@@ -25,6 +26,7 @@ internal sealed partial class StageSceneBuilder
     private readonly HashSet<string> _selectedStructures = [];
     private Project? _builtFor;
     private int _builtVersion = -1;
+    private string? _builtPath;
     private bool _selectionChanged = true;
 
     /// <summary>Builds scenes from <paramref name="state"/>, watching it for selection changes.</summary>
@@ -47,7 +49,7 @@ internal sealed partial class StageSceneBuilder
     public void Update(float time, float gridStrength, VideoFrame? video, Vector3? aimTarget)
     {
         var project = _state.Project;
-        if (!ReferenceEquals(project, _builtFor) || _state.Version != _builtVersion || _selectionChanged)
+        if (!ReferenceEquals(project, _builtFor) || _state.Version != _builtVersion || _selectionChanged || !ReferenceEquals(_state.FilePath, _builtPath))
             Rebuild(project);
 
         var frame = _state.CurrentFrame;
@@ -97,6 +99,10 @@ internal sealed partial class StageSceneBuilder
     private float Highlight(StageObject o) =>
         _state.SelectedObjectIds.Contains(o.Id) ? 1 : o.StructureId is { } structure && _selectedStructures.Contains(structure) ? StructureGlow : 0;
 
+    // Models live in the saved show's assets folder, so where one is depends on where the show was saved.
+    private string? ModelFile(StageObject o) =>
+        o.Kind == StageObjectKind.Model && o.Model is { } model && _state.FilePath is { } show ? ModelAssets.Resolve(show, model) : null;
+
     private void Rebuild(Project project)
     {
         var fixtures = project.Fixtures;
@@ -117,12 +123,13 @@ internal sealed partial class StageSceneBuilder
         for (var i = 0; i < objects.Count; i++)
         {
             var o = objects[i];
-            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), Highlight(o));
+            _objects[i] = new ObjectVisual(o.Id, o.Kind, StageGeometry.ToVector(o.Position), StageGeometry.ToVector(o.Size), StageGeometry.Orientation(o), StageGeometry.LinearColor(o.Color), Highlight(o), ModelFile(o));
         }
         _scene.SetObjects(_objects);
 
         _builtFor = project;
         _builtVersion = _state.Version;
+        _builtPath = _state.FilePath;
         _selectionChanged = false;
     }
 }

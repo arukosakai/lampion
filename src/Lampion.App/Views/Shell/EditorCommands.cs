@@ -23,11 +23,12 @@ internal sealed class EditorCommands
     /// <param name="state">The editor state.</param>
     /// <param name="files">Open, save and export.</param>
     /// <param name="import">Media import.</param>
+    /// <param name="models">3D model import.</param>
     /// <param name="layouts">Stage layout import, export and templates.</param>
     /// <param name="stage">The Stage 3D monitor.</param>
     /// <param name="timeline">The timeline control.</param>
     /// <param name="output">The DMX output.</param>
-    public EditorCommands(Window window, EditorState state, FileOperations files, MediaImport import, LayoutOperations layouts, StagePanel stage, TimelineControl timeline, DmxOutput output)
+    public EditorCommands(Window window, EditorState state, FileOperations files, MediaImport import, ModelImport models, LayoutOperations layouts, StagePanel stage, TimelineControl timeline, DmxOutput output)
     {
         // Zoom keeps the time just right of the track headers in place, where the eye usually is.
         var zoomAnchor = TimelineControl.HeaderWidth + 200;
@@ -74,6 +75,7 @@ internal sealed class EditorCommands
         AimTool = new("Aim tool", () => stage.SetTool(BuilderTool.Aim), "A");
         FrameSelection = new("Frame selection", stage.View.FrameSelection, "F");
         BuildTruss = new("Truss structure…", () => _ = layouts.BuildTruss(Controls.Stage3D.StageGeometry.ToVec(stage.View.Camera.Target)));
+        ImportModel = new("Import 3D model…", () => _ = models.Import());
         ExportLayout = new("Export stage layout…", () => _ = layouts.Export());
         ImportLayout = new("Import stage layout…", () => _ = layouts.Import());
         SaveTemplate = new("Save layout as template…", () => _ = layouts.SaveTemplate());
@@ -215,6 +217,9 @@ internal sealed class EditorCommands
 
     /// <summary>Stage → Truss structure: build an arch or cube with lights.</summary>
     public ShellCommand BuildTruss { get; }
+
+    /// <summary>Stage → Import 3D model: a glTF or OBJ file onto the stage.</summary>
+    public ShellCommand ImportModel { get; }
 
     /// <summary>Output → Send DMX output (a check box), to the device chosen in Output Setup.</summary>
     public ShellCommand ToggleOutput { get; }
