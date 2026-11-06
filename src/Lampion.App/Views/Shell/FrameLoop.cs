@@ -2,6 +2,7 @@ using Avalonia.Threading;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Media;
+using Lampion.App.Output;
 
 namespace Lampion.App.Views.Shell;
 
@@ -19,18 +20,18 @@ internal sealed class FrameLoop
     private readonly MediaEngine _media;
     private readonly StageView _stage;
     private readonly VideoMonitor _video;
-    private readonly ArtNetOutput _artNet;
+    private readonly DmxOutput _output;
     private readonly StatusBar _status;
     private readonly WindowTitle _title;
 
     /// <summary>A stopped loop over the workspace's per-frame parts.</summary>
-    public FrameLoop(EditorState state, MediaEngine media, StageView stage, VideoMonitor video, ArtNetOutput artNet, StatusBar status, WindowTitle title)
+    public FrameLoop(EditorState state, MediaEngine media, StageView stage, VideoMonitor video, DmxOutput output, StatusBar status, WindowTitle title)
     {
         _state = state;
         _media = media;
         _stage = stage;
         _video = video;
-        _artNet = artNet;
+        _output = output;
         _status = status;
         _title = title;
         _timer.Tick += OnTick;
@@ -49,8 +50,8 @@ internal sealed class FrameLoop
         _media.Sync(_state);
         _stage.UpdateScene();
         _video.Update();
-        _artNet.Tick(_state);
-        _status.Refresh(_state, _artNet.IsSending);
+        _output.Tick(_state);
+        _status.Refresh(_state, _output.Label);
         _title.Refresh();
     }
 

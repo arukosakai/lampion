@@ -49,7 +49,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 - Profiles where each channel has a role: dimmer, R/G/B, white, amber, UV, strobe, pan/tilt (16-bit)…
 - Lampion maps colour onto whatever channels each fixture actually has
 - Auto-addressing, overlap warnings, groups, and a live 512-channel monitor
-- Art-Net output so a real rig follows along
+- Live DMX output so a real rig follows along: Art-Net, or a USB interface (Enttec DMX USB Pro and compatibles, Open DMX / FTDI cables), picked in **Output → Output setup…**
 
 </td>
 <td valign="top">
@@ -147,7 +147,7 @@ dotnet test                                       # engine tests
 
 | Project | Contents |
 | --- | --- |
-| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net, stage layouts. No UI dependencies. |
+| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net and USB DMX output, stage layouts. No UI dependencies. |
 | `src/Lampion.App` | Avalonia UI, the OpenGL stage renderer and LibVLC media playback |
 | `tests/Lampion.Core.Tests` | xUnit tests for the engine and the exporter |
 

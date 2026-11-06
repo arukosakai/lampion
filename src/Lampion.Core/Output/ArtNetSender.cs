@@ -8,7 +8,7 @@ namespace Lampion.Core.Output;
 /// Sends frames as Art-Net ArtDmx packets over UDP, so a node or a running QLC+ can show the output live.
 /// Reuses one packet buffer and a pre-resolved address, so sending allocates nothing. Not thread-safe.
 /// </summary>
-public sealed class ArtNetSender : IDisposable
+public sealed class ArtNetSender : IDmxOutput
 {
     /// <summary>The Art-Net UDP port.</summary>
     public const int Port = 6454;

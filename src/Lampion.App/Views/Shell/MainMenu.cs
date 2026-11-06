@@ -35,7 +35,7 @@ internal static class MainMenu
                     c.UseAsDefaultLayout,
                     c.ForgetDefaultLayout
                 ),
-                Top("_Output", c.ToggleArtNet),
+                Top("_Output", c.ToggleOutput, null, c.OutputSetup),
             },
         };
 

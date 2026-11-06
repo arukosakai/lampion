@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Lampion.App.Output;
 using Lampion.App.Rendering;
 
 namespace Lampion.App.Editor.Storage;
@@ -12,8 +13,12 @@ internal static class SettingsStore
         try
         {
             if (File.Exists(UserPaths.Settings) && JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(UserPaths.Settings)) is { } settings)
-                // JSON can say "Fidelity": null whatever the type claims.
-                return settings with { Fidelity = (settings.Fidelity as StageFidelity)?.Sanitised() ?? StageFidelity.Quality };
+                // JSON can say "Fidelity": null (or "Output": null) whatever the type claims.
+                return settings with
+                {
+                    Fidelity = (settings.Fidelity as StageFidelity)?.Sanitised() ?? StageFidelity.Quality,
+                    Output = (settings.Output as OutputSettings) ?? new OutputSettings(),
+                };
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {

@@ -1,3 +1,4 @@
+using Lampion.App.Output;
 using Lampion.App.Rendering;
 
 namespace Lampion.App.Editor;
@@ -10,4 +11,7 @@ internal sealed record UserSettings
 
     /// <summary>True to overlay the frame rate on the 3D stage.</summary>
     public bool ShowFps { get; init; }
+
+    /// <summary>Where DMX output goes on this machine.</summary>
+    public OutputSettings Output { get; init; } = new();
 }

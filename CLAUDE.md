@@ -1,7 +1,7 @@
 # Lampion
 
 Cross-platform (.NET 10, Avalonia 12) light-show designer: patch DMX fixtures, lay effects out on a timeline
-synced to audio/video, preview in real-time OpenGL 3D, send Art-Net, export QLC+ workspaces.
+synced to audio/video, preview in real-time OpenGL 3D, send DMX over Art-Net or a USB interface, export QLC+ workspaces.
 
 **Priorities, in order:** user-friendly, developer-friendly, then fast. None of them is optional.
 
@@ -15,13 +15,13 @@ dotnet run --project src/Lampion.App       # start screen
 
 | Project | What lives there |
 | --- | --- |
-| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net, persistence. **No UI references, ever.** |
+| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net and USB DMX output, persistence. **No UI references, ever.** |
 | `src/Lampion.App` | Avalonia shell, panels, custom controls, OpenGL stage renderer, LibVLC media |
 | `tests/Lampion.Core.Tests` | xUnit tests for everything in Core |
 
 Namespaces follow folders (`src/Lampion.Core/Engine/DmxMapper.cs` → `Lampion.Core.Engine`).
 
-The evaluator is **pure**: same project + same time → same DMX. The 3D preview, Art-Net output and QLC+ export
+The evaluator is **pure**: same project + same time → same DMX. The 3D preview, DMX output and QLC+ export
 all read that one result, which is why they agree. Never add a second path that computes light on its own.
 
 ## The UI is After Effects
@@ -104,7 +104,7 @@ Everything that runs per frame (~60 Hz) or per fixture per frame:
 - `EditorState.Tick` → `ShowEvaluator` → `FixtureState` blending → `DmxMapper` → `ShowRenderer`/`DmxFrame`
 - `StageView.UpdateScene` / scene snapshot building and `StageRenderer` draw passes
 - `TimelineControl`, `DmxMonitor` and playhead rendering while playing
-- Art-Net sending and `MediaEngine.Sync`
+- DMX output (`DmxOutput.Tick` and its sender thread) and `MediaEngine.Sync`
 
 Rules for that code:
 

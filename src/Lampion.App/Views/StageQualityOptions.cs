@@ -113,5 +113,5 @@ internal sealed partial class StageQualityOptions : StackPanel
         return null;
     }
 
-    private void Save() => UserData.SaveSettings(new UserSettings { Fidelity = _view.Fidelity, ShowFps = _view.ShowFps });
+    private void Save() => UserData.SaveSettings(UserData.LoadSettings() with { Fidelity = _view.Fidelity, ShowFps = _view.ShowFps });
 }

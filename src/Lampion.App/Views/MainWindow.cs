@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Media;
+using Lampion.App.Output;
 using Lampion.App.Views.Shell;
 using Lampion.Core.Model;
 using Lampion.Core.Model.Timeline;
@@ -17,7 +18,7 @@ namespace Lampion.App.Views;
 internal sealed class MainWindow : Window
 {
     private readonly MediaEngine _media = new();
-    private readonly ArtNetOutput _artNet;
+    private readonly DmxOutput _output;
     private readonly FileOperations _files;
     private readonly FrameLoop _loop;
 
@@ -36,11 +37,11 @@ internal sealed class MainWindow : Window
         var video = new VideoMonitor(_media.Video) { Message = _media.Error };
         var status = new StatusBar { Message = _media.Error };
 
-        _artNet = new ArtNetOutput(status);
+        _output = new DmxOutput(status);
         _files = new FileOperations(this, state, _media, status, zoomToFit);
         var import = new MediaImport(this, state, _media, status, zoomToFit);
         var layouts = new LayoutOperations(this, state, status);
-        var commands = new EditorCommands(this, state, _files, import, layouts, stage, timeline.Timeline, _artNet);
+        var commands = new EditorCommands(this, state, _files, import, layouts, stage, timeline.Timeline, _output);
         stage.OpenTrussBuilder = commands.BuildTruss.Run;
 
         var projectPanel = new ProjectPanel(state, timeline.Timeline, () => import.Import(TrackKind.Audio), () => import.Import(TrackKind.Video));
@@ -54,7 +55,7 @@ internal sealed class MainWindow : Window
         _ = new WaveformLoader(state, timeline.Timeline.InvalidateVisual);
         var title = new WindowTitle(this, state);
         title.Refresh();
-        _loop = new FrameLoop(state, _media, stage.View, video, _artNet, status, title);
+        _loop = new FrameLoop(state, _media, stage.View, video, _output, status, title);
         _loop.Start();
         Opened += (_, _) => zoomToFit();
     }
@@ -92,6 +93,6 @@ internal sealed class MainWindow : Window
             return;
         _loop.Stop();
         _media.Dispose();
-        _artNet.Dispose();
+        _output.Dispose();
     }
 }

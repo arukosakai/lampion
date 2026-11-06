@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
+using Lampion.App.Output;
+using Lampion.App.Views.Output;
 using Lampion.App.Rendering;
 using Lampion.Core.Model.Timeline;
 
@@ -24,8 +26,8 @@ internal sealed class EditorCommands
     /// <param name="layouts">Stage layout import, export and templates.</param>
     /// <param name="stage">The Stage 3D monitor.</param>
     /// <param name="timeline">The timeline control.</param>
-    /// <param name="artNet">The Art-Net output.</param>
-    public EditorCommands(Window window, EditorState state, FileOperations files, MediaImport import, LayoutOperations layouts, StagePanel stage, TimelineControl timeline, ArtNetOutput artNet)
+    /// <param name="output">The DMX output.</param>
+    public EditorCommands(Window window, EditorState state, FileOperations files, MediaImport import, LayoutOperations layouts, StagePanel stage, TimelineControl timeline, DmxOutput output)
     {
         // Zoom keeps the time just right of the track headers in place, where the eye usually is.
         var zoomAnchor = TimelineControl.HeaderWidth + 200;
@@ -78,7 +80,8 @@ internal sealed class EditorCommands
         UseAsDefaultLayout = new("Use this layout as the default", () => _ = layouts.SaveDefault());
         ForgetDefaultLayout = new("Forget default layout", () => _ = layouts.ForgetDefault());
 
-        ToggleArtNet = new("Send Art-Net (broadcast)", artNet.Toggle) { IsChecked = () => artNet.IsSending };
+        ToggleOutput = new("Send DMX output", output.Toggle) { IsChecked = () => output.IsSending };
+        OutputSetup = new("Output setup…", () => _ = OutputSetupWindow.Show(window, output));
     }
 
     /// <summary>File → New / start screen.</summary>
@@ -213,6 +216,9 @@ internal sealed class EditorCommands
     /// <summary>Stage → Truss structure: build an arch or cube with lights.</summary>
     public ShellCommand BuildTruss { get; }
 
-    /// <summary>Output → Send Art-Net (a check box).</summary>
-    public ShellCommand ToggleArtNet { get; }
+    /// <summary>Output → Send DMX output (a check box), to the device chosen in Output Setup.</summary>
+    public ShellCommand ToggleOutput { get; }
+
+    /// <summary>Output → Output Setup: Art-Net or a USB DMX interface.</summary>
+    public ShellCommand OutputSetup { get; }
 }
