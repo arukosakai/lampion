@@ -44,6 +44,7 @@ internal sealed class StartSidebar : DockPanel
         if (UserData.DefaultLayout() is { } layout)
             list.Children.Add(StartCard.Action("★", "New from your default", $"\"{layout.Name}\" · {layout.Fixtures.Count} fixtures", () => actions.NewFromLayout(layout)));
         list.Children.Add(StartCard.Action("📂", "Open show…", "A .lampion file from disk", () => _ = actions.OpenFile()));
+        list.Children.Add(StartCard.Action("🎆", "Open the showcase", "A 90 s festival show: 48 fixtures, truss, pixel towers, every effect", actions.OpenShowcase));
         list.Children.Add(StartCard.Action("✨", "Open the demo", "A short show with pars, moving heads and a rainbow", actions.OpenDemo));
         return list;
     }

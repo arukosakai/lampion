@@ -40,6 +40,9 @@ internal sealed class StartActions
     /// <summary>Opens the demo show.</summary>
     public void OpenDemo() => _choose(ProjectFactory.Demo(), null);
 
+    /// <summary>Opens the festival showcase.</summary>
+    public void OpenShowcase() => _choose(ProjectFactory.Showcase(), null);
+
     /// <summary>Picks a show file and opens it.</summary>
     public async Task OpenFile()
     {

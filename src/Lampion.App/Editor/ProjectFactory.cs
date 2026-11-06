@@ -1,11 +1,12 @@
 using Lampion.Core.Model;
 using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Showcase;
 using Lampion.Core.Model.Timeline;
 using Lampion.Core.Persistence;
 
 namespace Lampion.App.Editor;
 
-/// <summary>Ways to begin a show: blank, from a stage layout, or the demo. Each call returns a new project.</summary>
+/// <summary>Ways to begin a show: blank, from a stage layout, the demo or the showcase. Each call returns a new project.</summary>
 internal static class ProjectFactory
 {
     private const string FirstLightTrack = "Lights 1";
@@ -37,6 +38,9 @@ internal static class ProjectFactory
         project.Name = "Demo show";
         return project;
     }
+
+    /// <summary>The full-production showcase: a festival stage with 48 fixtures and a 90 s show using every effect.</summary>
+    public static Project Showcase() => ShowcaseProject.Create();
 
     private static Project WithBuiltInProfiles()
     {

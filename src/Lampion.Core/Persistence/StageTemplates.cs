@@ -1,5 +1,6 @@
 using Lampion.Core.Model;
 using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Showcase;
 using Lampion.Core.Model.Stage;
 
 namespace Lampion.Core.Persistence;
@@ -12,6 +13,7 @@ public static class StageTemplates
     [
         (Club(), "Small stage, one front truss with four RGB pars, two LED bars on the floor"),
         (StageLayout.From(DemoProject.Create(), "Concert stage"), "12 m deck, two trusses, six RGBW pars, four moving heads, LED wall"),
+        (StageLayout.From(ShowcaseProject.Create(), "Festival stage"), "Ground-support truss, LED walls, pixel towers, 48 fixtures with wash and spot movers"),
     ];
 
     private static StageLayout Club()

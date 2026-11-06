@@ -4,6 +4,7 @@ using Lampion.Core.Model;
 using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Rig;
+using Lampion.Core.Model.Showcase;
 using Lampion.Core.Model.Stage;
 using Lampion.Core.Output;
 using Lampion.Core.Tests.Golden;
@@ -15,12 +16,13 @@ public class AllocationTests
 {
     private const int Frames = 240;
 
-    public static TheoryData<string> Projects => ["demo", "everything", "everything-solo"];
+    public static TheoryData<string> Projects => ["demo", "showcase", "everything", "everything-solo"];
 
     private static Project Create(string name) =>
         name switch
         {
             "demo" => DemoProject.Create(),
+            "showcase" => ShowcaseProject.Create(),
             "everything-solo" => EverythingProject.Create(solo: true),
             _ => EverythingProject.Create(),
         };
