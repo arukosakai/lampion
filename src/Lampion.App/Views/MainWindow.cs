@@ -50,6 +50,7 @@ internal sealed class MainWindow : Window
         Content = Workspace(MainMenu.Build(commands), projectPanel, effects, monitor, inspector, timeline, status.View);
 
         new ShortcutMap(commands).Attach(this);
+        FileDropImport.Attach(this, import, status);
         _ = new WaveformLoader(state, timeline.Timeline.InvalidateVisual);
         var title = new WindowTitle(this, state);
         title.Refresh();
