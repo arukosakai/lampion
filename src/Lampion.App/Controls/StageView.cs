@@ -18,6 +18,9 @@ namespace Lampion.App.Controls;
 /// </summary>
 internal sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomHitTest
 {
+    // On-screen length of each move-gizmo arrow; its length in metres follows the camera distance.
+    private const float GizmoArrowPixels = 90;
+
     private readonly EditorState _state;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly StageSceneBuilder _scene;
@@ -90,8 +93,8 @@ internal sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomH
     /// <summary>The scene last built by <see cref="UpdateScene"/>, or null before the first. Refilled in place every frame.</summary>
     public SceneSnapshot? Scene => _hasScene ? _scene.Scene : null;
 
-    /// <summary>Axis the gizmo drag is on (0 X, 1 Y, 2 Z), so the overlay can highlight it.</summary>
-    public int? ActiveAxis => _interaction.ActiveAxis;
+    /// <summary>Gizmo arrow to highlight (0 X, 1 Y, 2 Z): the one being dragged, else the one under the pointer.</summary>
+    public int? HighlightedAxis => _interaction.HighlightedAxis;
 
     /// <summary>Where the aim tool last pointed, or null.</summary>
     public Vector3? AimTarget => _editor.AimTarget;
@@ -198,7 +201,13 @@ internal sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomH
         var projector = Projector();
         if (!projector.TryProject(origin, out var o))
             return null;
-        return new GizmoHandles(o, Tip(projector, origin + Vector3.UnitX, o), Tip(projector, origin + Vector3.UnitY, o), Tip(projector, origin + Vector3.UnitZ, o));
+        var length = GizmoArrowPixels * Camera.MetresPerPixel(origin, (float)Bounds.Height);
+        return new GizmoHandles(
+            o,
+            Tip(projector, origin + Vector3.UnitX * length, o),
+            Tip(projector, origin + Vector3.UnitY * length, o),
+            Tip(projector, origin + Vector3.UnitZ * length, o),
+            length);
     }
 
     private static Vector2 Tip(in ScreenProjector projector, Vector3 world, Vector2 fallback) => projector.TryProject(world, out var tip) ? tip : fallback;
@@ -220,6 +229,13 @@ internal sealed class StageView : OpenGlControlBase, Avalonia.Rendering.ICustomH
     {
         base.OnPointerMoved(e);
         _interaction.Move(e.GetPosition(this));
+    }
+
+    /// <inheritdoc/>
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        base.OnPointerExited(e);
+        _interaction.Leave();
     }
 
     /// <inheritdoc/>

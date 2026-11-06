@@ -25,8 +25,14 @@ internal sealed class StageOverlay : Control
         new SolidColorBrush(Color.FromRgb(90, 210, 90)),
         new SolidColorBrush(Color.FromRgb(70, 140, 255)),
     ];
-    private static readonly Pen[] AxisPens = [new(AxisBrushes[0], 2.5), new(AxisBrushes[1], 2.5), new(AxisBrushes[2], 2.5)];
-    private static readonly Pen[] ActiveAxisPens = [new(AxisBrushes[0], 4), new(AxisBrushes[1], 4), new(AxisBrushes[2], 4)];
+    private static readonly Pen[] AxisPens = [new(AxisBrushes[0], 4), new(AxisBrushes[1], 4), new(AxisBrushes[2], 4)];
+    private static readonly IBrush[] HighlightAxisBrushes =
+    [
+        new SolidColorBrush(Color.FromRgb(255, 160, 160)),
+        new SolidColorBrush(Color.FromRgb(175, 245, 175)),
+        new SolidColorBrush(Color.FromRgb(165, 200, 255)),
+    ];
+    private static readonly Pen[] HighlightAxisPens = [new(HighlightAxisBrushes[0], 6), new(HighlightAxisBrushes[1], 6), new(HighlightAxisBrushes[2], 6)];
     private static readonly string[] AxisNames = ["X", "Y", "Z"];
     private static readonly Vector3 FixtureLabelDrop = new(0, -0.3f, 0);
 
@@ -109,16 +115,19 @@ internal sealed class StageOverlay : Control
     private void DrawMoveGizmo(DrawingContext ctx, in GizmoHandles gizmo)
     {
         var a = new Point(gizmo.Origin.X, gizmo.Origin.Y);
-        var active = _view.ActiveAxis;
+        var highlighted = _view.HighlightedAxis;
         for (var i = 0; i < 3; i++)
         {
             var tip = gizmo.Tip(i);
             var b = new Point(tip.X, tip.Y);
-            ctx.DrawLine(active == i ? ActiveAxisPens[i] : AxisPens[i], a, b);
-            ctx.DrawEllipse(AxisBrushes[i], null, b, 4.5, 4.5);
-            OverlayText.Draw(ctx, AxisNames[i], b + new Point(6, -7), AxisBrushes[i], 11, null);
+            var lit = highlighted == i;
+            var brush = lit ? HighlightAxisBrushes[i] : AxisBrushes[i];
+            ctx.DrawLine(lit ? HighlightAxisPens[i] : AxisPens[i], a, b);
+            var radius = lit ? 8.5 : 6.5;
+            ctx.DrawEllipse(brush, null, b, radius, radius);
+            OverlayText.Draw(ctx, AxisNames[i], b + new Point(radius + 2, -8), brush, 11, null);
         }
-        ctx.DrawEllipse(Brushes.White, null, a, 3, 3);
+        ctx.DrawEllipse(Brushes.White, null, a, 4, 4);
     }
 
     private string ErrorText(string error)

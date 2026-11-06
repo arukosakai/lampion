@@ -154,6 +154,16 @@ internal sealed class Camera
         return (a, Vector3.Normalize(b - a));
     }
 
+    /// <summary>How many metres one screen pixel spans at <paramref name="world"/>, for a viewport <paramref name="viewportHeight"/> pixels tall.</summary>
+    public float MetresPerPixel(Vector3 world, float viewportHeight)
+    {
+        if (Orthographic)
+            return VisibleHeight() / viewportHeight;
+        var position = Position;
+        var depth = MathF.Max(NearPlane, Vector3.Dot(world - position, Basis(position).Forward));
+        return 2 * depth * MathF.Tan(FieldOfView / 2) / viewportHeight;
+    }
+
     /// <summary>The current view frozen for projecting many points into a viewport of this size, in pixels.</summary>
     public ScreenProjector Projector(float width, float height) => new(View() * Projection(width / height), width, height);
 

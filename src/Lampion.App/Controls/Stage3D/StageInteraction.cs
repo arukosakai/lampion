@@ -12,7 +12,7 @@ namespace Lampion.App.Controls.Stage3D;
 internal sealed class StageInteraction
 {
     // How near (pixels) a press must land to a gizmo arrow to grab it, and how short an arrow may get before it can't be.
-    private const float ArrowReach = 7;
+    private const float ArrowReach = 9;
     private const float ShortestArrow = 4;
 
     private readonly StageView _view;
@@ -26,6 +26,7 @@ internal sealed class StageInteraction
     private readonly PlaneDrag _plane;
     private IStageDrag? _active;
     private Point _lastPointer;
+    private int? _hoveredAxis;
 
     /// <summary>Handles input for <paramref name="view"/>, editing through <paramref name="editor"/>.</summary>
     public StageInteraction(StageView view, EditorState state, StagePicker picker, SelectionEditor editor)
@@ -38,8 +39,8 @@ internal sealed class StageInteraction
         _plane = new PlaneDrag(view, state, editor);
     }
 
-    /// <summary>Axis of the gizmo arrow being dragged (0 X, 1 Y, 2 Z), or null.</summary>
-    public int? ActiveAxis => ReferenceEquals(_active, _axis) ? _axis.Axis : null;
+    /// <summary>Axis of the gizmo arrow to highlight (0 X, 1 Y, 2 Z): the one being dragged, else the one under the pointer; null for none.</summary>
+    public int? HighlightedAxis => ReferenceEquals(_active, _axis) ? _axis.Axis : _active is null ? _hoveredAxis : null;
 
     /// <summary>A button went down at <paramref name="point"/>.</summary>
     public void Press(Point point, PointerPointProperties buttons, KeyModifiers modifiers)
@@ -65,7 +66,7 @@ internal sealed class StageInteraction
         }
 
         _editor.PieceOnly = false;
-        if (_view.BuildMode && TryGrabArrow(point))
+        if (ArrowsGrabbable && TryGrabArrow(point))
             return;
 
         var additive = modifiers.HasFlag(KeyModifiers.Control) || modifiers.HasFlag(KeyModifiers.Meta);
@@ -90,23 +91,30 @@ internal sealed class StageInteraction
 
     private bool TryGrabArrow(Point point)
     {
-        if (_view.Gizmo() is not { } gizmo)
+        if (_view.Gizmo() is not { } gizmo || ArrowAt(point, gizmo) is not { } axis)
             return false;
+        _axis.Begin(point, axis, gizmo.Tip(axis) - gizmo.Origin, gizmo.Length);
+        _active = _axis;
+        return true;
+    }
+
+    // Shared by press and hover, so the arrow that lights up is the one a click would grab.
+    private static int? ArrowAt(Point point, in GizmoHandles gizmo)
+    {
         var p = new Vector2((float)point.X, (float)point.Y);
         for (var axis = 0; axis < 3; axis++)
         {
             var tip = gizmo.Tip(axis);
             if (StageGeometry.DistanceToSegment(p, gizmo.Origin, tip) > ArrowReach)
                 continue;
-            var screen = tip - gizmo.Origin;
-            if (screen.Length() < ShortestArrow)
+            if ((tip - gizmo.Origin).Length() < ShortestArrow)
                 continue;
-            _axis.Begin(point, axis, screen);
-            _active = _axis;
-            return true;
+            return axis;
         }
-        return false;
+        return null;
     }
+
+    private bool ArrowsGrabbable => _view.BuildMode && !(_view.Tool == BuilderTool.Aim && _state.SelectedFixtureIds.Count > 0);
 
     private void Select(StagePick picked, bool additive)
     {
@@ -125,6 +133,7 @@ internal sealed class StageInteraction
         var delta = point - _lastPointer;
         _lastPointer = point;
         _active?.Move(point, delta);
+        _hoveredAxis = _active is null && ArrowsGrabbable && _view.Gizmo() is { } gizmo ? ArrowAt(point, gizmo) : null;
     }
 
     /// <summary>The button came up at <paramref name="point"/>; ends the drag.</summary>
@@ -134,4 +143,7 @@ internal sealed class StageInteraction
         _active = null;
         drag?.Release(point);
     }
+
+    /// <summary>The pointer left the view; drops the hover highlight.</summary>
+    public void Leave() => _hoveredAxis = null;
 }
