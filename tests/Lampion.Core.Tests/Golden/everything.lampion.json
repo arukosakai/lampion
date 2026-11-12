@@ -2290,6 +2290,7 @@
     "shows": [],
     "faders": [],
     "pads": [],
+    "widgets": [],
     "lightDelayMs": 0
   },
   "allClips": [

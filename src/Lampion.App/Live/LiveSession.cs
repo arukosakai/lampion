@@ -131,7 +131,7 @@ internal sealed class LiveSession : IDisposable
         {
             // The project's own timeline is snapshotted here; a file is read on the thread pool.
             var own = string.IsNullOrEmpty(show.Path) ? Copy(_state.Project) : null;
-            var path = ResolvePath(show.Path);
+            var path = LiveEdits.Resolve(_state.FilePath, show.Path);
             var patch = Patch ?? throw new InvalidOperationException("Live mode isn't running.");
             var cue = await Task.Run(() => ShowCue.Load(own ?? ProjectSerializer.Load(path), patch, show.Loop));
             if (generation != _loadGeneration)
@@ -284,13 +284,6 @@ internal sealed class LiveSession : IDisposable
         _lastRebuild = Stopwatch.GetTimestamp();
         _ledsDirty = true;
         Changed?.Invoke();
-    }
-
-    private string ResolvePath(string path)
-    {
-        if (string.IsNullOrEmpty(path) || Path.IsPathRooted(path) || _state.FilePath is not { } project)
-            return path;
-        return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(project))!, path));
     }
 
     private static Project Copy(Project project) => ProjectSerializer.Deserialize(ProjectSerializer.Serialize(project, indented: false));

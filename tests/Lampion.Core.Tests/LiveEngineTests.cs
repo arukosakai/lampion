@@ -292,6 +292,9 @@ public class LiveEngineTests
         strobe.Midi = new MidiBinding(MidiBindingKind.Control, 1, 7);
         rig.Live.Faders.Add(strobe);
         rig.Live.Pads.Add(Pad(new RainbowEffect { Speed = 2 }, PadMode.Flash, "par1"));
+        rig.Live.Widgets.Add(new LiveWidget { Kind = LiveWidgetKind.Clock });
+        rig.Live.Widgets.Add(new LiveWidget { Kind = LiveWidgetKind.Photo, ImagePath = "gumi.png" });
+        rig.Live.LightDelayMs = 35;
 
         var loaded = ProjectSerializer.Deserialize(ProjectSerializer.Serialize(rig));
 
@@ -301,6 +304,9 @@ public class LiveEngineTests
         Assert.Equal(new MidiBinding(MidiBindingKind.Control, 1, 7), loaded.Live.Faders[0].Midi);
         Assert.Equal(2, Assert.IsType<RainbowEffect>(loaded.Live.Pads[0].Effect).Speed);
         Assert.Equal(PadMode.Flash, loaded.Live.Pads[0].Mode);
+        Assert.Equal([LiveWidgetKind.Clock, LiveWidgetKind.Photo], loaded.Live.Widgets.Select(w => w.Kind));
+        Assert.Equal("gumi.png", loaded.Live.Widgets[1].ImagePath);
+        Assert.Equal(35, loaded.Live.LightDelayMs);
     }
 
     [Fact]
@@ -311,5 +317,6 @@ public class LiveEngineTests
         Assert.Empty(loaded.Live.Shows);
         Assert.Empty(loaded.Live.Faders);
         Assert.Empty(loaded.Live.Pads);
+        Assert.Empty(loaded.Live.Widgets);
     }
 }

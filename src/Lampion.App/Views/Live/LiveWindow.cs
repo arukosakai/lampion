@@ -8,7 +8,8 @@ using Lampion.App.Output;
 namespace Lampion.App.Views.Live;
 
 /// <summary>
-/// Output → Live console: the set list on the left, faders and pads on the right, engine and MIDI status below.
+/// Output → Live console: the set list on the left, faders and pads in the middle, widgets (clock, photos) on the right,
+/// engine and MIDI status below.
 /// Opening it starts live mode (the workspace's stage and DMX monitor follow the live output); closing it stops it,
 /// after asking while a show is playing. Wires the panels to one <see cref="LiveSession"/>; it does no work itself.
 /// </summary>
@@ -21,16 +22,19 @@ internal sealed class LiveWindow : Window
     private LiveWindow(EditorState state, DmxOutput output)
     {
         Title = "Lampion Live";
-        Width = 1180;
+        Width = 1460;
         Height = 720;
         _session = new LiveSession(state, output);
         var setList = new SetListPanel(this, state, _session);
         var console = new ConsolePanel(this, state, _session);
         var status = new LiveStatusLine(_session, output);
+        var widgets = new WidgetColumn(this, state, _session);
 
         var body = new DockPanel { Margin = new Thickness(12) };
         DockPanel.SetDock(status, Dock.Bottom);
         body.Children.Add(status);
+        DockPanel.SetDock(widgets, Dock.Right);
+        body.Children.Add(widgets);
         DockPanel.SetDock(setList, Dock.Left);
         body.Children.Add(setList);
         body.Children.Add(console);
@@ -43,6 +47,7 @@ internal sealed class LiveWindow : Window
             setList.Refresh();
             console.Refresh();
             status.Refresh();
+            widgets.Refresh();
         });
         Opened += (_, _) =>
         {

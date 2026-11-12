@@ -72,6 +72,35 @@ internal static class LiveEdits
         state.Commit();
     }
 
+    /// <summary>Adds a widget at the bottom of the column; photos get <paramref name="imagePath"/>, made relative to the project when next to it.</summary>
+    public static void AddWidget(EditorState state, LiveWidgetKind kind, string imagePath = "")
+    {
+        state.Project.Live.Widgets.Add(new LiveWidget { Kind = kind, ImagePath = imagePath.Length == 0 ? "" : Relative(state.FilePath, imagePath) });
+        state.Commit();
+    }
+
+    /// <summary>Points a photo widget at another picture.</summary>
+    public static void SetPhoto(EditorState state, LiveWidget widget, string imagePath)
+    {
+        widget.ImagePath = Relative(state.FilePath, imagePath);
+        state.Commit();
+    }
+
+    /// <summary>Removes a widget.</summary>
+    public static void RemoveWidget(EditorState state, LiveWidget widget)
+    {
+        if (state.Project.Live.Widgets.Remove(widget))
+            state.Commit();
+    }
+
+    /// <summary>A set-list or widget path as a full path: relative ones are resolved against the project file's folder.</summary>
+    public static string Resolve(string? projectPath, string path)
+    {
+        if (string.IsNullOrEmpty(path) || Path.IsPathRooted(path) || projectPath is null)
+            return path;
+        return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, path));
+    }
+
     private static string Relative(string? projectPath, string path)
     {
         if (projectPath is null)

@@ -125,6 +125,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 - **Music in sync:** the show's audio plays and is the master clock. The lights hold the first frame while the song buffers, start with it, then follow its position: small drift is slewed away (up to ±5 % speed), so there are no visible jumps. **Light delay (ms)** makes up for the PA's latency.
 - **Faders:** intensity, hue, saturation or any channel role of some fixtures, or the intensity, speed or hue of a pad. Faders only reach fixtures the playing show doesn't drive, and a strip says when the show holds its fixtures.
 - **Pads:** launchpad-style buttons that start and stop an effect (toggle or flash), lit while on. If the controller has an output, its pad LEDs light up too.
+- **Widgets:** a column for a wall clock and photos (+ Widget; right-click to change or remove). Display only.
 - **MIDI:** right-click a fader or pad → Edit → **Learn**, then move a slider or hit a pad. Windows only for now.
 - Rendering runs on its own high-priority thread at 100 Hz and doesn't allocate per frame. The UI only displays it, so the 3D stage and DMX monitor follow the live output, and frames go straight from the engine to the DMX device.
 

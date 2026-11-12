@@ -15,6 +15,9 @@ public sealed class LiveSet
     /// <summary>Effect pads, row by row.</summary>
     public List<LivePad> Pads { get; } = [];
 
+    /// <summary>Widgets in the console's side column, top to bottom.</summary>
+    public List<LiveWidget> Widgets { get; } = [];
+
     /// <summary>
     /// Milliseconds the lights run behind the music, to make up for the sound system's latency (audio interface buffer,
     /// DSP, speaker distance); negative runs them ahead. Tuned by eye and ear at the venue, −500..500.
