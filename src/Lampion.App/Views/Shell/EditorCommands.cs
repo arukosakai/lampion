@@ -3,6 +3,7 @@ using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Output;
 using Lampion.App.Views.Output;
+using Lampion.App.Views.Live;
 using Lampion.App.Rendering;
 using Lampion.Core.Model.Timeline;
 
@@ -17,6 +18,8 @@ internal sealed class EditorCommands
     // Arrow keys step one frame at 30 fps, or a second with Shift.
     private const double FrameStep = 1 / 30.0;
     private const double ZoomStep = 1.4;
+
+    private LiveWindow? _live;
 
     /// <summary>Builds the commands over the workspace's parts.</summary>
     /// <param name="window">Owner of dialogs, closed by <see cref="Exit"/>.</param>
@@ -84,6 +87,7 @@ internal sealed class EditorCommands
 
         ToggleOutput = new("Send DMX output", output.Toggle) { IsChecked = () => output.IsSending };
         OutputSetup = new("Output setup…", () => _ = OutputSetupWindow.Show(window, output));
+        LiveConsole = new("Live console…", () => LiveWindow.ShowFor(window, state, output, ref _live), "Ctrl+L");
     }
 
     /// <summary>File → New / start screen.</summary>
@@ -226,4 +230,7 @@ internal sealed class EditorCommands
 
     /// <summary>Output → Output Setup: Art-Net or a USB DMX interface.</summary>
     public ShellCommand OutputSetup { get; }
+
+    /// <summary>Output → Live console: set list, faders and effect pads driving the rig in real time.</summary>
+    public ShellCommand LiveConsole { get; }
 }

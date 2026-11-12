@@ -29,6 +29,7 @@ internal sealed class DmxOutput : IDisposable
     private volatile string? _problem;
     private string? _reported;
     private string _label;
+    private volatile IDmxFrameSource? _source;
 
     /// <summary>An output that reports to <paramref name="status"/>, set up from the saved user settings; off until started.</summary>
     public DmxOutput(StatusBar status)
@@ -98,13 +99,24 @@ internal sealed class DmxOutput : IDisposable
             Start();
     }
 
+    /// <summary>
+    /// Where the sender thread takes frames from directly, bypassing <see cref="Tick"/>: live mode puts its engine
+    /// here so frames go engine thread → sender thread → device without waiting on the UI. Null sends the editor's frame.
+    /// </summary>
+    public IDmxFrameSource? Source
+    {
+        get => _source;
+        set => _source = value;
+    }
+
     /// <summary>Hands the current frame to the sender and reports new problems. Call every UI tick; allocation-free while sending works.</summary>
     public void Tick(EditorState state)
     {
         if (_worker is null)
             return;
-        lock (_gate)
-            state.CurrentFrame.CopyTo(_latest);
+        if (_source is null)
+            lock (_gate)
+                state.CurrentFrame.CopyTo(_latest);
         var problem = _problem;
         if (ReferenceEquals(problem, _reported))
             return;
@@ -133,8 +145,11 @@ internal sealed class DmxOutput : IDisposable
                     Wait(RetryInterval);
                     continue;
                 }
-                lock (_gate)
-                    _latest.CopyTo(_sending);
+                if (_source is { } source)
+                    source.CopyLatestTo(_sending);
+                else
+                    lock (_gate)
+                        _latest.CopyTo(_sending);
                 if (!TrySend(device, _sending))
                 {
                     device.Dispose();

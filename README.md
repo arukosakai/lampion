@@ -1,4 +1,4 @@
-<div align="center">
+| <kbd>Ctrl</kbd>+<kbd>L</kbd> | Live console | <div align="center">
 
 # 🏮 Lampion
 
@@ -114,6 +114,18 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 - Each group gets a **Sequence** holding the exact rendered DMX, reduced to linear fades within a tolerance you choose.
 - One **Show** plays the sequences alongside **Audio** and **Video** functions at their timeline positions.
 - It can **merge into an existing workspace**: fixtures at the same address are reused, overlaps are skipped with a warning, and IDs and names never collide.
+
+---
+
+## 🎚️ Live console (preview)
+
+**Output → Live console…** (<kbd>Ctrl</kbd>+<kbd>L</kbd>) turns the project into a live rig:
+
+- **Set list:** other Lampion shows (or this project's own timeline). **GO** cuts to the selected one. Show fixtures are matched to the rig by id, then by universe and address.
+- **Faders:** intensity, hue, saturation or any channel role of some fixtures, or the intensity, speed or hue of a pad. Faders only reach fixtures the playing show doesn't drive, and a strip says when the show holds its fixtures.
+- **Pads:** launchpad-style buttons that start and stop an effect (toggle or flash), lit while on. If the controller has an output, its pad LEDs light up too.
+- **MIDI:** right-click a fader or pad → Edit → **Learn**, then move a slider or hit a pad. Windows only for now.
+- Rendering runs on its own high-priority thread at 100 Hz and doesn't allocate per frame. The UI only displays it, so the 3D stage and DMX monitor follow the live output, and frames go straight from the engine to the DMX device.
 
 ---
 

@@ -41,6 +41,7 @@ internal sealed class DmxMonitor : Control
     {
         _state = state;
         state.PlayheadChanged += InvalidateVisual;
+        state.FrameChanged += InvalidateVisual;
         state.Changed += OnPatchOrSelectionChanged;
         state.SelectionChanged += OnPatchOrSelectionChanged;
     }

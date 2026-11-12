@@ -36,7 +36,7 @@ internal static class MainMenu
                     c.UseAsDefaultLayout,
                     c.ForgetDefaultLayout
                 ),
-                Top("_Output", c.ToggleOutput, null, c.OutputSetup),
+                Top("_Output", c.ToggleOutput, null, c.OutputSetup, null, c.LiveConsole),
             },
         };
 

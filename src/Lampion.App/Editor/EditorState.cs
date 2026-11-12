@@ -29,6 +29,8 @@ public sealed class EditorState
     private readonly DmxFrame _frame = new();
     private double _frameTime = -1;
     private int _frameVersion = -1;
+    private IDmxFrameSource? _liveSource;
+    private long _liveSeen = -1;
 
     /// <summary>Starts editing <paramref name="project"/>, saved at <paramref name="filePath"/> (null while unsaved).</summary>
     public EditorState(Project project, string? filePath = null)
@@ -292,6 +294,27 @@ public sealed class EditorState
     {
         if (_transport.Advance(Project.ContentEnd))
             PlayheadChanged?.Invoke();
+        if (_liveSource is { } live && live.Sequence != _liveSeen)
+            FrameChanged?.Invoke();
+    }
+
+    /// <summary>Raised from <see cref="Tick"/> when live mode has a new frame, so monitors that only redraw on playhead moves follow it.</summary>
+    public event Action? FrameChanged;
+
+    /// <summary>
+    /// While live mode runs, its frames: <see cref="CurrentFrame"/> shows them instead of the timeline, so the 3D stage
+    /// and the DMX monitor follow the live show. Null shows the timeline at the playhead again.
+    /// </summary>
+    public IDmxFrameSource? LiveSource
+    {
+        get => _liveSource;
+        set
+        {
+            _liveSource = value;
+            _liveSeen = -1;
+            _frameTime = -1;
+            FrameChanged?.Invoke();
+        }
     }
 
     /// <summary>
@@ -305,16 +328,24 @@ public sealed class EditorState
     }
 
     /// <summary>
-    /// DMX output at the playhead (with any <see cref="Test"/> on top), rendered at most once per playhead
-    /// move or edit and allocation-free in steady state. The frame is owned by the editor and overwritten
-    /// on the next change: read it right away, or <see cref="DmxFrame.CopyTo"/> it to keep it.
+    /// DMX output at the playhead, or the newest live frame while <see cref="LiveSource"/> is set (with any
+    /// <see cref="Test"/> on top), rendered at most once per playhead move, edit or live frame and allocation-free
+    /// in steady state. The frame is owned by the editor and overwritten on the next change: read it right away,
+    /// or <see cref="DmxFrame.CopyTo"/> it to keep it.
     /// </summary>
     public DmxFrame CurrentFrame
     {
         get
         {
-            var playhead = Playhead;
             var version = Version;
+            if (_liveSource is { } live)
+            {
+                var fresh = live.Sequence != _liveSeen;
+                if (fresh)
+                    _liveSeen = live.CopyLatestTo(_frame);
+                return _testHold.Apply(_frame, fresh, Project, version);
+            }
+            var playhead = Playhead;
             var rendered = _frameTime != playhead || _frameVersion != version;
             if (rendered)
             {

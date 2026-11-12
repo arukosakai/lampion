@@ -27,6 +27,7 @@ internal sealed class ShortcutMap
             new(Key.N, Ctrl: true, Shift: false, c.NewProject),
             new(Key.P, Ctrl: true, Shift: true, c.ProjectSettings),
             new(Key.E, Ctrl: true, Shift: false, c.ExportQlc),
+            new(Key.L, Ctrl: true, Shift: false, c.LiveConsole),
             new(Key.I, Ctrl: true, Shift: false, c.ImportAudio),
             new(Key.K, Ctrl: true, Shift: false, c.SplitAtPlayhead),
             new(Key.D, Ctrl: true, Shift: false, c.Duplicate),

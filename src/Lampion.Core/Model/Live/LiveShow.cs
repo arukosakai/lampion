@@ -12,7 +12,7 @@ public sealed class LiveShow
     /// <summary>Name shown in the set list.</summary>
     public string Name { get; set; } = "Show";
 
-    /// <summary>The show file, relative to the project file when it sits next to it, absolute otherwise.</summary>
+    /// <summary>The show file, relative to the project file when it sits next to it, absolute otherwise; empty plays this project's own timeline.</summary>
     public string Path { get; set; } = "";
 
     /// <summary>Start over at the end instead of stopping.</summary>
