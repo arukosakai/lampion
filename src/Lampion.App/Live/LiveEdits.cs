@@ -1,6 +1,7 @@
 using Lampion.App.Editor;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Live;
+using Lampion.Core.Persistence;
 
 namespace Lampion.App.Live;
 
@@ -10,7 +11,7 @@ internal static class LiveEdits
     /// <summary>Adds a show to the end of the set list; <paramref name="path"/> is made relative to the project when it's next to it.</summary>
     public static void AddShow(EditorState state, string name, string path)
     {
-        state.Project.Live.Shows.Add(new LiveShow { Name = name, Path = Relative(state.FilePath, path) });
+        state.Project.Live.Shows.Add(new LiveShow { Name = name, Path = ShowPaths.Relative(state.FilePath, path) });
         state.Commit();
     }
 
@@ -75,14 +76,14 @@ internal static class LiveEdits
     /// <summary>Adds a widget at the bottom of the column; photos get <paramref name="imagePath"/>, made relative to the project when next to it.</summary>
     public static void AddWidget(EditorState state, LiveWidgetKind kind, string imagePath = "")
     {
-        state.Project.Live.Widgets.Add(new LiveWidget { Kind = kind, ImagePath = imagePath.Length == 0 ? "" : Relative(state.FilePath, imagePath) });
+        state.Project.Live.Widgets.Add(new LiveWidget { Kind = kind, ImagePath = imagePath.Length == 0 ? "" : ShowPaths.Relative(state.FilePath, imagePath) });
         state.Commit();
     }
 
     /// <summary>Points a photo widget at another picture.</summary>
     public static void SetPhoto(EditorState state, LiveWidget widget, string imagePath)
     {
-        widget.ImagePath = Relative(state.FilePath, imagePath);
+        widget.ImagePath = ShowPaths.Relative(state.FilePath, imagePath);
         state.Commit();
     }
 
@@ -93,20 +94,19 @@ internal static class LiveEdits
             state.Commit();
     }
 
-    /// <summary>A set-list or widget path as a full path: relative ones are resolved against the project file's folder.</summary>
-    public static string Resolve(string? projectPath, string path)
+    /// <summary>Replaces the whole console (set list, faders, pads, widgets, light delay) with <paramref name="console"/>, as one undo step.</summary>
+    public static void ReplaceConsole(EditorState state, LiveSet console)
     {
-        if (string.IsNullOrEmpty(path) || Path.IsPathRooted(path) || projectPath is null)
-            return path;
-        return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, path));
-    }
-
-    private static string Relative(string? projectPath, string path)
-    {
-        // Empty means "this project's own timeline", which has no file to point at.
-        if (projectPath is null || path.Length == 0)
-            return path;
-        var relative = Path.GetRelativePath(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, path);
-        return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative.Replace('\\', '/');
+        var live = state.Project.Live;
+        live.Shows.Clear();
+        live.Shows.AddRange(console.Shows);
+        live.Faders.Clear();
+        live.Faders.AddRange(console.Faders);
+        live.Pads.Clear();
+        live.Pads.AddRange(console.Pads);
+        live.Widgets.Clear();
+        live.Widgets.AddRange(console.Widgets);
+        live.LightDelayMs = console.LightDelayMs;
+        state.Commit();
     }
 }

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Live;
 using Lampion.Core.Model.Live;
+using Lampion.Core.Persistence;
 
 namespace Lampion.App.Views.Live;
 
@@ -67,7 +68,7 @@ internal sealed class WidgetColumn : DockPanel
             else
             {
                 var change = MenuItem("Change photo…", () => _ = ChangePhoto(widget));
-                _widgets.Children.Add(new PhotoWidget(LiveEdits.Resolve(_state.FilePath, widget.ImagePath), new ContextMenu { Items = { change, remove } }));
+                _widgets.Children.Add(new PhotoWidget(ShowPaths.Resolve(_state.FilePath, widget.ImagePath), new ContextMenu { Items = { change, remove } }));
             }
         }
         if (_state.Project.Live.Widgets.Count == 0)

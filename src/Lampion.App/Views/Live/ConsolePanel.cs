@@ -31,7 +31,9 @@ internal sealed class ConsolePanel : DockPanel
         _session = session;
         var addFader = Ui.Button("+ Fader", () => _ = FaderEditor.Show(_owner, _state, _session, LiveEdits.AddFader(_state)), "Add a fader over the fixtures selected in the workspace");
         var addPad = Ui.Button("+ Pad", () => _ = PadEditor.Show(_owner, _state, _session, LiveEdits.AddPad(_state)), "Add an effect pad over the fixtures selected in the workspace");
-        var bar = Ui.Row(Ui.Section("Console"), addFader, addPad);
+        var save = Ui.Button("Save console…", () => _ = ConsoleFiles.Save(_owner, _state), "Save this console (set list, faders, pads, MIDI mappings, widgets) to a file you can load into another project");
+        var load = Ui.Button("Load console…", () => _ = ConsoleFiles.Load(_owner, _state), "Replace this console with one saved from another project; its fixtures are matched by address, groups by name");
+        var bar = Ui.Row(Ui.Section("Console"), addFader, addPad, save, load);
         bar.Margin = new Thickness(0, 0, 0, 6);
         SetDock(bar, Dock.Top);
         Children.Add(bar);

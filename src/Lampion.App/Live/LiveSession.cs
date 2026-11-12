@@ -148,7 +148,7 @@ internal sealed class LiveSession : IDisposable
         {
             // The project's own timeline is snapshotted here; a file is read on the thread pool.
             var own = string.IsNullOrEmpty(show.Path) ? Copy(_state.Project) : null;
-            var path = LiveEdits.Resolve(_state.FilePath, show.Path);
+            var path = ShowPaths.Resolve(_state.FilePath, show.Path);
             var patch = Patch ?? throw new InvalidOperationException("Live mode isn't running.");
             var cue = await Task.Run(() => ShowCue.Load(own ?? ProjectSerializer.Load(path), patch, show.Loop));
             if (generation != _loadGeneration)
