@@ -15,8 +15,6 @@ internal static class EffectParameterTable
     private static readonly ScrubRange Percent = ScrubRange.Percent;
     private static readonly ScrubRange Spread = new(0, 4, 0.01, Unit: "×");
     private static readonly ScrubRange Hue = new(0, 1, 1 / 360.0, 360, Unit: "°");
-    private static readonly ScrubRange Speed = new(-4, 4, 0.005, Unit: " /s");
-    private static readonly ScrubRange Rate = new(0.05, 30, 0.02, Unit: " Hz");
     private static readonly ScrubRange Seconds = new(0, 8, 0.005, Unit: " s");
     private static readonly ScrubRange Tail = new(0, 12, 0.02, Unit: " fx");
     private static readonly ScrubRange Wavelength = new(0.25, 32, 0.02, Unit: " fx");
@@ -38,7 +36,7 @@ internal static class EffectParameterTable
 
     private static readonly EffectParameter[] Rainbow =
     [
-        Number<RainbowEffect>("Speed", Speed, e => e.Speed, (e, v) => e.Speed = v),
+        Tempo<RainbowEffect>("Speed", TempoScale.Speed, e => e.Speed, (e, v) => e.Speed = v),
         Number<RainbowEffect>("Spread", Spread, e => e.Spread, (e, v) => e.Spread = v),
         Number<RainbowEffect>("Saturation", Percent, e => e.Saturation, (e, v) => e.Saturation = v),
         Number<RainbowEffect>("Start hue", Hue, e => e.StartHue, (e, v) => e.StartHue = v),
@@ -48,7 +46,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Cycle =
     [
         new PaletteParameter<ColorCycleEffect>("Colors", e => e.Colors),
-        Number<ColorCycleEffect>("Step time", Seconds, e => e.StepTime, (e, v) => e.StepTime = v),
+        Tempo<ColorCycleEffect>("Step time", TempoScale.StepTime, e => e.StepTime, (e, v) => e.StepTime = v),
         Number<ColorCycleEffect>("Fade ratio", Percent, e => e.FadeRatio, (e, v) => e.FadeRatio = v),
         Number<ColorCycleEffect>("Fixture offset", Phase, e => e.FixtureOffset, (e, v) => e.FixtureOffset = v),
         Intensity,
@@ -57,7 +55,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Chase =
     [
         new PaletteParameter<ChaseEffect>("Colors", e => e.Colors),
-        Number<ChaseEffect>("Step time", Seconds, e => e.StepTime, (e, v) => e.StepTime = v),
+        Tempo<ChaseEffect>("Step time", TempoScale.StepTime, e => e.StepTime, (e, v) => e.StepTime = v),
         Number<ChaseEffect>("Tail", Tail, e => e.Tail, (e, v) => e.Tail = v),
         Choice<ChaseEffect, ChaseDirection>("Direction", e => e.Direction, (e, v) => e.Direction = v),
         Number<ChaseEffect>("Background", Percent, e => e.Background, (e, v) => e.Background = v),
@@ -67,7 +65,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Strobe =
     [
         Color<StrobeEffect>("Color", e => e.Color, (e, v) => e.Color = v),
-        Number<StrobeEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<StrobeEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<StrobeEffect>("Duty", Percent, e => e.Duty, (e, v) => e.Duty = v),
         Intensity,
     ];
@@ -75,7 +73,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Pulse =
     [
         Color<PulseEffect>("Color", e => e.Color, (e, v) => e.Color = v),
-        Number<PulseEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<PulseEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<PulseEffect>("Minimum", Percent, e => e.Minimum, (e, v) => e.Minimum = v),
         Choice<PulseEffect, Waveform>("Wave", e => e.Wave, (e, v) => e.Wave = v),
         Number<PulseEffect>("Phase", Phase, e => e.Phase, (e, v) => e.Phase = v),
@@ -85,7 +83,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Sparkle =
     [
         Color<SparkleEffect>("Color", e => e.Color, (e, v) => e.Color = v),
-        Number<SparkleEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<SparkleEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<SparkleEffect>("Decay", Seconds, e => e.Decay, (e, v) => e.Decay = v),
         new IntegerParameter<SparkleEffect>("Seed", e => e.Seed, (e, v) => e.Seed = v),
         Intensity,
@@ -95,7 +93,7 @@ internal static class EffectParameterTable
     [
         new PaletteParameter<GradientEffect>("Colors", e => e.Colors),
         Number<GradientEffect>("Repeat", Repeat, e => e.Repeat, (e, v) => e.Repeat = v),
-        Number<GradientEffect>("Speed", Speed, e => e.Speed, (e, v) => e.Speed = v),
+        Tempo<GradientEffect>("Speed", TempoScale.Speed, e => e.Speed, (e, v) => e.Speed = v),
         Intensity,
     ];
 
@@ -103,7 +101,7 @@ internal static class EffectParameterTable
     [
         Color<ColorWaveEffect>("Color", e => e.Color, (e, v) => e.Color = v),
         Color<ColorWaveEffect>("Base", e => e.Base, (e, v) => e.Base = v),
-        Number<ColorWaveEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<ColorWaveEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<ColorWaveEffect>("Wavelength", Wavelength, e => e.Wavelength, (e, v) => e.Wavelength = v),
         Choice<ColorWaveEffect, Waveform>("Wave", e => e.Wave, (e, v) => e.Wave = v),
         Intensity,
@@ -113,7 +111,7 @@ internal static class EffectParameterTable
     [
         Color<FireEffect>("Ember", e => e.Ember, (e, v) => e.Ember = v),
         Color<FireEffect>("Flame", e => e.Flame, (e, v) => e.Flame = v),
-        Number<FireEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<FireEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<FireEffect>("Minimum", Percent, e => e.Minimum, (e, v) => e.Minimum = v),
         new IntegerParameter<FireEffect>("Seed", e => e.Seed, (e, v) => e.Seed = v),
         Intensity,
@@ -122,7 +120,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Lightning =
     [
         Color<LightningEffect>("Color", e => e.Color, (e, v) => e.Color = v),
-        Number<LightningEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<LightningEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<LightningEffect>("Decay", Seconds, e => e.Decay, (e, v) => e.Decay = v),
         Choice<LightningEffect, LightningMode>("Mode", e => e.Mode, (e, v) => e.Mode = v),
         new IntegerParameter<LightningEffect>("Seed", e => e.Seed, (e, v) => e.Seed = v),
@@ -132,7 +130,7 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Heartbeat =
     [
         Color<HeartbeatEffect>("Color", e => e.Color, (e, v) => e.Color = v),
-        Number<HeartbeatEffect>("Rate", Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Tempo<HeartbeatEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
         Number<HeartbeatEffect>("Minimum", Percent, e => e.Minimum, (e, v) => e.Minimum = v),
         Number<HeartbeatEffect>("Phase", Phase, e => e.Phase, (e, v) => e.Phase = v),
         Intensity,
@@ -142,7 +140,7 @@ internal static class EffectParameterTable
     [
         Color<HitEffect>("Color", e => e.Color, (e, v) => e.Color = v),
         Number<HitEffect>("Decay", Seconds, e => e.Decay, (e, v) => e.Decay = v),
-        Number<HitEffect>("Interval", Seconds, e => e.Interval, (e, v) => e.Interval = v),
+        Tempo<HitEffect>("Interval", TempoScale.Interval, e => e.Interval, (e, v) => e.Interval = v),
         Number<HitEffect>("Offset", Seconds, e => e.Offset, (e, v) => e.Offset = v),
         Intensity,
     ];
@@ -170,6 +168,9 @@ internal static class EffectParameterTable
 
     private static NumberParameter<T> Number<T>(string label, ScrubRange range, Func<T, double> get, Action<T, double> set)
         where T : LightEffect => new(label, range, get, set);
+
+    private static TempoParameter<T> Tempo<T>(string label, TempoScale scale, Func<T, double> get, Action<T, double> set)
+        where T : LightEffect => new(label, scale, get, set);
 
     private static ColorParameter<T> Color<T>(string label, Func<T, string> get, Action<T, string> set)
         where T : LightEffect => new(label, get, set);

@@ -12,6 +12,9 @@ internal sealed record UserSettings
     /// <summary>True to overlay the frame rate on the 3D stage.</summary>
     public bool ShowFps { get; init; }
 
+    /// <summary>True to show effect timing (rates, speeds, step times, intervals) in beats per minute. Projects always store native units.</summary>
+    public bool RatesInBpm { get; init; }
+
     /// <summary>Where DMX output goes on this machine.</summary>
     public OutputSettings Output { get; init; } = new();
 }

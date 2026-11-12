@@ -102,7 +102,7 @@ internal sealed class ScrubValue : Panel
         _dragged = true;
         var modifiers = e.KeyModifiers;
         var speed = (modifiers & KeyModifiers.Shift) != 0 ? 10 : (modifiers & KeyModifiers.Control) != 0 ? 0.1 : 1;
-        SetValue(_pressValue + dx * _range.Step * speed, live: true);
+        SetValue(_range.FromDisplay(_range.ToDisplay(_pressValue) + dx * _range.DisplayStep * speed), live: true);
     }
 
     private void OnReleased(object? sender, PointerReleasedEventArgs e)
@@ -127,7 +127,7 @@ internal sealed class ScrubValue : Panel
 
     private void UpdateText()
     {
-        var shown = _value * _range.Scale;
+        var shown = _range.ToDisplay(_value);
         var unit = _range.Unit;
         Span<char> buffer = stackalloc char[64];
         if (shown.TryFormat(buffer, out var written, _range.Format, CultureInfo.InvariantCulture) && written + unit.Length <= buffer.Length)
@@ -143,7 +143,7 @@ internal sealed class ScrubValue : Panel
 
     private void BeginTyping()
     {
-        _box.Text = (_value * _range.Scale).ToString(_range.Format, CultureInfo.InvariantCulture);
+        _box.Text = _range.ToDisplay(_value).ToString(_range.Format, CultureInfo.InvariantCulture);
         _text.IsVisible = false;
         _box.IsVisible = true;
         _box.Focus();
@@ -162,7 +162,7 @@ internal sealed class ScrubValue : Panel
         var text = new string((_box.Text ?? "").Where(c => char.IsDigit(c) || c is '.' or ',' or '-' or '+').ToArray()).Replace(',', '.');
         if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var typed))
         {
-            SetValue(typed / _range.Scale, live: false);
+            SetValue(_range.FromDisplay(typed), live: false);
             Committed?.Invoke(_value);
         }
     }
