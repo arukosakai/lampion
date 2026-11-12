@@ -91,6 +91,13 @@ internal sealed class LiveSession : IDisposable
     /// <summary>The latest problem in words (show load, MIDI, engine), or null.</summary>
     public string? Problem { get; private set; }
 
+    /// <summary>Shows <paramref name="problem"/> in the live window's problem line.</summary>
+    public void Report(string problem)
+    {
+        Problem = problem;
+        Changed?.Invoke();
+    }
+
     /// <summary>Raised when the patch, the playing show or the MIDI devices change, so panels can rebuild.</summary>
     public event Action? Changed;
 

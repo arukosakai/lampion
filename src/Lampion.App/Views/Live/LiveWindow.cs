@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -53,12 +54,22 @@ internal sealed class LiveWindow : Window
         {
             _session.Start();
             _timer.Start();
+            Dispatcher.UIThread.UnhandledException += KeepShowRunning;
         };
         Closed += (_, _) =>
         {
+            Dispatcher.UIThread.UnhandledException -= KeepShowRunning;
             _timer.Stop();
             _session.Dispose();
         };
+    }
+
+    // While live, a bug in some button handler must not take the process (and the DMX output with it) down mid-show.
+    private void KeepShowRunning(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        e.Handled = true;
+        _session.Report($"Something went wrong ({e.Exception.GetType().Name}: {e.Exception.Message}); the show keeps running. Please report this.");
+        Trace.TraceError(e.Exception.ToString());
     }
 
     /// <summary>Shows the live console next to <paramref name="owner"/>, or brings the open one forward.</summary>

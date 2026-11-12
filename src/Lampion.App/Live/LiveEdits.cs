@@ -103,7 +103,8 @@ internal static class LiveEdits
 
     private static string Relative(string? projectPath, string path)
     {
-        if (projectPath is null)
+        // Empty means "this project's own timeline", which has no file to point at.
+        if (projectPath is null || path.Length == 0)
             return path;
         var relative = Path.GetRelativePath(Path.GetDirectoryName(Path.GetFullPath(projectPath))!, path);
         return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative.Replace('\\', '/');
