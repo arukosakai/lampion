@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -68,8 +67,18 @@ internal sealed class LiveWindow : Window
     private void KeepShowRunning(object? sender, DispatcherUnhandledExceptionEventArgs e)
     {
         e.Handled = true;
-        _session.Report($"Something went wrong ({e.Exception.GetType().Name}: {e.Exception.Message}); the show keeps running. Please report this.");
-        Trace.TraceError(e.Exception.ToString());
+        _session.Report($"Something went wrong ({e.Exception.GetType().Name}: {e.Exception.Message}); the show keeps running. Details in {CrashLog.PathName}.");
+        CrashLog.Write("Contained during live", e.Exception);
+    }
+
+    /// <summary>True while a show is playing (loaded and not yet finished).</summary>
+    public bool IsShowPlaying => _session.Playing is not null && !_session.Engine.ShowEnded;
+
+    /// <summary>Closes without the "stop live?" question, for when the user already confirmed elsewhere.</summary>
+    public void CloseWithoutAsking()
+    {
+        _confirmedClose = true;
+        Close();
     }
 
     /// <summary>Shows the live console next to <paramref name="owner"/>, or brings the open one forward.</summary>

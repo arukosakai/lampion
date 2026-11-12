@@ -20,6 +20,7 @@ internal sealed class LiveSession : IDisposable
     // Rebuilding the patch serializes the project, so edits mid-drag are folded into a few rebuilds a second.
     private static readonly long RebuildInterval = Stopwatch.Frequency / 4;
     private static readonly long StatsInterval = Stopwatch.Frequency;
+    private static readonly long MidiCheckInterval = Stopwatch.Frequency * 2;
 
     private readonly EditorState _state;
     private readonly DmxOutput _output;
@@ -35,6 +36,12 @@ internal sealed class LiveSession : IDisposable
     private int _loadGeneration;
     private string[] _faderIds = [];
     private string[] _padIds = [];
+    private int _faultsSeen;
+    private string? _midiErrorSeen;
+    private string? _wantedIn;
+    private string? _wantedOut;
+    private long _lastMidiCheck;
+    private LivePower? _power;
 
     /// <summary>A stopped session over <paramref name="state"/>'s project, sending through <paramref name="output"/>.</summary>
     public LiveSession(EditorState state, DmxOutput output)
@@ -108,7 +115,8 @@ internal sealed class LiveSession : IDisposable
             return;
         // Live mode owns the speakers: the editor's own playback would play the timeline's music over the show's.
         _state.Pause();
-        Rebuild();
+        TryRebuild();
+        _power = new LivePower();
         Loop.Start();
         _state.LiveSource = Loop.Frames;
         _output.Source = Loop.Frames;
@@ -123,6 +131,8 @@ internal sealed class LiveSession : IDisposable
         _output.Source = null;
         _state.LiveSource = null;
         Loop.Stop();
+        _power?.Dispose();
+        _power = null;
         Controls.ReleaseAllPads();
         _leds.Update(MidiOut, _state.Project.Live.Pads, Controls, force: true);
     }
@@ -149,18 +159,35 @@ internal sealed class LiveSession : IDisposable
             // The cue goes live holding its first frame; the music (or, without music, the clock) then starts it.
             Engine.Scene = new LiveScene(cue.Patch, cue);
             _media.LightDelay = _state.Project.Live.LightDelayMs / 1000;
-            if (!_media.Play(cue, out var missing))
+            IReadOnlyList<string> missing = [];
+            string? audioFailure = null;
+            bool music;
+            try
+            {
+                music = _media.Play(cue, out missing);
+            }
+            catch (Exception ex)
+            {
+                // The show is already on stage; without music it must still run, on its own clock.
+                _media.Stop();
+                music = false;
+                audioFailure = ex.Message;
+            }
+            if (!music)
                 cue.Clock.Start(Stopwatch.GetTimestamp(), 0);
             Playing = show;
-            if (missing.Count > 0)
+            if (audioFailure is not null)
+                Problem = $"{show.Name}: the music couldn't start ({audioFailure}); the lights run on their own clock.";
+            else if (missing.Count > 0)
                 Problem = $"{show.Name}: music not found ({string.Join(", ", missing)}); the lights run on their own clock.";
             else if (_media.Error is { } audio && cue.AudioClips.Count > 0)
                 Problem = audio;
             else if (cue.UnmatchedFixtures > 0)
                 Problem = $"{show.Name}: {cue.UnmatchedFixtures} fixture(s) aren't in this rig (no matching id or address) and stay dark.";
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or InvalidOperationException)
+        catch (Exception ex)
         {
+            // Whatever is wrong with the file, the show that is playing now keeps playing.
             Problem = $"Couldn't load {show.Name}: {ex.Message}";
         }
         finally
@@ -201,6 +228,8 @@ internal sealed class LiveSession : IDisposable
     public void OpenMidi(int input, int output)
     {
         CloseMidi();
+        _wantedIn = input >= 0 && input < MidiDevices.InputNames().Count ? MidiDevices.InputNames()[input] : null;
+        _wantedOut = output >= 0 && output < MidiDevices.OutputNames().Count ? MidiDevices.OutputNames()[output] : null;
         try
         {
             if (input >= 0)
@@ -227,7 +256,18 @@ internal sealed class LiveSession : IDisposable
             return;
         var now = Stopwatch.GetTimestamp();
         if ((_state.Version != _patchVersion || !ReferenceEquals(_state.Project, _patchProject)) && now - _lastRebuild > RebuildInterval)
-            Rebuild();
+            TryRebuild();
+
+        if (Engine.FaultCount != _faultsSeen)
+        {
+            _faultsSeen = Engine.FaultCount;
+            Problem = Engine.LastFault;
+        }
+        if (Router.Error is { } midiError && !ReferenceEquals(midiError, _midiErrorSeen))
+        {
+            _midiErrorSeen = midiError;
+            Problem = "MIDI message ignored: " + midiError;
+        }
 
         _media.LightDelay = _state.Project.Live.LightDelayMs / 1000;
         _media.Tick();
@@ -246,6 +286,12 @@ internal sealed class LiveSession : IDisposable
             Problem = "MIDI out: " + ledProblem;
         _ledsDirty = false;
 
+        if (now - _lastMidiCheck > MidiCheckInterval)
+        {
+            _lastMidiCheck = now;
+            WatchMidi();
+        }
+
         if (now - _lastStats > StatsInterval)
         {
             _lastStats = now;
@@ -261,6 +307,88 @@ internal sealed class LiveSession : IDisposable
         Stop();
         CloseMidi();
         _media.Dispose();
+    }
+
+    // A controller that drops off the USB bus (a kicked cable, a flaky hub) is closed when it disappears and reopened by
+    // name when it comes back, so nobody has to dig through menus mid-show.
+    private void WatchMidi()
+    {
+        if (_wantedIn is null && _wantedOut is null)
+            return;
+        var inputs = MidiDevices.InputNames();
+        var outputs = MidiDevices.OutputNames();
+        var changed = false;
+        if (_wantedIn is { } inName)
+        {
+            var at = IndexOf(inputs, inName);
+            if (at < 0 && MidiIn is not null)
+            {
+                MidiIn.Dispose();
+                MidiIn = null;
+                Problem = $"MIDI controller \"{inName}\" disconnected; plug it back in and it reconnects by itself.";
+                changed = true;
+            }
+            else if (at >= 0 && MidiIn is null && TryOpenMidi(() => MidiIn = MidiDevices.OpenInput(at, Router.Handle)))
+            {
+                Problem = $"MIDI controller \"{inName}\" reconnected.";
+                changed = true;
+            }
+        }
+        if (_wantedOut is { } outName)
+        {
+            var at = IndexOf(outputs, outName);
+            if (at < 0 && MidiOut is not null)
+            {
+                MidiOut.Dispose();
+                MidiOut = null;
+                changed = true;
+            }
+            else if (at >= 0 && MidiOut is null && TryOpenMidi(() => MidiOut = MidiDevices.OpenOutput(at)))
+            {
+                _ledsDirty = true;
+                changed = true;
+            }
+        }
+        if (changed)
+            Changed?.Invoke();
+    }
+
+    private static int IndexOf(IReadOnlyList<string> names, string name)
+    {
+        for (var i = 0; i < names.Count; i++)
+            if (names[i] == name)
+                return i;
+        return -1;
+    }
+
+    // A device that is back in the list but not ready yet fails to open; the next check tries again.
+    private static bool TryOpenMidi(Action open)
+    {
+        try
+        {
+            open();
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or PlatformNotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    // An edit that can't be compiled must not touch the show: keep running on the last good patch and say why.
+    private void TryRebuild()
+    {
+        try
+        {
+            Rebuild();
+        }
+        catch (Exception ex)
+        {
+            _patchVersion = _state.Version;
+            _patchProject = _state.Project;
+            _lastRebuild = Stopwatch.GetTimestamp();
+            Problem = "That edit couldn't be applied live (" + ex.Message + "); still running the previous setup.";
+        }
     }
 
     private void Rebuild()

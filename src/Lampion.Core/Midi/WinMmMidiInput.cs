@@ -48,7 +48,15 @@ internal sealed class WinMmMidiInput : IMidiInput
 
     private void OnMessage(IntPtr handle, uint message, IntPtr instance, IntPtr param1, IntPtr param2)
     {
-        if (message == WinMm.MimData)
-            _handler(MidiMessage.FromPacked((int)param1));
+        // An exception here would surface on the driver's thread and end the process.
+        try
+        {
+            if (message == WinMm.MimData)
+                _handler(MidiMessage.FromPacked((int)param1));
+        }
+        catch (Exception)
+        {
+            // Nothing to report to from the driver's thread; losing one message is the safe outcome.
+        }
     }
 }

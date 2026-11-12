@@ -75,12 +75,26 @@ internal sealed partial class LiveMedia
         // LibVLC's event thread: a clip opened paused has finished buffering and will sound almost at once when released.
         private void OnPaused(object? sender, EventArgs e) => _ready = true;
 
+        // Guarded: an exception on LibVLC's event thread would end the process mid-show.
+        private static void Safely(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Live audio callback failed: " + ex);
+            }
+        }
+
         // LibVLC's event thread. Reports before the position moves are VLC opening the file, not sound coming out.
         private void OnTime(object? sender, MediaPlayerTimeChangedEventArgs e)
         {
             var timestamp = Stopwatch.GetTimestamp();
-            if (!_paused && e.Time > _startMs)
-                owner.OnPosition(this, e.Time / 1000.0, timestamp);
+            var ms = e.Time;
+            if (!_paused && ms > _startMs)
+                Safely(() => owner.OnPosition(this, ms / 1000.0, timestamp));
         }
     }
 }

@@ -74,7 +74,7 @@ internal sealed class DmxOutput : IDisposable
         _problem = null;
         _reported = null;
         var settings = Settings;
-        _worker = new Thread(() => Run(settings)) { IsBackground = true, Name = "DMX output" };
+        _worker = new Thread(() => Run(settings)) { IsBackground = true, Priority = ThreadPriority.AboveNormal, Name = "DMX output" };
         _worker.Start();
     }
 
@@ -139,35 +139,45 @@ internal sealed class DmxOutput : IDisposable
             var interval = (long)(FrameInterval.TotalSeconds * Stopwatch.Frequency);
             while (!_stop)
             {
-                device ??= TryOpen(settings);
-                if (device is null)
+                try
                 {
-                    Wait(RetryInterval);
-                    continue;
+                    device ??= TryOpen(settings);
+                    if (device is null)
+                    {
+                        Wait(RetryInterval);
+                        continue;
+                    }
+                    if (_source is { } source)
+                        source.CopyLatestTo(_sending);
+                    else
+                        lock (_gate)
+                            _latest.CopyTo(_sending);
+                    if (!TrySend(device, _sending))
+                    {
+                        Release(ref device);
+                        Wait(RetryInterval);
+                        continue;
+                    }
+                    _problem = null;
+                    var now = Stopwatch.GetTimestamp();
+                    due = Math.Max(due + interval, now - interval);
+                    Wait(Stopwatch.GetElapsedTime(now, due));
                 }
-                if (_source is { } source)
-                    source.CopyLatestTo(_sending);
-                else
-                    lock (_gate)
-                        _latest.CopyTo(_sending);
-                if (!TrySend(device, _sending))
+                catch (Exception ex)
                 {
-                    device.Dispose();
-                    device = null;
+                    // Whatever went wrong, this thread must survive it: an escaped exception ends the process, and the
+                    // show with it. Drop the device and reopen it, as for an unplugged cable.
+                    _problem = "Output error: " + ex.Message;
+                    Release(ref device);
                     Wait(RetryInterval);
-                    continue;
                 }
-                _problem = null;
-                var now = Stopwatch.GetTimestamp();
-                due = Math.Max(due + interval, now - interval);
-                Wait(Stopwatch.GetElapsedTime(now, due));
             }
             if (device is not null)
                 TrySend(device, Dark(_sending));
         }
         finally
         {
-            device?.Dispose();
+            Release(ref device);
         }
     }
 
@@ -178,11 +188,24 @@ internal sealed class DmxOutput : IDisposable
             device.Send(frame);
             return true;
         }
-        catch (Exception ex) when (ex is IOException or SocketException or InvalidOperationException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
             _problem = ex.Message;
             return false;
         }
+    }
+
+    private static void Release(ref IDmxOutput? device)
+    {
+        try
+        {
+            device?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError("Closing the DMX device failed: " + ex);
+        }
+        device = null;
     }
 
     private IDmxOutput? TryOpen(OutputSettings settings)

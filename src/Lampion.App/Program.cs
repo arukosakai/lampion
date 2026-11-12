@@ -7,7 +7,11 @@ internal static class Program
 {
     /// <summary>Starts the desktop app; the first argument, if any, is a show file to open.</summary>
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        Editor.CrashLog.Install();
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
 
     // The 3D stage needs a real OpenGL context, so each platform is steered to its GL backend first
     // (ANGLE on Windows, desktop GL on macOS, GLX/EGL on Linux) with software as the last resort.

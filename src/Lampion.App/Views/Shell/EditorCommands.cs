@@ -36,8 +36,8 @@ internal sealed class EditorCommands
         // Zoom keeps the time just right of the track headers in place, where the eye usually is.
         var zoomAnchor = TimelineControl.HeaderWidth + 200;
 
-        NewProject = new("New / start screen…", () => _ = files.NewProject(), "Ctrl+N");
-        Open = new("Open…", () => _ = files.OpenProject(), "Ctrl+O");
+        NewProject = new("New / start screen…", () => _ = UnlessShowPlaying(window, files.NewProject), "Ctrl+N");
+        Open = new("Open…", () => _ = UnlessShowPlaying(window, files.OpenProject), "Ctrl+O");
         Save = new("Save", () => _ = files.Save(saveAs: false), "Ctrl+S");
         SaveAs = new("Save as…", () => _ = files.Save(saveAs: true), "Ctrl+Shift+S");
         ProjectSettings = new("Project settings…", () => _ = Dialogs.ProjectSettings(window, state), "Ctrl+Shift+P");
@@ -233,4 +233,21 @@ internal sealed class EditorCommands
 
     /// <summary>Output → Live console: set list, faders and effect pads driving the rig in real time.</summary>
     public ShellCommand LiveConsole { get; }
+
+    /// <summary>True while the live console is open and a show is playing in it.</summary>
+    public bool LiveShowPlaying => _live is { IsVisible: true } live && live.IsShowPlaying;
+
+    /// <summary>Closes the live console without asking, after the user already agreed to stop the show.</summary>
+    public void CloseLive() => _live?.CloseWithoutAsking();
+
+    // Replacing the project would swap the rig out from under the running show.
+    private async Task UnlessShowPlaying(Window window, Func<Task> action)
+    {
+        if (LiveShowPlaying)
+        {
+            await Dialogs.Ask(window, "A show is playing", "Opening another project would change the rig under the running show. Stop the show in the live console first.", "OK");
+            return;
+        }
+        await action();
+    }
 }

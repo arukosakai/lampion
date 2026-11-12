@@ -21,6 +21,8 @@ internal sealed class MainWindow : Window
     private readonly DmxOutput _output;
     private readonly FileOperations _files;
     private readonly FrameLoop _loop;
+    private readonly EditorCommands _commands;
+    private bool _liveCloseConfirmed;
 
     /// <summary>A workspace editing <paramref name="project"/>, saved at <paramref name="path"/> (null while unsaved).</summary>
     public MainWindow(Project project, string? path)
@@ -42,7 +44,7 @@ internal sealed class MainWindow : Window
         var import = new MediaImport(this, state, _media, status, zoomToFit);
         var models = new ModelImport(this, state, _files, status);
         var layouts = new LayoutOperations(this, state, status);
-        var commands = new EditorCommands(this, state, _files, import, models, layouts, stage, timeline.Timeline, _output);
+        var commands = _commands = new EditorCommands(this, state, _files, import, models, layouts, stage, timeline.Timeline, _output);
         stage.OpenTrussBuilder = commands.BuildTruss.Run;
         stage.ImportModel = commands.ImportModel.Run;
 
@@ -87,10 +89,27 @@ internal sealed class MainWindow : Window
         return main;
     }
 
+    // Closing the workspace ends the live show and its DMX output, so a stray Alt+F4 must not do it silently.
+    private async Task AskToStopLive()
+    {
+        var answer = await Dialogs.Ask(this, "A show is playing", "Quitting stops the show and the lights. Quit anyway?", "Stop the show and quit", "Keep playing");
+        if (answer != "Stop the show and quit")
+            return;
+        _liveCloseConfirmed = true;
+        _commands.CloseLive();
+        Close();
+    }
+
     /// <inheritdoc />
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
+        if (_commands.LiveShowPlaying && !_liveCloseConfirmed)
+        {
+            e.Cancel = true;
+            _ = AskToStopLive();
+            return;
+        }
         if (!_files.ConfirmClose(e))
             return;
         _loop.Stop();
