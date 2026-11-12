@@ -38,6 +38,9 @@ internal static class EffectSwap
             case PulseEffect e:
                 e.Color = hex;
                 break;
+            case EvenSparkleEffect e:
+                e.Color = hex;
+                break;
             case SparkleEffect e:
                 e.Color = hex;
                 break;

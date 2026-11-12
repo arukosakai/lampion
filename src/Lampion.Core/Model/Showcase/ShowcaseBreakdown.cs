@@ -5,7 +5,7 @@ using Lampion.Core.Model.Timeline;
 
 namespace Lampion.Core.Model.Showcase;
 
-/// <summary>Bars 24–32: everything dips to black, then a red heartbeat under UV, stars, embers, and a riser into drop 2.</summary>
+/// <summary>Bars 24–32: everything dips to black, then a red heartbeat under UV, stars, embers ticking on the beat, and a riser into drop 2.</summary>
 internal static class ShowcaseBreakdown
 {
     private const double Start = 24;
@@ -31,7 +31,7 @@ internal static class ShowcaseBreakdown
             Cue.Clip("Flames", Start + 2, 6, new FireEffect { Ember = "#7A0A00", Flame = "#FF8A2A", Rate = 6 }, fadeIn: 2)
                 .With(Cue.Lane(ChannelRole.Tilt, (0, 0.3, Easing.EaseInOut), (6, 0.55, Easing.Linear)))
         );
-        tracks.WallBars.Clips.Add(Cue.Clip("Embers", Start, 8, new FireEffect(), transition: Cue.Into(TransitionKind.Crossfade, 1)));
+        tracks.WallBars.Clips.Add(Cue.Clip("Ember ticks", Start, 8, new EvenSparkleEffect { Color = "#FF7A2A", Rate = Cue.BeatRate * 2, Decay = 0.4, Intensity = 0.8 }, transition: Cue.Into(TransitionKind.Crossfade, 1)));
         tracks.PixelTowers.Clips.Add(Cue.Clip("Breathing arc", Start, 8, new PulseEffect { Color = "#FFC890", Rate = 0.25, Phase = 0.1 }, transition: dip.Clone()));
         ShowcaseRiser.Add(tracks, start: Start + 4);
     }

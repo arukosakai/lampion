@@ -89,6 +89,16 @@ internal static class EffectParameterTable
         Intensity,
     ];
 
+    private static readonly EffectParameter[] EvenSparkle =
+    [
+        Color<EvenSparkleEffect>("Color", e => e.Color, (e, v) => e.Color = v),
+        Tempo<EvenSparkleEffect>("Rate", TempoScale.Rate, e => e.Rate, (e, v) => e.Rate = v),
+        Number<EvenSparkleEffect>("Decay", Seconds, e => e.Decay, (e, v) => e.Decay = v),
+        Choice<EvenSparkleEffect, SparkleOrder>("Order", e => e.Order, (e, v) => e.Order = v),
+        new IntegerParameter<EvenSparkleEffect>("Seed", e => e.Seed, (e, v) => e.Seed = v),
+        Intensity,
+    ];
+
     private static readonly EffectParameter[] Gradient =
     [
         new PaletteParameter<GradientEffect>("Colors", e => e.Colors),
@@ -157,6 +167,7 @@ internal static class EffectParameterTable
             StrobeEffect => Strobe,
             PulseEffect => Pulse,
             SparkleEffect => Sparkle,
+            EvenSparkleEffect => EvenSparkle,
             GradientEffect => Gradient,
             ColorWaveEffect => Wave,
             FireEffect => Fire,

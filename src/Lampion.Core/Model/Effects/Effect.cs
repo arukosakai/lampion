@@ -17,6 +17,7 @@ namespace Lampion.Core.Model.Effects;
 [JsonDerivedType(typeof(StrobeEffect), "strobe")]
 [JsonDerivedType(typeof(PulseEffect), "pulse")]
 [JsonDerivedType(typeof(SparkleEffect), "sparkle")]
+[JsonDerivedType(typeof(EvenSparkleEffect), "even-sparkle")]
 [JsonDerivedType(typeof(GradientEffect), "gradient")]
 [JsonDerivedType(typeof(ColorWaveEffect), "wave")]
 [JsonDerivedType(typeof(FireEffect), "fire")]

@@ -25,7 +25,7 @@ public class EffectTests
     [Fact]
     public void NewEffectsStayInRangeAndRepeatExactly()
     {
-        foreach (var kind in new[] { "gradient", "wave", "fire", "lightning", "heartbeat", "hit" })
+        foreach (var kind in new[] { "even-sparkle", "gradient", "wave", "fire", "lightning", "heartbeat", "hit" })
         {
             var effect = EffectCatalog.Create(kind);
             for (var t = 0.0; t < 20; t += 0.037)
@@ -58,6 +58,38 @@ public class EffectTests
 
         var repeating = new HitEffect { Decay = 0.5, Interval = 1 };
         Assert.Equal(1, repeating.Sample(new EffectContext(2, 4, 0, 1)).Intensity, 6);
+    }
+
+    [Theory]
+    [InlineData(SparkleOrder.Shuffled)]
+    [InlineData(SparkleOrder.Sequential)]
+    public void EvenSparkleHitsOneFixtureEveryIntervalAndEachOncePerRound(SparkleOrder order)
+    {
+        const int count = 6;
+        var sparkle = new EvenSparkleEffect { Rate = 4, Decay = 0.1, Order = order };
+        for (var round = -2; round < 5; round++)
+        {
+            var hitThisRound = new bool[count];
+            for (var hit = 0; hit < count; hit++)
+            {
+                var t = (round * count + hit) * 0.25 + 1e-9;
+                var lit = Enumerable.Range(0, count).Where(i => sparkle.Sample(new EffectContext(t, 20, i, count)).Intensity > 0.99).ToList();
+                var fixture = Assert.Single(lit);
+                Assert.False(hitThisRound[fixture]);
+                hitThisRound[fixture] = true;
+                if (order == SparkleOrder.Sequential)
+                    Assert.Equal(hit, fixture);
+            }
+        }
+    }
+
+    [Fact]
+    public void EvenSparkleShufflesDifferentlyEachRound()
+    {
+        var sparkle = new EvenSparkleEffect { Rate = 1, Decay = 0.1 };
+        int FirstHit(int round) =>
+            Enumerable.Range(0, 8).Single(i => sparkle.Sample(new EffectContext(round * 8 + 1e-9, 20, i, 8)).Intensity > 0.99);
+        Assert.True(Enumerable.Range(0, 6).Select(FirstHit).Distinct().Count() > 1);
     }
 
     [Fact]
