@@ -76,9 +76,12 @@ public sealed class LivePatch
     internal byte[] Channels { get; }
 
     /// <summary>Compiles <paramref name="project"/>'s rig and <see cref="Project.Live"/> console. Takes a deep copy; the project is not kept.</summary>
-    public static LivePatch Build(Project project)
+    public static LivePatch Build(Project project) => BuildFrom(ProjectSerializer.Deserialize(ProjectSerializer.Serialize(project, indented: false)));
+
+    /// <summary>Compiles <paramref name="rig"/> as it is, without copying: the patch keeps it, so nobody may edit it afterwards.</summary>
+    internal static LivePatch BuildFrom(Project rig)
     {
-        var patch = new LivePatch(ProjectSerializer.Deserialize(ProjectSerializer.Serialize(project, indented: false)));
+        var patch = new LivePatch(rig);
         patch.Compile();
         return patch;
     }

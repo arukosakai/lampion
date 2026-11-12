@@ -33,7 +33,7 @@ public sealed class LightningEffect : Effect
         var slotLength = 1 / Math.Max(0.02, Rate);
         var decay = Math.Max(0.01, Decay);
         var key = Mode == LightningMode.Together ? 0 : ctx.Index;
-        var slot = (int)Math.Floor(ctx.Time / slotLength);
+        var slot = EffectMath.Slot(ctx.Time / slotLength);
         var level = 0.0;
         for (var s = slot - 1; s <= slot; s++)
         {

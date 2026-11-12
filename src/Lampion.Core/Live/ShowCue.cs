@@ -14,8 +14,9 @@ public sealed class ShowCue
     private readonly int[] _toRig;
     private readonly bool[] _owned;
 
-    private ShowCue(Project show, ShowEvaluator evaluator, LivePatch patch, bool loop, ShowClock clock)
+    private ShowCue(Project show, ShowEvaluator evaluator, LivePatch patch, bool loop, ShowClock clock, ShowLooks looks)
     {
+        Looks = looks;
         Show = show;
         Evaluator = evaluator;
         Patch = patch;
@@ -51,6 +52,9 @@ public sealed class ShowCue
 
     internal ShowEvaluator Evaluator { get; }
 
+    /// <summary>The engine's evaluation buffers for this show, shared with <see cref="Retarget"/>ed copies.</summary>
+    internal ShowLooks Looks { get; }
+
     /// <summary>
     /// The show's time. Shared by a cue and its <see cref="Retarget"/>ed copies, so the show keeps its place across a patch
     /// change. Starts holding at 0: start it, or let the music's position reports start it.
@@ -68,11 +72,11 @@ public sealed class ShowCue
     {
         var evaluator = new ShowEvaluator(show);
         evaluator.Evaluate(0);
-        return new ShowCue(show, evaluator, patch, loop, new ShowClock());
+        return new ShowCue(show, evaluator, patch, loop, new ShowClock(), new ShowLooks(show.Fixtures.Count));
     }
 
     /// <summary>The same show, still at the same point in time, mapped onto a rebuilt patch.</summary>
-    public ShowCue Retarget(LivePatch patch) => new(Show, Evaluator, patch, Loop, Clock);
+    public ShowCue Retarget(LivePatch patch) => new(Show, Evaluator, patch, Loop, Clock, Looks);
 
     /// <summary>True when the show drives rig fixture <paramref name="rigIndex"/>.</summary>
     public bool Owns(int rigIndex) => (uint)rigIndex < (uint)_owned.Length && _owned[rigIndex];

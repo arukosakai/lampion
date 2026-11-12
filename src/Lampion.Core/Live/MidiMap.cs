@@ -23,7 +23,8 @@ internal sealed class MidiMap
     /// <summary>What <paramref name="message"/> is bound to, encoded as described on the type; 0 when nothing.</summary>
     public int Lookup(in MidiMessage message)
     {
-        var slot = ((message.Channel - 1) << 7) | message.Data1;
+        // Masked: a malformed data byte over 127 must read a wrong slot at worst, never past the table.
+        var slot = ((message.Channel - 1) << 7) | (message.Data1 & 0x7F);
         if (message.IsControlChange)
             return _controls[slot];
         return message.IsNoteOn || message.IsNoteOff ? _notes[slot] : 0;

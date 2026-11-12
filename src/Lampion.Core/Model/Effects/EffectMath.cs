@@ -9,6 +9,12 @@ internal static class EffectMath
     /// <summary>Non-negative remainder of <paramref name="a"/> / <paramref name="n"/>, for cycling through palettes.</summary>
     public static int Mod(int a, int n) => ((a % n) + n) % n;
 
+    /// <summary>
+    /// The whole slot <paramref name="position"/> falls in, kept a few slots inside the int range (NaN gives 0). Callers
+    /// loop from a slot or two before to this one, which never ends if it is <see cref="int.MaxValue"/>.
+    /// </summary>
+    public static int Slot(double position) => double.IsNaN(position) ? 0 : (int)Math.Clamp(Math.Floor(position), int.MinValue + 8.0, int.MaxValue - 8.0);
+
     /// <summary>One cycle of a waveform at phase 0..1, peaking at 1.</summary>
     public static double Shape(Waveform wave, double phase) =>
         wave switch

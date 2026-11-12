@@ -12,6 +12,7 @@ public sealed class MidiRouter
     private LivePatch? _patch;
     private long _last;
     private long _count;
+    private volatile string? _error;
 
     /// <summary>A router writing to <paramref name="controls"/>.</summary>
     public MidiRouter(LiveControls controls) => Controls = controls;
@@ -26,8 +27,24 @@ public sealed class MidiRouter
         set => Volatile.Write(ref _patch, value);
     }
 
-    /// <summary>Routes one message. Safe to call from any thread, including several inputs at once.</summary>
+    /// <summary>Routes one message. Safe to call from any thread, including several inputs at once. Never throws: it runs on
+    /// the driver's thread, where an exception would end the process.</summary>
     public void Handle(MidiMessage message)
+    {
+        try
+        {
+            Route(message);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    /// <summary>Why the last message couldn't be routed, or null; for the status line.</summary>
+    public string? Error => _error;
+
+    private void Route(MidiMessage message)
     {
         Interlocked.Exchange(ref _last, (Interlocked.Increment(ref _count) << 24) | (uint)message.Packed);
         if (Volatile.Read(ref _patch) is not { } patch)

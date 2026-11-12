@@ -43,6 +43,8 @@ public sealed class ShowClock
     /// <summary>Runs from <paramref name="time"/> show seconds at <paramref name="timestamp"/>, at normal speed.</summary>
     public void Start(long timestamp, double time)
     {
+        if (!double.IsFinite(time))
+            return;
         lock (_writers)
             Volatile.Write(ref _anchor, new Anchor(timestamp, time, 1, true));
     }
@@ -50,6 +52,8 @@ public sealed class ShowClock
     /// <summary>Stops at <paramref name="time"/> show seconds until the next <see cref="Start"/> or <see cref="Sync"/>.</summary>
     public void Hold(double time)
     {
+        if (!double.IsFinite(time))
+            return;
         lock (_writers)
             Volatile.Write(ref _anchor, new Anchor(0, time, 1, false));
     }
@@ -58,9 +62,13 @@ public sealed class ShowClock
     /// The music was at <paramref name="showTime"/> show seconds at <paramref name="timestamp"/>. A holding clock starts
     /// from there; a running one slews toward it, or snaps when off by more than <see cref="JumpThreshold"/>.
     /// </summary>
+    /// <remarks>Non-finite times are ignored, here and in <see cref="Start"/> and <see cref="Hold"/>.</remarks>
     /// <returns>The error that was found, in seconds (positive: the lights were behind).</returns>
     public double Sync(long timestamp, double showTime)
     {
+        // A garbage report must not poison the clock the whole show runs on; ignore it and keep free-running.
+        if (!double.IsFinite(showTime))
+            return LastError;
         lock (_writers)
         {
             var a = _anchor;

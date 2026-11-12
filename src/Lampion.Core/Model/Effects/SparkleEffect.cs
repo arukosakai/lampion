@@ -30,7 +30,7 @@ public sealed class SparkleEffect : Effect
         // so the result depends only on time — scrubbing and export see exactly what playback does.
         var slotLength = 1 / Math.Max(0.05, Rate);
         var decay = Math.Max(0.01, Decay);
-        var slot = (int)Math.Floor(ctx.Time / slotLength);
+        var slot = EffectMath.Slot(ctx.Time / slotLength);
         var level = 0.0;
         for (var s = slot - 2; s <= slot; s++)
         {

@@ -28,6 +28,8 @@ public sealed class LiveEngine
     private bool _ended;
     private long _publishedTime;
     private volatile bool _publishedEnded;
+    private volatile string? _lastFault;
+    private int _faults;
 
     /// <summary>An idle engine reading <paramref name="controls"/>.</summary>
     public LiveEngine(LiveControls controls) => Controls = controls;
@@ -47,6 +49,15 @@ public sealed class LiveEngine
 
     /// <summary>True once a non-looping show has played to its end; its fixtures are back on the console. Any thread.</summary>
     public bool ShowEnded => _publishedEnded;
+
+    /// <summary>
+    /// Faults contained so far: a show that failed to evaluate (its fixtures held their last look) or a pad that threw
+    /// (it was switched off). Any thread.
+    /// </summary>
+    public int FaultCount => Volatile.Read(ref _faults);
+
+    /// <summary>The latest contained fault in words, or null. Any thread.</summary>
+    public string? LastFault => _lastFault;
 
     /// <summary>
     /// Renders the frame due at <paramref name="timestamp"/> (a <see cref="Stopwatch"/> timestamp) into
@@ -103,7 +114,17 @@ public sealed class LiveEngine
             // With music, a loop restarts when the music does; until then the show holds its last moment.
             _time = cue.Clock.FollowsMedia ? Math.BitDecrement(cue.Duration) : _time % cue.Duration;
         }
-        var show = cue.Evaluator.Evaluate(_time);
+        var looks = cue.Looks;
+        try
+        {
+            cue.Evaluator.Evaluate(double.IsFinite(_time) ? _time : 0, looks.Back);
+            looks.Swap();
+        }
+        catch (Exception ex)
+        {
+            Fault("The show", ex);
+        }
+        var show = looks.Front;
         for (var i = 0; i < show.Length; i++)
             if (cue.RigIndexOf(i) is var rig and >= 0)
                 states[rig] = show[i];
@@ -193,23 +214,38 @@ public sealed class LiveEngine
             var targets = pad.Fixtures;
             var time = _padTime[p];
             var shift = _padHue[p];
-            for (var k = 0; k < targets.Length; k++)
+            try
             {
-                var j = targets[k];
-                if (IsOwned(owned, j))
-                    continue;
-                var sample = pad.Effect.Sample(new EffectContext(time, PadEffectSpan, k, targets.Length));
-                var color = sample.Color;
-                if (shift != 0)
+                for (var k = 0; k < targets.Length; k++)
                 {
-                    var (h, s, v) = color.ToHsv();
-                    color = Rgb.FromHsv(h + shift, s, v);
+                    var j = targets[k];
+                    if (IsOwned(owned, j))
+                        continue;
+                    var sample = pad.Effect.Sample(new EffectContext(time, PadEffectSpan, k, targets.Length));
+                    var color = sample.Color;
+                    if (shift != 0)
+                    {
+                        var (h, s, v) = color.ToHsv();
+                        color = Rgb.FromHsv(h + shift, s, v);
+                    }
+                    layer = default;
+                    layer.Light = color * sample.Intensity;
+                    states[j].Blend(in layer, _padIntensity[p], pad.Blend);
                 }
-                layer = default;
-                layer.Light = color * sample.Intensity;
-                states[j].Blend(in layer, _padIntensity[p], pad.Blend);
+            }
+            catch (Exception ex)
+            {
+                // One broken pad must not cost the frame: switch it off and let everything else carry on.
+                Controls.SetPad(p, on: false);
+                Fault("A pad", ex);
             }
         }
+    }
+
+    private void Fault(string what, Exception ex)
+    {
+        _lastFault = what + " failed and was contained: " + ex.Message;
+        Interlocked.Increment(ref _faults);
     }
 
     private static bool IsOwned(ReadOnlySpan<bool> owned, int fixture) => (uint)fixture < (uint)owned.Length && owned[fixture];
