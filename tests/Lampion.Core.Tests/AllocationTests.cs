@@ -1,8 +1,11 @@
 using Lampion.Core.Color;
 using Lampion.Core.Engine;
+using Lampion.Core.Live;
+using Lampion.Core.Midi;
 using Lampion.Core.Model;
 using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Effects;
+using Lampion.Core.Model.Live;
 using Lampion.Core.Model.Rig;
 using Lampion.Core.Model.Showcase;
 using Lampion.Core.Model.Stage;
@@ -179,6 +182,53 @@ public class AllocationTests
                 project.FixtureById(fixture.Id);
                 _ = project.ContentEnd;
                 StageMath.Raycast(objects, fixture.Position, StageMath.Direction(fixture.Yaw, fixture.Pitch));
+            })
+        );
+    }
+
+    [Theory]
+    [MemberData(nameof(Projects))]
+    public void LiveEngineDoesNotAllocate(string name)
+    {
+        // The project is both the rig and the show, with half the rig on the console: every layer runs every frame.
+        var rig = Create(name);
+        var free = rig.Fixtures.Where((_, i) => i % 2 == 0).Select(f => f.Id).ToArray();
+        foreach (var track in rig.Tracks)
+            track.FixtureIds.RemoveAll(free.Contains);
+        foreach (var target in Enum.GetValues<LiveFaderTarget>())
+        {
+            var fader = new LiveFader { Target = target, Role = ChannelRole.Pan, Midi = new MidiBinding(MidiBindingKind.Control, 1, (int)target) };
+            fader.FixtureIds.AddRange(free);
+            rig.Live.Faders.Add(fader);
+        }
+        foreach (var entry in EffectCatalog.Entries)
+        {
+            var pad = new LivePad { Effect = EffectCatalog.Create(entry.Kind), Midi = new MidiBinding(MidiBindingKind.Note, 1, rig.Live.Pads.Count) };
+            pad.FixtureIds.AddRange(free);
+            rig.Live.Pads.Add(pad);
+        }
+        for (var f = 0; f < rig.Live.Faders.Count; f++)
+            if (LivePatch.IsPadTarget(rig.Live.Faders[f].Target))
+                rig.Live.Faders[f].PadId = rig.Live.Pads[f % rig.Live.Pads.Count].Id;
+
+        var patch = LivePatch.Build(rig);
+        var controls = new LiveControls();
+        var engine = new LiveEngine(controls) { Scene = new LiveScene(patch, ShowCue.Load(Create(name), patch, loop: true)) };
+        var router = new MidiRouter(controls) { Patch = patch };
+        var mailbox = new DmxFrameMailbox();
+        var frame = new DmxFrame();
+        var copy = new DmxFrame();
+        long seen = 0;
+        Assert.Equal(
+            0,
+            Allocated(i =>
+            {
+                router.Handle(MidiMessage.ControlChange(1, i % 8, i % 128));
+                router.Handle(MidiMessage.NoteOn(1, i % EffectCatalog.Entries.Count, 100));
+                router.TryGetLatest(ref seen, out _);
+                engine.Render(1 / 100.0 + i % 3 * 0.001, frame);
+                mailbox.Publish(frame);
+                mailbox.CopyLatestTo(copy);
             })
         );
     }

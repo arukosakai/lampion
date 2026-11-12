@@ -1,0 +1,237 @@
+using Lampion.Core.Color;
+using Lampion.Core.Engine;
+using Lampion.Core.Model.Effects;
+using Lampion.Core.Model.Live;
+
+namespace Lampion.Core.Live;
+
+/// <summary>
+/// Renders live DMX: the playing show on the fixtures it owns, then the console (faders, then pads) on every
+/// other fixture. <see cref="Render"/> runs on one thread (the <see cref="LiveLoop"/>) and allocates nothing;
+/// <see cref="Scene"/> can be swapped from any thread and is picked up on the next render.
+/// </summary>
+public sealed class LiveEngine
+{
+    /// <summary>Seconds that effects timed over a clip (colour fade, hit) take on a pad, since a pad has no length.</summary>
+    public const double PadEffectSpan = 4;
+
+    private readonly int[] _padSeen = new int[LiveControls.MaxPads];
+    private readonly double[] _padTime = new double[LiveControls.MaxPads];
+    private readonly double[] _padIntensity = new double[LiveControls.MaxPads];
+    private readonly double[] _padSpeed = new double[LiveControls.MaxPads];
+    private readonly double[] _padHue = new double[LiveControls.MaxPads];
+    private LiveScene? _scene;
+    private LiveScene? _current;
+    private double _time;
+    private bool _ended;
+    private long _publishedTime;
+    private volatile bool _publishedEnded;
+
+    /// <summary>An idle engine reading <paramref name="controls"/>.</summary>
+    public LiveEngine(LiveControls controls) => Controls = controls;
+
+    /// <summary>The faders and pads it reads every render.</summary>
+    public LiveControls Controls { get; }
+
+    /// <summary>What to render; null renders nothing. Any thread; takes effect on the next <see cref="Render"/>.</summary>
+    public LiveScene? Scene
+    {
+        get => Volatile.Read(ref _scene);
+        set => Volatile.Write(ref _scene, value);
+    }
+
+    /// <summary>Seconds into the playing show, as of the last render. Any thread.</summary>
+    public double ShowTime => BitConverter.Int64BitsToDouble(Volatile.Read(ref _publishedTime));
+
+    /// <summary>True once a non-looping show has played to its end; its fixtures are back on the console. Any thread.</summary>
+    public bool ShowEnded => _publishedEnded;
+
+    /// <summary>
+    /// Advances by <paramref name="seconds"/> and renders the next frame into <paramref name="frame"/>, replacing
+    /// its contents. Engine thread only; allocation-free once the frame's universes exist.
+    /// </summary>
+    public void Render(double seconds, DmxFrame frame)
+    {
+        var scene = Volatile.Read(ref _scene);
+        if (!ReferenceEquals(scene, _current))
+            Switch(scene);
+        frame.Clear();
+        if (scene is null)
+            return;
+
+        var patch = scene.Patch;
+        var states = patch.States.AsSpan();
+        states.Clear();
+        var cue = PlayShow(scene.Cue, states);
+        var owned = cue is null ? ReadOnlySpan<bool>.Empty : cue.Owned;
+        ApplyFaders(patch, owned, states);
+        ApplyPads(patch, owned, states, seconds);
+        Map(patch, frame);
+
+        if (cue is not null)
+            _time += seconds;
+        Volatile.Write(ref _publishedTime, BitConverter.DoubleToInt64Bits(_time));
+        _publishedEnded = _ended;
+    }
+
+    private void Switch(LiveScene? scene)
+    {
+        // Same clock means the same show, re-mapped after an edit: keep playing from where it is.
+        if (!ReferenceEquals(scene?.Cue?.Clock, _current?.Cue?.Clock))
+        {
+            _time = 0;
+            _ended = false;
+        }
+        _current = scene;
+    }
+
+    private ShowCue? PlayShow(ShowCue? cue, Span<FixtureState> states)
+    {
+        if (cue is null || _ended)
+            return null;
+        if (_time >= cue.Duration)
+        {
+            if (!cue.Loop || cue.Duration <= 0)
+            {
+                _ended = true;
+                return null;
+            }
+            _time %= cue.Duration;
+        }
+        var show = cue.Evaluator.Evaluate(_time);
+        for (var i = 0; i < show.Length; i++)
+            if (cue.RigIndexOf(i) is var rig and >= 0)
+                states[rig] = show[i];
+        return cue;
+    }
+
+    private void ApplyFaders(LivePatch patch, ReadOnlySpan<bool> owned, Span<FixtureState> states)
+    {
+        var level = patch.Level;
+        var hue = patch.Hue;
+        var saturation = patch.Saturation;
+        var touched = patch.Touched;
+        var manual = patch.Manual;
+        level.AsSpan().Fill(-1);
+        hue.AsSpan().Fill(-1);
+        saturation.AsSpan().Fill(-1);
+        touched.AsSpan().Clear();
+        manual.AsSpan().Clear();
+        _padIntensity.AsSpan().Fill(1);
+        _padSpeed.AsSpan().Fill(1);
+        _padHue.AsSpan().Clear();
+
+        var faders = patch.Faders;
+        for (var f = 0; f < faders.Length; f++)
+        {
+            var fader = faders[f];
+            var value = Controls.Fader(f);
+            switch (fader.Target)
+            {
+                case LiveFaderTarget.PadIntensity when fader.Pad >= 0:
+                    _padIntensity[fader.Pad] = value;
+                    continue;
+                case LiveFaderTarget.PadSpeed when fader.Pad >= 0:
+                    _padSpeed[fader.Pad] = Math.Pow(4, value * 2 - 1);
+                    continue;
+                case LiveFaderTarget.PadHueShift when fader.Pad >= 0:
+                    _padHue[fader.Pad] = value;
+                    continue;
+            }
+            var targets = fader.Fixtures;
+            for (var t = 0; t < targets.Length; t++)
+            {
+                var j = targets[t];
+                touched[j] = true;
+                switch (fader.Target)
+                {
+                    case LiveFaderTarget.Intensity:
+                        level[j] = Math.Max(level[j], value);
+                        break;
+                    case LiveFaderTarget.Hue:
+                        hue[j] = value;
+                        break;
+                    case LiveFaderTarget.Saturation:
+                        saturation[j] = value;
+                        break;
+                    case LiveFaderTarget.Role:
+                        manual[j].SetRole(fader.Role, manual[j].TryGetRole(fader.Role, out var below) ? Math.Max(below, value) : value);
+                        break;
+                }
+            }
+        }
+
+        for (var j = 0; j < states.Length; j++)
+        {
+            if (!touched[j] || IsOwned(owned, j))
+                continue;
+            var color = hue[j] >= 0 ? Rgb.FromHsv(hue[j], saturation[j] >= 0 ? saturation[j] : 1, 1) : Rgb.White;
+            manual[j].Light = color * Math.Max(0, level[j]);
+            states[j] = manual[j];
+        }
+    }
+
+    private void ApplyPads(LivePatch patch, ReadOnlySpan<bool> owned, Span<FixtureState> states, double seconds)
+    {
+        var pads = patch.Pads;
+        FixtureState layer = default;
+        for (var p = 0; p < pads.Length; p++)
+        {
+            var generation = Controls.PadGeneration(p);
+            if (generation != _padSeen[p])
+            {
+                _padSeen[p] = generation;
+                _padTime[p] = 0;
+            }
+            if ((generation & 1) == 0)
+                continue;
+
+            var pad = pads[p];
+            var targets = pad.Fixtures;
+            var time = _padTime[p];
+            var shift = _padHue[p];
+            for (var k = 0; k < targets.Length; k++)
+            {
+                var j = targets[k];
+                if (IsOwned(owned, j))
+                    continue;
+                var sample = pad.Effect.Sample(new EffectContext(time, PadEffectSpan, k, targets.Length));
+                var color = sample.Color;
+                if (shift != 0)
+                {
+                    var (h, s, v) = color.ToHsv();
+                    color = Rgb.FromHsv(h + shift, s, v);
+                }
+                layer = default;
+                layer.Light = color * sample.Intensity;
+                states[j].Blend(in layer, _padIntensity[p], pad.Blend);
+            }
+            _padTime[p] = time + seconds * _padSpeed[p];
+        }
+    }
+
+    private static bool IsOwned(ReadOnlySpan<bool> owned, int fixture) => (uint)fixture < (uint)owned.Length && owned[fixture];
+
+    // Same placement rules as ShowRenderer: later fixtures win where footprints overlap, past 512 is dropped.
+    private static void Map(LivePatch patch, DmxFrame frame)
+    {
+        var index = patch.Index;
+        var fixtures = patch.Rig.Fixtures;
+        var states = patch.States;
+        for (var i = 0; i < states.Length; i++)
+        {
+            if (index.ProfileOf(i) is not { } profile)
+                continue;
+            var fixture = fixtures[i];
+            var values = patch.Channels.AsSpan(0, profile.Channels.Count);
+            DmxMapper.Map(fixture, profile, in index.LayoutOf(i), in states[i], values);
+            var universe = frame.Universe(fixture.Universe);
+            for (var c = 0; c < values.Length; c++)
+            {
+                var address = fixture.Address - 1 + c;
+                if (address is >= 0 and < DmxFrame.UniverseSize)
+                    universe[address] = values[c];
+            }
+        }
+    }
+}

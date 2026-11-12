@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Lampion.Core.Model.Live;
 using Lampion.Core.Model.Rig;
 using Lampion.Core.Model.Stage;
 using Lampion.Core.Model.Timeline;
@@ -45,6 +46,9 @@ public sealed class Project
 
     /// <summary>Timeline markers, in no particular order.</summary>
     public List<Marker> Markers { get; } = [];
+
+    /// <summary>The set list and console used in live mode; empty for a project that is only a show.</summary>
+    public LiveSet Live { get; } = new();
 
     /// <summary>Every clip on every track, in track order. Lazily enumerated; also written to project files (read-only there).</summary>
     public IEnumerable<Clip> AllClips => Tracks.SelectMany(t => t.Clips);

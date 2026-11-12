@@ -2286,6 +2286,11 @@
       "label": "Outro"
     }
   ],
+  "live": {
+    "shows": [],
+    "faders": [],
+    "pads": []
+  },
   "allClips": [
     {
       "kind": "light",
