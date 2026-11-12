@@ -14,7 +14,7 @@ public sealed class ShowCue
     private readonly int[] _toRig;
     private readonly bool[] _owned;
 
-    private ShowCue(Project show, ShowEvaluator evaluator, LivePatch patch, bool loop, object clock)
+    private ShowCue(Project show, ShowEvaluator evaluator, LivePatch patch, bool loop, ShowClock clock)
     {
         Show = show;
         Evaluator = evaluator;
@@ -26,6 +26,7 @@ public sealed class ShowCue
         UnmatchedFixtures = unmatched;
         _owned = new bool[patch.FixtureCount];
         OwnedCount = MarkOwned(show, _toRig, _owned);
+        AudioClips = show.Tracks.Where(t => t.Kind == TrackKind.Audio && !t.Muted).SelectMany(t => t.Clips.OfType<MediaClip>()).OrderBy(c => c.Start).ToList();
     }
 
     /// <summary>The show's name.</summary>
@@ -50,8 +51,14 @@ public sealed class ShowCue
 
     internal ShowEvaluator Evaluator { get; }
 
-    /// <summary>Shared by a cue and its <see cref="Retarget"/>ed copies, so the engine keeps the show's time across a patch change.</summary>
-    internal object Clock { get; }
+    /// <summary>
+    /// The show's time. Shared by a cue and its <see cref="Retarget"/>ed copies, so the show keeps its place across a patch
+    /// change. Starts holding at 0: start it, or let the music's position reports start it.
+    /// </summary>
+    public ShowClock Clock { get; }
+
+    /// <summary>Audio clips on the show's unmuted audio tracks, by start time; the live media player plays them and steers <see cref="Clock"/> by them.</summary>
+    public IReadOnlyList<MediaClip> AudioClips { get; }
 
     /// <summary>
     /// Prepares <paramref name="show"/> to play on <paramref name="patch"/>. The project becomes the cue's:
@@ -61,7 +68,7 @@ public sealed class ShowCue
     {
         var evaluator = new ShowEvaluator(show);
         evaluator.Evaluate(0);
-        return new ShowCue(show, evaluator, patch, loop, new object());
+        return new ShowCue(show, evaluator, patch, loop, new ShowClock());
     }
 
     /// <summary>The same show, still at the same point in time, mapped onto a rebuilt patch.</summary>

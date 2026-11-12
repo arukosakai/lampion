@@ -106,15 +106,12 @@ public sealed class LiveLoop : IDisposable
         using var wait = new PreciseWait();
         var period = (long)(Stopwatch.Frequency / Rate);
         var due = Stopwatch.GetTimestamp();
-        var last = due;
         while (!Volatile.Read(ref _stop))
         {
             var start = Stopwatch.GetTimestamp();
-            var seconds = (start - last) / (double)Stopwatch.Frequency;
-            last = start;
             try
             {
-                Engine.Render(seconds, _frame);
+                Engine.Render(start, _frame);
                 Frames.Publish(_frame);
                 _error = null;
             }

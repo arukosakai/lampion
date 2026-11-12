@@ -2289,7 +2289,8 @@
   "live": {
     "shows": [],
     "faders": [],
-    "pads": []
+    "pads": [],
+    "lightDelayMs": 0
   },
   "allClips": [
     {

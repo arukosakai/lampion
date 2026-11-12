@@ -5,6 +5,7 @@ using Lampion.Core.Live;
 using Lampion.Core.Midi;
 using Lampion.Core.Model;
 using Lampion.Core.Model.Live;
+using Lampion.Core.Model.Timeline;
 using Lampion.Core.Persistence;
 
 namespace Lampion.App.Live;
@@ -23,6 +24,7 @@ internal sealed class LiveSession : IDisposable
     private readonly EditorState _state;
     private readonly DmxOutput _output;
     private readonly PadLeds _leds = new();
+    private readonly LiveMedia _media = new();
     private int _patchVersion = -1;
     private Project? _patchProject;
     private long _lastRebuild;
@@ -62,6 +64,9 @@ internal sealed class LiveSession : IDisposable
     /// <summary>The set-list entry playing, or null.</summary>
     public LiveShow? Playing { get; private set; }
 
+    /// <summary>The audio clip steering the show's clock, or null when the lights run on their own clock.</summary>
+    public MediaClip? FollowingMusic => _media.Following;
+
     /// <summary>The show playing, mapped onto the rig, or null.</summary>
     public ShowCue? Cue => Engine.Scene?.Cue;
 
@@ -94,6 +99,8 @@ internal sealed class LiveSession : IDisposable
     {
         if (Loop.IsRunning)
             return;
+        // Live mode owns the speakers: the editor's own playback would play the timeline's music over the show's.
+        _state.Pause();
         Rebuild();
         Loop.Start();
         _state.LiveSource = Loop.Frames;
@@ -105,6 +112,7 @@ internal sealed class LiveSession : IDisposable
     {
         if (!Loop.IsRunning)
             return;
+        _media.Stop();
         _output.Source = null;
         _state.LiveSource = null;
         Loop.Stop();
@@ -131,9 +139,17 @@ internal sealed class LiveSession : IDisposable
             // A rebuild may have swapped the patch while loading.
             if (!ReferenceEquals(cue.Patch, Patch) && Patch is { } current)
                 cue = cue.Retarget(current);
+            // The cue goes live holding its first frame; the music (or, without music, the clock) then starts it.
             Engine.Scene = new LiveScene(cue.Patch, cue);
+            _media.LightDelay = _state.Project.Live.LightDelayMs / 1000;
+            if (!_media.Play(cue, out var missing))
+                cue.Clock.Start(Stopwatch.GetTimestamp(), 0);
             Playing = show;
-            if (cue.UnmatchedFixtures > 0)
+            if (missing.Count > 0)
+                Problem = $"{show.Name}: music not found ({string.Join(", ", missing)}); the lights run on their own clock.";
+            else if (_media.Error is { } audio && cue.AudioClips.Count > 0)
+                Problem = audio;
+            else if (cue.UnmatchedFixtures > 0)
                 Problem = $"{show.Name}: {cue.UnmatchedFixtures} fixture(s) aren't in this rig (no matching id or address) and stay dark.";
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or InvalidOperationException)
@@ -153,6 +169,7 @@ internal sealed class LiveSession : IDisposable
     {
         _loadGeneration++;
         Loading = false;
+        _media.Stop();
         if (Patch is { } patch)
             Engine.Scene = new LiveScene(patch, null);
         Playing = null;
@@ -205,6 +222,9 @@ internal sealed class LiveSession : IDisposable
         if ((_state.Version != _patchVersion || !ReferenceEquals(_state.Project, _patchProject)) && now - _lastRebuild > RebuildInterval)
             Rebuild();
 
+        _media.LightDelay = _state.Project.Live.LightDelayMs / 1000;
+        _media.Tick();
+
         if (Router.TryGetLatest(ref _midiSeen, out var message))
         {
             LastMidi = Describe(message);
@@ -233,6 +253,7 @@ internal sealed class LiveSession : IDisposable
     {
         Stop();
         CloseMidi();
+        _media.Dispose();
     }
 
     private void Rebuild()

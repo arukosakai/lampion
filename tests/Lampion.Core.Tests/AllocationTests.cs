@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Lampion.Core.Color;
 using Lampion.Core.Engine;
 using Lampion.Core.Live;
@@ -213,7 +214,10 @@ public class AllocationTests
 
         var patch = LivePatch.Build(rig);
         var controls = new LiveControls();
-        var engine = new LiveEngine(controls) { Scene = new LiveScene(patch, ShowCue.Load(Create(name), patch, loop: true)) };
+        var cue = ShowCue.Load(Create(name), patch, loop: true);
+        var now = Stopwatch.GetTimestamp();
+        cue.Clock.Start(now, 0);
+        var engine = new LiveEngine(controls) { Scene = new LiveScene(patch, cue) };
         var router = new MidiRouter(controls) { Patch = patch };
         var mailbox = new DmxFrameMailbox();
         var frame = new DmxFrame();
@@ -226,7 +230,9 @@ public class AllocationTests
                 router.Handle(MidiMessage.ControlChange(1, i % 8, i % 128));
                 router.Handle(MidiMessage.NoteOn(1, i % EffectCatalog.Entries.Count, 100));
                 router.TryGetLatest(ref seen, out _);
-                engine.Render(1 / 100.0 + i % 3 * 0.001, frame);
+                now += Stopwatch.Frequency / 100 + i % 3 * Stopwatch.Frequency / 1000;
+                engine.Render(now, frame);
+                cue.Clock.TimeAt(now);
                 mailbox.Publish(frame);
                 mailbox.CopyLatestTo(copy);
             })

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Lampion.Core.Engine;
 using Lampion.Core.Live;
 using Lampion.Core.Model;
@@ -49,18 +50,24 @@ public class LiveEngineTests
         return pad;
     }
 
-    private static byte[] Render(LiveEngine engine, double seconds = 0.01)
+    // Engine time in Stopwatch ticks; each Render draws the frame at _now, then moves _now on by the given seconds.
+    private long _now = Stopwatch.Frequency;
+
+    private byte[] Render(LiveEngine engine, double seconds = 0.01)
     {
         var frame = new DmxFrame();
-        engine.Render(seconds, frame);
+        engine.Render(_now, frame);
+        _now += (long)(seconds * Stopwatch.Frequency);
         return frame.TryGetUniverse(1, out var channels) ? channels.ToArray() : new byte[DmxFrame.UniverseSize];
     }
 
-    private static (LiveEngine Engine, LivePatch Patch) Start(Project rig, Project? show = null, bool loop = false)
+    private (LiveEngine Engine, LivePatch Patch) Start(Project rig, Project? show = null, bool loop = false)
     {
         var patch = LivePatch.Build(rig);
         var engine = new LiveEngine(new LiveControls());
-        engine.Scene = new LiveScene(patch, show is null ? null : ShowCue.Load(show, patch, loop));
+        var cue = show is null ? null : ShowCue.Load(show, patch, loop);
+        cue?.Clock.Start(_now, 0);
+        engine.Scene = new LiveScene(patch, cue);
         return (engine, patch);
     }
 
@@ -141,7 +148,34 @@ public class LiveEngineTests
         Render(engine);
 
         Assert.False(engine.ShowEnded);
-        Assert.Equal(0.51, engine.ShowTime, 3);
+        Assert.Equal(0.5, engine.ShowTime, 3);
+    }
+
+    [Fact]
+    public void ShowWaitsAtTheStartUntilItsMusicPlays()
+    {
+        var patch = LivePatch.Build(Rig());
+        var cue = ShowCue.Load(RedShowOnPars(), patch, loop: false);
+        cue.Clock.FollowsMedia = true;
+        var engine = new LiveEngine(new LiveControls()) { Scene = new LiveScene(patch, cue) };
+
+        Render(engine, 2);
+        Render(engine);
+
+        Assert.Equal(0, engine.ShowTime);
+    }
+
+    [Fact]
+    public void LoopWithMusicHoldsTheEndUntilTheMusicRestarts()
+    {
+        var (engine, _) = Start(Rig(), RedShowOnPars(duration: 1), loop: true);
+        engine.Scene!.Cue!.Clock.FollowsMedia = true;
+
+        Render(engine, 1.5);
+        Render(engine);
+
+        Assert.False(engine.ShowEnded);
+        Assert.True(engine.ShowTime is > 0.99 and < 1);
     }
 
     [Fact]
@@ -156,7 +190,7 @@ public class LiveEngineTests
         engine.Scene = new LiveScene(rebuilt, engine.Scene!.Cue!.Retarget(rebuilt));
         Render(engine);
 
-        Assert.Equal(3.02, engine.ShowTime, 3);
+        Assert.Equal(3.01, engine.ShowTime, 3);
     }
 
     [Fact]

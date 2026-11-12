@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Lampion.App.Editor;
 using Lampion.App.Live;
 using Lampion.Core.Model.Live;
+using Lampion.Core.Model.Timeline;
 using Lampion.Core.Persistence;
 
 namespace Lampion.App.Views.Live;
@@ -22,6 +23,9 @@ internal sealed class SetListPanel : DockPanel
     private readonly TextBlock _now = new() { FontSize = 13, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock _time = new() { FontSize = 12 };
     private readonly ProgressBar _progress = new() { Minimum = 0, Maximum = 1, Height = 6 };
+    private readonly TextBlock _music = new() { FontSize = 11, Foreground = Brushes.Gray, TextWrapping = TextWrapping.Wrap };
+    private int _shownErrorMs = int.MinValue;
+    private MediaClip? _shownMusic;
     private int _shownSecond = -1;
     private bool _syncingLoop;
 
@@ -65,7 +69,9 @@ internal sealed class SetListPanel : DockPanel
         SetDock(top, Dock.Top);
         Children.Add(top);
 
-        var bottom = Ui.Column(6, Ui.Row(go, stop), _now, _time, _progress);
+        var delay = Ui.Number(state.Project.Live.LightDelayMs, v => { _state.Project.Live.LightDelayMs = v; _state.Commit(); }, -500, 500, 5, "0");
+        ToolTip.SetTip(delay, "Milliseconds the lights wait for the sound: raise it until hits land with the kick through the PA (negative runs them early)");
+        var bottom = Ui.Column(6, Ui.Row(go, stop), _now, _time, _progress, _music, Ui.Field("Light delay (ms)", delay, 110));
         bottom.Margin = new Thickness(0, 8, 0, 0);
         SetDock(bottom, Dock.Bottom);
         Children.Add(bottom);
@@ -80,6 +86,7 @@ internal sealed class SetListPanel : DockPanel
     /// <summary>Updates the now-playing time and progress. Call every UI tick; allocates only when the shown second changes.</summary>
     public void Refresh()
     {
+        ShowMusic();
         var cue = _session.Cue;
         if (cue is null || _session.Engine.ShowEnded)
         {
@@ -99,6 +106,20 @@ internal sealed class SetListPanel : DockPanel
             _shownSecond = second;
             _time.Text = $"{Clock(time)} / {Clock(cue.Duration)}  ·  holds {cue.OwnedCount} of {cue.Patch.FixtureCount} fixtures";
         }
+    }
+
+    // Which song the lights follow and how far off they were at the last correction; text only changes when the whole ms does.
+    private void ShowMusic()
+    {
+        var clip = _session.FollowingMusic;
+        var errorMs = clip is null || _session.Cue is not { } cue ? 0 : (int)Math.Round(cue.Clock.LastError * 1000);
+        if (ReferenceEquals(clip, _shownMusic) && errorMs == _shownErrorMs)
+            return;
+        _shownMusic = clip;
+        _shownErrorMs = errorMs;
+        _music.Text = clip is null
+            ? (_session.Cue is null ? "" : "No music playing: the lights run on their own clock.")
+            : $"♪ {Path.GetFileName(clip.Path)} · lights follow the music (last correction {errorMs:+0;-0;0} ms)";
     }
 
     private void Rebuild()

@@ -14,4 +14,10 @@ public sealed class LiveSet
 
     /// <summary>Effect pads, row by row.</summary>
     public List<LivePad> Pads { get; } = [];
+
+    /// <summary>
+    /// Milliseconds the lights run behind the music, to make up for the sound system's latency (audio interface buffer,
+    /// DSP, speaker distance); negative runs them ahead. Tuned by eye and ear at the venue, −500..500.
+    /// </summary>
+    public double LightDelayMs { get; set; }
 }

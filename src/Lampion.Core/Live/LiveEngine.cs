@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Lampion.Core.Color;
 using Lampion.Core.Engine;
 using Lampion.Core.Model.Effects;
@@ -23,6 +24,7 @@ public sealed class LiveEngine
     private LiveScene? _scene;
     private LiveScene? _current;
     private double _time;
+    private long _lastTimestamp;
     private bool _ended;
     private long _publishedTime;
     private volatile bool _publishedEnded;
@@ -47,11 +49,14 @@ public sealed class LiveEngine
     public bool ShowEnded => _publishedEnded;
 
     /// <summary>
-    /// Advances by <paramref name="seconds"/> and renders the next frame into <paramref name="frame"/>, replacing
-    /// its contents. Engine thread only; allocation-free once the frame's universes exist.
+    /// Renders the frame due at <paramref name="timestamp"/> (a <see cref="Stopwatch"/> timestamp) into
+    /// <paramref name="frame"/>, replacing its contents. The show's time comes from its <see cref="ShowClock"/>; pads advance by
+    /// the time since the last render. Engine thread only; allocation-free once the frame's universes exist.
     /// </summary>
-    public void Render(double seconds, DmxFrame frame)
+    public void Render(long timestamp, DmxFrame frame)
     {
+        var seconds = _lastTimestamp == 0 ? 0 : Math.Max(0, (timestamp - _lastTimestamp) / (double)Stopwatch.Frequency);
+        _lastTimestamp = timestamp;
         var scene = Volatile.Read(ref _scene);
         if (!ReferenceEquals(scene, _current))
             Switch(scene);
@@ -62,14 +67,12 @@ public sealed class LiveEngine
         var patch = scene.Patch;
         var states = patch.States.AsSpan();
         states.Clear();
-        var cue = PlayShow(scene.Cue, states);
+        var cue = PlayShow(scene.Cue, states, timestamp);
         var owned = cue is null ? ReadOnlySpan<bool>.Empty : cue.Owned;
         ApplyFaders(patch, owned, states);
         ApplyPads(patch, owned, states, seconds);
         Map(patch, frame);
 
-        if (cue is not null)
-            _time += seconds;
         Volatile.Write(ref _publishedTime, BitConverter.DoubleToInt64Bits(_time));
         _publishedEnded = _ended;
     }
@@ -85,10 +88,11 @@ public sealed class LiveEngine
         _current = scene;
     }
 
-    private ShowCue? PlayShow(ShowCue? cue, Span<FixtureState> states)
+    private ShowCue? PlayShow(ShowCue? cue, Span<FixtureState> states, long timestamp)
     {
         if (cue is null || _ended)
             return null;
+        _time = cue.Clock.TimeAt(timestamp);
         if (_time >= cue.Duration)
         {
             if (!cue.Loop || cue.Duration <= 0)
@@ -96,7 +100,8 @@ public sealed class LiveEngine
                 _ended = true;
                 return null;
             }
-            _time %= cue.Duration;
+            // With music, a loop restarts when the music does; until then the show holds its last moment.
+            _time = cue.Clock.FollowsMedia ? Math.BitDecrement(cue.Duration) : _time % cue.Duration;
         }
         var show = cue.Evaluator.Evaluate(_time);
         for (var i = 0; i < show.Length; i++)
@@ -178,13 +183,11 @@ public sealed class LiveEngine
         for (var p = 0; p < pads.Length; p++)
         {
             var generation = Controls.PadGeneration(p);
-            if (generation != _padSeen[p])
-            {
-                _padSeen[p] = generation;
-                _padTime[p] = 0;
-            }
+            var restarted = generation != _padSeen[p];
+            _padSeen[p] = generation;
             if ((generation & 1) == 0)
                 continue;
+            _padTime[p] = restarted ? 0 : _padTime[p] + seconds * _padSpeed[p];
 
             var pad = pads[p];
             var targets = pad.Fixtures;
@@ -206,7 +209,6 @@ public sealed class LiveEngine
                 layer.Light = color * sample.Intensity;
                 states[j].Blend(in layer, _padIntensity[p], pad.Blend);
             }
-            _padTime[p] = time + seconds * _padSpeed[p];
         }
     }
 
