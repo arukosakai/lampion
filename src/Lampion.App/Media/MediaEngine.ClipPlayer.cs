@@ -50,6 +50,8 @@ internal sealed partial class MediaEngine
             Path = path;
             _target = target;
             _media = new VlcMedia(vlc, path, FromType.FromPath);
+            // Opened ahead of time and parked, so Play only has to unpause.
+            _media.AddOption(":start-paused");
             _player = new MediaPlayer(_media);
             if (target is not null)
             {
@@ -70,52 +72,76 @@ internal sealed partial class MediaEngine
         /// <summary>The <see cref="MediaEngine.Sync"/> pass that last found this player's clip.</summary>
         public int Seen { get; set; }
 
-        /// <summary>Plays, pauses or seeks to follow the playhead. Allocation-free.</summary>
+        /// <summary>True from the moment this player is asked to play until sound or frames are actually coming out.</summary>
+        public bool IsStarting => _rolling && !_player.IsPlaying;
+
+        /// <summary>Plays, pauses, parks or seeks to follow the playhead. Allocation-free.</summary>
         /// <param name="inside">True when the playhead is within the clip.</param>
+        /// <param name="cued">True when the playhead is within the clip or about to reach it, so the player is kept open and parked there.</param>
         /// <param name="playing">True while the editor is playing.</param>
-        /// <param name="expected">Where in the media file the playhead is, in seconds.</param>
+        /// <param name="expected">Where in the media file the playhead is (or the clip starts, if not inside yet), in seconds.</param>
         /// <param name="volume">Gain from 0 to 2; 1 is unchanged.</param>
-        public void Follow(bool inside, bool playing, double expected, double volume)
+        public void Follow(bool inside, bool cued, bool playing, double expected, double volume)
         {
-            _player.Volume = (int)Math.Round(Math.Clamp(volume, 0, 2) * 100);
-            if (!inside || !playing)
+            SetVolume(volume);
+            if (inside && playing)
             {
-                if (_rolling)
-                {
-                    _player.SetPause(true);
-                    _rolling = false;
-                }
-                if (!inside)
-                    return;
+                Roll(expected);
+                return;
             }
-            if (playing)
+            if (_rolling)
             {
-                // VLC opens media asynchronously, so IsPlaying lags Play(); track what was asked for instead
-                // and only correct drift once the player is really running.
-                if (!_rolling)
-                {
-                    _rolling = true;
-                    if (!_started)
-                        _player.Play();
-                    _started = true;
-                    _player.SetPause(false);
-                    SeekWhilePlaying(expected, learnLead: false);
-                    return;
-                }
+                _player.SetPause(true);
+                _rolling = false;
+            }
+            if (cued)
+                Park(expected);
+        }
+
+        // VLC opens media asynchronously, so IsPlaying lags Play(); track what was asked for instead
+        // and only correct drift once the player is really running.
+        private void Roll(double expected)
+        {
+            if (_rolling)
+            {
                 CorrectDrift(expected);
                 return;
             }
-            // Paused or scrubbing: hold still, but keep video on the frame under the playhead.
-            if (_target is not null && (double.IsNaN(_lastSeek) || Math.Abs(_lastSeek - expected) > ScrubTolerance))
-            {
-                if (!_started)
-                {
-                    _started = true;
-                    _player.Play();
-                    _player.SetPause(true);
-                }
+            _rolling = true;
+            Open();
+            // Seeking flushes the audio buffers, which crackles; a parked player is already in place.
+            if (!IsParkedAt(expected))
                 Seek(expected);
-            }
+            _player.SetPause(false);
+            _reportedMs = long.MinValue;
+            _reports = 0;
+            _measureLead = false;
+        }
+
+        // Paused, scrubbing or about to start: open the file and hold it still under the playhead.
+        private void Park(double expected)
+        {
+            Open();
+            if (!IsParkedAt(expected))
+                Seek(expected);
+        }
+
+        private bool IsParkedAt(double expected) => !double.IsNaN(_lastSeek) && Math.Abs(_lastSeek - expected) <= ScrubTolerance;
+
+        private void Open()
+        {
+            if (_started)
+                return;
+            _started = true;
+            _player.Play();
+        }
+
+        // Every volume change goes down to the audio device, so only send real changes.
+        private void SetVolume(double volume)
+        {
+            var level = (int)Math.Round(Math.Clamp(volume, 0, 2) * 100);
+            if (_player.Volume != level)
+                _player.Volume = level;
         }
 
         private void CorrectDrift(double expected)
@@ -131,7 +157,7 @@ internal sealed partial class MediaEngine
                 _seekLead = Math.Clamp(_seekLead + behind, 0, MaxSeekLead);
             }
             if (Math.Abs(behind) > DriftTolerance)
-                SeekWhilePlaying(expected, learnLead: true);
+                SeekWhilePlaying(expected);
         }
 
         // LibVLC refreshes Time only every ~250 ms, so extrapolate from when the reported value last changed.
@@ -149,12 +175,12 @@ internal sealed partial class MediaEngine
         }
 
         // Opening or unpausing is far slower than seeking a running player, so only corrections teach the lead.
-        private void SeekWhilePlaying(double expected, bool learnLead)
+        private void SeekWhilePlaying(double expected)
         {
             Seek(expected + _seekLead);
             _reportedMs = long.MinValue;
             _reports = 0;
-            _measureLead = learnLead;
+            _measureLead = true;
         }
 
         private void Seek(double seconds)

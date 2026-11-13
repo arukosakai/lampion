@@ -290,8 +290,11 @@ public sealed class EditorState
     }
 
     /// <summary>Advances the playhead from the wall clock; called once per UI frame. Allocation-free.</summary>
-    public void Tick()
+    /// <param name="holdPlayhead">True to keep the playhead still while playing, so the show waits for media that is still starting.</param>
+    public void Tick(bool holdPlayhead = false)
     {
+        if (holdPlayhead)
+            _transport.Hold();
         if (_transport.Advance(Project.ContentEnd))
             PlayheadChanged?.Invoke();
         if (_liveSource is { } live && live.Sequence != _liveSeen)

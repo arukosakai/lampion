@@ -57,6 +57,15 @@ internal sealed class Transport
         return true;
     }
 
+    /// <summary>Keeps the playhead where it is while playing, e.g. until media has started. Allocation-free.</summary>
+    public void Hold()
+    {
+        if (!IsPlaying)
+            return;
+        _playStart = Playhead;
+        _clock.Restart();
+    }
+
     /// <summary>
     /// Moves the playhead to where the clock says it is, stopping (or wrapping, with <see cref="Loop"/>) at
     /// <paramref name="contentEnd"/>. Allocation-free.

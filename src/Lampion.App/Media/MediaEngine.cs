@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Lampion.App.Editor;
 using Lampion.App.Rendering;
 using Lampion.Core.Model.Timeline;
@@ -18,9 +19,17 @@ internal sealed partial class MediaEngine : IDisposable
     private const double DriftTolerance = 0.12;
     private const uint MaxVideoWidth = 1280;
 
+    // Seconds before a clip starts that its player is opened and parked, so it starts without a seek.
+    private const double Preroll = 2.0;
+
+    // Longest the playhead waits for media after Play, so a file VLC chokes on can't stall the show.
+    private static readonly TimeSpan MaxCue = TimeSpan.FromSeconds(1.5);
+
     private readonly LibVLC? _vlc;
     private readonly Dictionary<string, ClipPlayer> _players = [];
     private readonly List<string> _gone = [];
+    private readonly Stopwatch _cue = new();
+    private bool _wasPlaying;
     private int _generation;
 
     /// <summary>Starts LibVLC; on failure the engine stays usable but silent, and <see cref="Error"/> says why.</summary>
@@ -46,6 +55,12 @@ internal sealed partial class MediaEngine : IDisposable
     /// <summary>The latest decoded video frame, written from LibVLC's decode thread under a lock on itself.</summary>
     public VideoFrame Video { get; } = new();
 
+    /// <summary>
+    /// True right after Play while media under the playhead is still starting; the playhead should wait, or the
+    /// first moments of the song are skipped. Never longer than <see cref="MaxCue"/>.
+    /// </summary>
+    public bool IsCueing => _cue.IsRunning;
+
     /// <summary>Length of a media file in seconds, or null when LibVLC cannot read it (or is unavailable).</summary>
     public async Task<double?> ProbeDurationAsync(string path)
     {
@@ -66,6 +81,12 @@ internal sealed partial class MediaEngine : IDisposable
             return;
         var t = state.Playhead;
         var playing = state.IsPlaying;
+        if (playing && !_wasPlaying)
+            _cue.Restart();
+        else if (!playing)
+            _cue.Reset();
+        _wasPlaying = playing;
+        var starting = false;
         _generation++;
         foreach (var track in state.Project.Tracks)
         {
@@ -79,20 +100,27 @@ internal sealed partial class MediaEngine : IDisposable
                 if (existing is not null)
                     existing.Seen = _generation;
                 var inside = t >= clip.Start && t < clip.End;
-                if (!inside && existing is null)
+                var cued = inside || (t >= clip.Start - Preroll && t < clip.Start);
+                if (!cued && existing is null)
                     continue;
                 var player = existing is not null && existing.Path == clip.Path ? existing : TryOpen(clip, track.Kind == TrackKind.Video, existing);
-                player?.Follow(inside, playing, t - clip.Start + clip.MediaOffset, track.Muted ? 0 : clip.Volume);
+                if (player is null)
+                    continue;
+                var expected = Math.Max(t - clip.Start, 0) + clip.MediaOffset;
+                player.Follow(inside, cued, playing, expected, track.Muted ? 0 : clip.Volume);
+                starting |= player.IsStarting;
             }
         }
         CloseUnseen();
+        if (_cue.IsRunning && (!starting || _cue.Elapsed > MaxCue))
+            _cue.Stop();
     }
 
     /// <summary>Holds every player still, e.g. before the project is replaced.</summary>
     public void StopAll()
     {
         foreach (var player in _players.Values)
-            player.Follow(false, false, 0, 0);
+            player.Follow(false, false, false, 0, 0);
     }
 
     /// <summary>Stops and releases every player and LibVLC itself.</summary>

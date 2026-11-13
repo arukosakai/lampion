@@ -46,7 +46,7 @@ internal sealed class FrameLoop
     /// <summary>Runs one frame now.</summary>
     public void Tick()
     {
-        _state.Tick();
+        _state.Tick(holdPlayhead: _media.IsCueing);
         _media.Sync(_state);
         _stage.UpdateScene();
         _video.Update();
