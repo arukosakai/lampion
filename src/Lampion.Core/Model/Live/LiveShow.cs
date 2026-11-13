@@ -17,4 +17,7 @@ public sealed class LiveShow
 
     /// <summary>Start over at the end instead of stopping.</summary>
     public bool Loop { get; set; }
+
+    /// <summary>The MIDI button that cuts straight to this show, or null.</summary>
+    public MidiBinding? Midi { get; set; }
 }

@@ -12,7 +12,7 @@ namespace Lampion.App.Live;
 
 /// <summary>
 /// Live mode for one workspace: runs the <see cref="LiveLoop"/> on the project's rig, loads set-list shows off the
-/// UI thread, routes MIDI, lights the controller's pads and keeps the engine's patch in step with edits.
+/// UI thread, routes MIDI (set-list buttons included), lights the controller and keeps the engine's patch in step with edits.
 /// While running, the editor's stage and DMX monitor and the DMX output all show the live frames. UI thread only.
 /// </summary>
 internal sealed class LiveSession : IDisposable
@@ -24,7 +24,7 @@ internal sealed class LiveSession : IDisposable
 
     private readonly EditorState _state;
     private readonly DmxOutput _output;
-    private readonly PadLeds _leds = new();
+    private readonly ControllerLeds _leds = new();
     private readonly LiveMedia _media = new();
     private int _patchVersion = -1;
     private Project? _patchProject;
@@ -32,8 +32,8 @@ internal sealed class LiveSession : IDisposable
     private long _lastStats;
     private long _midiSeen;
     private Action<MidiBinding>? _learn;
-    private bool _ledsDirty;
     private int _loadGeneration;
+    private LiveShow? _loadingShow;
     private string[] _faderIds = [];
     private string[] _padIds = [];
     private int _faultsSeen;
@@ -70,6 +70,9 @@ internal sealed class LiveSession : IDisposable
 
     /// <summary>The set-list entry playing, or null.</summary>
     public LiveShow? Playing { get; private set; }
+
+    /// <summary>The show GO cuts to: the set list's selection, which steps on after each GO. Null when the set list is empty.</summary>
+    public LiveShow? Next { get; set; }
 
     /// <summary>The audio clip steering the show's clock, or null when the lights run on their own clock.</summary>
     public MediaClip? FollowingMusic => _media.Following;
@@ -120,6 +123,7 @@ internal sealed class LiveSession : IDisposable
         Loop.Start();
         _state.LiveSource = Loop.Frames;
         _output.Source = Loop.Frames;
+        ConnectApc();
     }
 
     /// <summary>Stops the engine and hands the monitors and DMX output back to the timeline.</summary>
@@ -134,7 +138,7 @@ internal sealed class LiveSession : IDisposable
         _power?.Dispose();
         _power = null;
         Controls.ReleaseAllPads();
-        _leds.Update(MidiOut, _state.Project.Live.Pads, Controls, force: true);
+        UpdateLeds();
     }
 
     /// <summary>Loads <paramref name="show"/> off the UI thread and cuts to it when ready.</summary>
@@ -142,6 +146,7 @@ internal sealed class LiveSession : IDisposable
     {
         var generation = ++_loadGeneration;
         Loading = true;
+        _loadingShow = show;
         Problem = null;
         Changed?.Invoke();
         try
@@ -193,9 +198,25 @@ internal sealed class LiveSession : IDisposable
         finally
         {
             if (generation == _loadGeneration)
+            {
                 Loading = false;
+                _loadingShow = null;
+            }
             Changed?.Invoke();
         }
+    }
+
+    /// <summary>Cuts to <see cref="Next"/> (the first show when nothing is selected) and moves <see cref="Next"/> on by one.</summary>
+    public void GoNext()
+    {
+        var shows = _state.Project.Live.Shows;
+        if (shows.Count == 0)
+            return;
+        var at = Math.Max(0, Next is { } next ? shows.IndexOf(next) : 0);
+        var show = shows[at];
+        // Moved on before loading starts, so the set list redraws with the new selection.
+        Next = shows[Math.Min(at + 1, shows.Count - 1)];
+        _ = Go(show);
     }
 
     /// <summary>Stops the show; its fixtures go back to the console.</summary>
@@ -203,6 +224,7 @@ internal sealed class LiveSession : IDisposable
     {
         _loadGeneration++;
         Loading = false;
+        _loadingShow = null;
         _media.Stop();
         if (Patch is { } patch)
             Engine.Scene = new LiveScene(patch, null);
@@ -237,7 +259,7 @@ internal sealed class LiveSession : IDisposable
             if (output >= 0)
                 MidiOut = MidiDevices.OpenOutput(output);
             Problem = null;
-            _ledsDirty = true;
+            _leds.Forget();
         }
         catch (Exception ex) when (ex is IOException or PlatformNotSupportedException)
         {
@@ -272,6 +294,7 @@ internal sealed class LiveSession : IDisposable
         _media.LightDelay = _state.Project.Live.LightDelayMs / 1000;
         _media.Tick();
 
+        HandlePresses();
         if (Router.TryGetLatest(ref _midiSeen, out var message))
         {
             LastMidi = Describe(message);
@@ -282,9 +305,7 @@ internal sealed class LiveSession : IDisposable
             }
         }
 
-        if (_leds.Update(MidiOut, _state.Project.Live.Pads, Controls, _ledsDirty) is { } ledProblem)
-            Problem = "MIDI out: " + ledProblem;
-        _ledsDirty = false;
+        UpdateLeds();
 
         if (now - _lastMidiCheck > MidiCheckInterval)
         {
@@ -345,7 +366,7 @@ internal sealed class LiveSession : IDisposable
             }
             else if (at >= 0 && MidiOut is null && TryOpenMidi(() => MidiOut = MidiDevices.OpenOutput(at)))
             {
-                _ledsDirty = true;
+                _leds.Forget();
                 changed = true;
             }
         }
@@ -417,7 +438,6 @@ internal sealed class LiveSession : IDisposable
         _patchVersion = _state.Version;
         _patchProject = _state.Project;
         _lastRebuild = Stopwatch.GetTimestamp();
-        _ledsDirty = true;
         Changed?.Invoke();
     }
 
@@ -429,8 +449,43 @@ internal sealed class LiveSession : IDisposable
         : m.IsNoteOff ? $"Note {m.Data1} off · ch {m.Channel}"
         : $"0x{m.Status:X2} {m.Data1} {m.Data2}";
 
+    // Set-list buttons: presses no fader or pad took. While learning, the press is the binding being learned, not a command.
+    private void HandlePresses()
+    {
+        var live = _state.Project.Live;
+        while (Router.TryTakePress(out var press))
+        {
+            if (_learn is not null)
+                continue;
+            if (live.GoMidi?.Matches(press) == true)
+                GoNext();
+            else if (live.StopMidi?.Matches(press) == true)
+                StopShow();
+            else if (live.Shows.Find(s => s.Midi?.Matches(press) == true) is { } show)
+                _ = Go(show);
+        }
+    }
+
+    private void UpdateLeds()
+    {
+        var playing = Engine.ShowEnded ? null : Playing;
+        if (_leds.Update(MidiOut, _state.Project.Live, Controls, playing, _loadingShow, Next) is { } ledProblem)
+            Problem = "MIDI out: " + ledProblem;
+    }
+
+    // Plugged in and nothing chosen yet: an APC mini mk2 is almost certainly the controller meant for this console.
+    private void ConnectApc()
+    {
+        if (MidiIn is not null || MidiOut is not null || _wantedIn is not null || !MidiDevices.Supported)
+            return;
+        var input = ApcMiniMk2.Find(MidiDevices.InputNames());
+        if (input >= 0)
+            OpenMidi(input, ApcMiniMk2.Find(MidiDevices.OutputNames()));
+    }
+
     private void CloseMidi()
     {
+        _leds.Blank(MidiOut);
         MidiIn?.Dispose();
         MidiIn = null;
         MidiOut?.Dispose();

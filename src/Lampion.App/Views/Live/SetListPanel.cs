@@ -11,7 +11,8 @@ namespace Lampion.App.Views.Live;
 
 /// <summary>
 /// The set list: shows in running order, GO to cut to the selected one (the selection then steps to the next,
-/// like a cue stack), Stop, and a now-playing line with time and progress.
+/// like a cue stack), Stop, a now-playing line with time and progress, and the MIDI buttons for GO, Stop and each show.
+/// The selection is the session's <see cref="LiveSession.Next"/>, so a MIDI GO moves it too.
 /// </summary>
 internal sealed class SetListPanel : DockPanel
 {
@@ -24,6 +25,9 @@ internal sealed class SetListPanel : DockPanel
     private readonly TextBlock _time = new() { FontSize = 12 };
     private readonly ProgressBar _progress = new() { Minimum = 0, Maximum = 1, Height = 6 };
     private readonly TextBlock _music = new() { FontSize = 11, Foreground = Brushes.Gray, TextWrapping = TextWrapping.Wrap };
+    private readonly ContentControl _showMidi = new();
+    private LiveShow? _showMidiFor;
+    private bool _syncingSelection;
     private int _shownErrorMs = int.MinValue;
     private MediaClip? _shownMusic;
     private int _shownSecond = -1;
@@ -51,7 +55,12 @@ internal sealed class SetListPanel : DockPanel
                 _state.Commit();
             }
         };
-        _list.SelectionChanged += (_, _) => SyncLoop();
+        _list.SelectionChanged += (_, _) =>
+        {
+            if (!_syncingSelection)
+                _session.Next = Selected;
+            SyncLoop();
+        };
 
         var top = Ui.Column(6,
             Ui.Section("Set list"),
@@ -71,7 +80,16 @@ internal sealed class SetListPanel : DockPanel
 
         var delay = Ui.Number(state.Project.Live.LightDelayMs, v => { _state.Project.Live.LightDelayMs = v; _state.Commit(); }, -500, 500, 5, "0");
         ToolTip.SetTip(delay, "Milliseconds the lights wait for the sound: raise it until hits land with the kick through the PA (negative runs them early)");
-        var bottom = Ui.Column(6, Ui.Row(go, stop), _now, _time, _progress, _music, Ui.Field("Light delay (ms)", delay, 110));
+        var midi = new Expander
+        {
+            Header = "MIDI buttons",
+            Content = Ui.Column(4,
+                MidiLearnRow.Build(_session, () => _state.Project.Live.GoMidi, b => { _state.Project.Live.GoMidi = b; _state.Commit(); }, "GO"),
+                MidiLearnRow.Build(_session, () => _state.Project.Live.StopMidi, b => { _state.Project.Live.StopMidi = b; _state.Commit(); }, "Stop"),
+                _showMidi),
+        };
+        ToolTip.SetTip(midi, "Controller buttons for GO, Stop and the selected show; they light up while it plays");
+        var bottom = Ui.Column(6, Ui.Row(go, stop), _now, _time, _progress, _music, Ui.Field("Light delay (ms)", delay, 110), midi);
         bottom.Margin = new Thickness(0, 8, 0, 0);
         SetDock(bottom, Dock.Bottom);
         Children.Add(bottom);
@@ -125,8 +143,13 @@ internal sealed class SetListPanel : DockPanel
     private void Rebuild()
     {
         var index = _list.SelectedIndex;
-        _list.ItemsSource = _state.Project.Live.Shows.Select(s => (ReferenceEquals(s, _session.Playing) ? "▶ " : "   ") + s.Name + (s.Loop ? "  ⟳" : "")).ToList();
-        _list.SelectedIndex = Math.Min(Math.Max(index, 0), _state.Project.Live.Shows.Count - 1);
+        var shows = _state.Project.Live.Shows;
+        _syncingSelection = true;
+        _list.ItemsSource = shows.Select(s => (ReferenceEquals(s, _session.Playing) ? "▶ " : "   ") + s.Name + (s.Loop ? "  ⟳" : "")).ToList();
+        var next = _session.Next is { } n ? shows.IndexOf(n) : -1;
+        _list.SelectedIndex = next >= 0 ? next : Math.Min(Math.Max(index, 0), shows.Count - 1);
+        _syncingSelection = false;
+        _session.Next = Selected;
         _now.Text = _session.Loading ? "Loading…" : _session.Playing is { } playing ? "Now: " + playing.Name : "No show playing — everything is on the console.";
         _shownSecond = -1;
         SyncLoop();
@@ -137,15 +160,18 @@ internal sealed class SetListPanel : DockPanel
         _syncingLoop = true;
         _loop.IsChecked = Selected?.Loop == true;
         _syncingLoop = false;
+        if (ReferenceEquals(Selected, _showMidiFor))
+            return;
+        _showMidiFor = Selected;
+        _showMidi.Content = Selected is { } show
+            ? MidiLearnRow.Build(_session, () => show.Midi, b => { show.Midi = b; _state.Commit(); }, "This show")
+            : null;
     }
 
     private void Go()
     {
-        if (Selected is not { } show)
-            return;
-        _ = _session.Go(show);
-        if (_list.SelectedIndex < _state.Project.Live.Shows.Count - 1)
-            _list.SelectedIndex++;
+        if (Selected is not null)
+            _session.GoNext();
     }
 
     private async Task AddShow()

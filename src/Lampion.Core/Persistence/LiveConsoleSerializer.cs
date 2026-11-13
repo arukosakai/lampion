@@ -104,6 +104,8 @@ public static class LiveConsoleSerializer
         to.Pads.AddRange(copy.Pads);
         to.Widgets.AddRange(copy.Widgets);
         to.LightDelayMs = copy.LightDelayMs;
+        to.GoMidi = copy.GoMidi;
+        to.StopMidi = copy.StopMidi;
     }
 
     private static Dictionary<string, string> MapFixtures(LiveConsoleFile file, Project project, out List<string> unmatched)

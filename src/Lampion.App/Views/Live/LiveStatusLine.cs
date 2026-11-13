@@ -24,6 +24,8 @@ internal sealed class LiveStatusLine : StackPanel
     private LiveLoopStats _shownStats;
     private string? _shownMidi;
     private string? _shownProblem;
+    private string? _shownIn;
+    private string? _shownOut;
 
     /// <summary>A status line for <paramref name="session"/> and <paramref name="output"/>.</summary>
     public LiveStatusLine(LiveSession session, DmxOutput output)
@@ -49,6 +51,9 @@ internal sealed class LiveStatusLine : StackPanel
     public void Refresh()
     {
         _send.IsChecked = _output.IsSending;
+        // Devices also open and close without the pickers: auto-connect at start, unplug and replug.
+        if (_session.MidiIn?.Name != _shownIn || _session.MidiOut?.Name != _shownOut)
+            FillDevices();
         var stats = _session.Stats;
         if (stats != _shownStats)
         {
@@ -76,6 +81,8 @@ internal sealed class LiveStatusLine : StackPanel
             _devices.Content = Ui.Label("MIDI controllers need Windows in this prototype; the on-screen console works everywhere.", null);
             return;
         }
+        _shownIn = _session.MidiIn?.Name;
+        _shownOut = _session.MidiOut?.Name;
         var inputs = new List<string> { "No MIDI input" };
         inputs.AddRange(MidiDevices.InputNames());
         var outputs = new List<string> { "No pad lights" };
@@ -91,6 +98,9 @@ internal sealed class LiveStatusLine : StackPanel
         {
             var currentIn = _session.MidiIn is { } i ? inputs.IndexOf(i.Name) - 1 : -1;
             var currentOut = _session.MidiOut is { } o ? outputs.IndexOf(o.Name) - 1 : -1;
+            // A controller's lights almost always go back to the device it plays from, under the same name.
+            if (newInput >= 0 && newOutput is null && currentOut < 0)
+                currentOut = outputs.IndexOf(inputs[newInput.Value + 1]) - 1;
             _session.OpenMidi(newInput ?? currentIn, newOutput ?? currentOut);
         }
     }

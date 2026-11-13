@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Live;
 using Lampion.Core.Live;
+using Lampion.Core.Midi;
 using Lampion.Core.Model.Live;
 
 namespace Lampion.App.Views.Live;
@@ -20,6 +21,7 @@ internal sealed class ConsolePanel : DockPanel
     private readonly WrapPanel _pads = new();
     private readonly List<FaderStrip> _strips = [];
     private readonly List<PadButton> _buttons = [];
+    private readonly Button _mapApc;
     private ShowCue? _heldFor;
     private bool _heldEnded;
 
@@ -33,7 +35,9 @@ internal sealed class ConsolePanel : DockPanel
         var addPad = Ui.Button("+ Pad", () => _ = PadEditor.Show(_owner, _state, _session, LiveEdits.AddPad(_state)), "Add an effect pad over the fixtures selected in the workspace");
         var save = Ui.Button("Save console…", () => _ = ConsoleFiles.Save(_owner, _state), "Save this console (set list, faders, pads, MIDI mappings, widgets) to a file you can load into another project");
         var load = Ui.Button("Load console…", () => _ = ConsoleFiles.Load(_owner, _state), "Replace this console with one saved from another project; its fixtures are matched by address, groups by name");
-        var bar = Ui.Row(Ui.Section("Console"), addFader, addPad, save, load);
+        _mapApc = Ui.Button("Map to APC mini mk2", () => LiveEdits.MapToApcMiniMk2(_state),
+            "Bind faders 1–9 to its faders, the first 64 pads to its grid (top row first), shows 1–7 to its scene buttons, Stop to the bottom scene button and GO to the rightmost track button. Undoable.");
+        var bar = Ui.Row(Ui.Section("Console"), addFader, addPad, save, load, _mapApc);
         bar.Margin = new Thickness(0, 0, 0, 6);
         SetDock(bar, Dock.Top);
         Children.Add(bar);
@@ -65,6 +69,7 @@ internal sealed class ConsolePanel : DockPanel
             button.Refresh();
         if (!ReferenceEquals(_session.Cue, _heldFor) || _session.Engine.ShowEnded != _heldEnded)
             ShowHeld();
+        _mapApc.IsVisible = ApcMiniMk2.Matches(_session.MidiIn?.Name);
     }
 
     private void Rebuild()

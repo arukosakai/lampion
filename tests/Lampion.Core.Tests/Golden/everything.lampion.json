@@ -2291,6 +2291,8 @@
     "faders": [],
     "pads": [],
     "widgets": [],
+    "goMidi": null,
+    "stopMidi": null,
     "lightDelayMs": 0
   },
   "allClips": [

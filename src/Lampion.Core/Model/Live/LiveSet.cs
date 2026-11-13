@@ -18,6 +18,12 @@ public sealed class LiveSet
     /// <summary>Widgets in the console's side column, top to bottom.</summary>
     public List<LiveWidget> Widgets { get; } = [];
 
+    /// <summary>The MIDI button that cuts to the next show in the set list, or null.</summary>
+    public MidiBinding? GoMidi { get; set; }
+
+    /// <summary>The MIDI button that stops the show, or null.</summary>
+    public MidiBinding? StopMidi { get; set; }
+
     /// <summary>
     /// Milliseconds the lights run behind the music, to make up for the sound system's latency (audio interface buffer,
     /// DSP, speaker distance); negative runs them ahead. Tuned by eye and ear at the venue, −500..500.

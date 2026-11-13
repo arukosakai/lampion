@@ -84,6 +84,62 @@ public class MidiRouterTests
     }
 
     [Fact]
+    public void UnboundPressesAreQueuedInOrderAndBoundOnesAreNot()
+    {
+        var project = new Project();
+        project.Live.Pads.Add(new LivePad { Midi = new MidiBinding(MidiBindingKind.Note, 1, 36) });
+        var router = Router(project);
+
+        router.Handle(MidiMessage.NoteOn(1, 36, 127));
+        router.Handle(MidiMessage.NoteOn(1, 0x70, 127));
+        router.Handle(MidiMessage.NoteOn(1, 0x70, 0));
+        router.Handle(MidiMessage.NoteOn(1, 0x6B, 127));
+
+        Assert.True(router.TryTakePress(out var first));
+        Assert.Equal(MidiMessage.NoteOn(1, 0x70, 127), first);
+        Assert.True(router.TryTakePress(out var second));
+        Assert.Equal(MidiMessage.NoteOn(1, 0x6B, 127), second);
+        Assert.False(router.TryTakePress(out _));
+    }
+
+    [Fact]
+    public void AControlIsAPressOnlyWhenItRisesPastHalfWay()
+    {
+        var router = Router(new Project());
+        foreach (var value in (int[])[10, 70, 90, 127, 30, 64])
+            router.Handle(MidiMessage.ControlChange(1, 20, value));
+
+        Assert.True(router.TryTakePress(out var first));
+        Assert.Equal(70, first.Data2);
+        Assert.True(router.TryTakePress(out var second));
+        Assert.Equal(64, second.Data2);
+        Assert.False(router.TryTakePress(out _));
+    }
+
+    [Fact]
+    public void AnOverflowingQueueKeepsTheNewestPresses()
+    {
+        var router = Router(new Project());
+        for (var i = 0; i < MidiRouter.PressCapacity + 10; i++)
+            router.Handle(MidiMessage.NoteOn(1, i, 100));
+
+        var taken = new List<int>();
+        while (router.TryTakePress(out var press))
+            taken.Add(press.Data1);
+        Assert.Equal(Enumerable.Range(10, MidiRouter.PressCapacity), taken);
+    }
+
+    [Fact]
+    public void BindingMatchesPressesOnly()
+    {
+        var note = new MidiBinding(MidiBindingKind.Note, 1, 0x70);
+        Assert.True(note.Matches(MidiMessage.NoteOn(1, 0x70, 127)));
+        Assert.False(note.Matches(MidiMessage.NoteOn(1, 0x70, 0)));
+        Assert.False(note.Matches(MidiMessage.NoteOn(2, 0x70, 127)));
+        Assert.False(note.Matches(MidiMessage.ControlChange(1, 0x70, 127)));
+    }
+
+    [Fact]
     public void QuickOffOnRetriggersThePad()
     {
         var controls = new LiveControls();

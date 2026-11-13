@@ -1,4 +1,5 @@
 using Lampion.App.Editor;
+using Lampion.Core.Live;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Live;
 using Lampion.Core.Persistence;
@@ -94,7 +95,14 @@ internal static class LiveEdits
             state.Commit();
     }
 
-    /// <summary>Replaces the whole console (set list, faders, pads, widgets, light delay) with <paramref name="console"/>, as one undo step.</summary>
+    /// <summary>Binds the console to an APC mini mk2's controls (see <see cref="ApcLayout"/>), as one undo step.</summary>
+    public static void MapToApcMiniMk2(EditorState state)
+    {
+        ApcLayout.Apply(state.Project.Live);
+        state.Commit();
+    }
+
+    /// <summary>Replaces the whole console (set list, faders, pads, widgets, light delay, set-list MIDI) with <paramref name="console"/>, as one undo step.</summary>
     public static void ReplaceConsole(EditorState state, LiveSet console)
     {
         var live = state.Project.Live;
@@ -107,6 +115,8 @@ internal static class LiveEdits
         live.Widgets.Clear();
         live.Widgets.AddRange(console.Widgets);
         live.LightDelayMs = console.LightDelayMs;
+        live.GoMidi = console.GoMidi;
+        live.StopMidi = console.StopMidi;
         state.Commit();
     }
 }
