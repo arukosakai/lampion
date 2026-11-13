@@ -119,7 +119,7 @@ public class LiveRobustnessTests
     [Theory]
     [InlineData(1e9)]
     [InlineData(double.PositiveInfinity)]
-    public void HugeRatesDoNotHangSlotEffects(double rate)
+    public async Task HugeRatesDoNotHangSlotEffects(double rate)
     {
         // These loop over the slots around "now"; a slot index that saturated at int.MaxValue used to loop forever.
         Effect[] effects = [new SparkleEffect { Rate = rate }, new LightningEffect { Rate = rate }];
@@ -130,7 +130,7 @@ public class LiveRobustnessTests
                     effect.Sample(new EffectContext(time, 4, 1, 4));
         });
 
-        Assert.True(sampled.Wait(TimeSpan.FromSeconds(5)), "a slot effect hung");
+        Assert.True(await Task.WhenAny(sampled, Task.Delay(TimeSpan.FromSeconds(5))) == sampled, "a slot effect hung");
     }
 
     [Fact]
