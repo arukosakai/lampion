@@ -20,6 +20,7 @@ internal sealed class TimelineInput
     private readonly Cursor _arrowCursor = new(StandardCursorType.Arrow);
     private readonly Cursor _resizeCursor = new(StandardCursorType.SizeWestEast);
     private readonly Cursor _handCursor = new(StandardCursorType.Hand);
+    private readonly Cursor _textCursor = new(StandardCursorType.Ibeam);
 
     private readonly EditorState _state;
     private readonly TimelineViewport _viewport;
@@ -49,7 +50,7 @@ internal sealed class TimelineInput
     /// <summary>Whether a drag is in progress (the timeline doesn't page during playback meanwhile).</summary>
     public bool IsInteracting => _interaction is not null;
 
-    /// <summary>Handles a pointer press: scrub in the ruler, header clicks, keyframes, clip drags and menus, or select-and-seek.</summary>
+    /// <summary>Handles a pointer press: scrub in the ruler, the timecode readout, header clicks, keyframes, clip drags and menus, or select-and-seek.</summary>
     public void Pressed(PointerPressedEventArgs e)
     {
         var p = e.GetPosition(_host);
@@ -63,6 +64,8 @@ internal sealed class TimelineInput
                 Begin(_scrub, e);
                 _scrub.Seek(p);
             }
+            else if (!rightButton)
+                _host.RequestTimecodeEntry();
             return;
         }
 
@@ -172,7 +175,9 @@ internal sealed class TimelineInput
     private void UpdateCursor(Point p)
     {
         var cursor = _arrowCursor;
-        if (p.X > TimelineViewport.HeaderWidth
+        if (p.Y < TimelineViewport.RulerHeight && p.X <= TimelineViewport.HeaderWidth)
+            cursor = _textCursor;
+        else if (p.X > TimelineViewport.HeaderWidth
             && _hitTester.TryGetRow(p.Y, out var row, out var rowY)
             && !row.IsLane
             && _hitTester.TryHitClip(row, rowY, p, out var hit))

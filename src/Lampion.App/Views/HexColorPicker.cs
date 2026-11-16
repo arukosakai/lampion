@@ -3,13 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls;
 using Lampion.Core.Color;
 
 namespace Lampion.App.Views;
 
 /// <summary>
-/// The colour picker behind <see cref="Ui.ColorPicker"/>: a swatch button whose flyout has HSB sliders,
-/// a hex box and preset chips, all kept in step with each other.
+/// The colour picker behind <see cref="Ui.ColorPicker"/>: a swatch button whose flyout has a colour wheel,
+/// a new/original preview, HSB sliders, a hex box and preset chips, all kept in step with each other.
 /// </summary>
 internal sealed class HexColorPicker
 {
@@ -22,6 +23,8 @@ internal sealed class HexColorPicker
     private readonly Slider _hue;
     private readonly Slider _saturation;
     private readonly Slider _brightness;
+    private readonly ColorWheel _wheel = new() { Width = 150, Height = 150 };
+    private readonly ColorComparePreview _preview;
     private string _hex;
     // Set while sliders are moved from code, so their change events don't echo back as user edits.
     private bool _updating;
@@ -49,12 +52,16 @@ internal sealed class HexColorPicker
         _saturation = Ui.Slider(s, 0, 1, _ => FromSliders());
         _brightness = Ui.Slider(v, 0, 1, _ => FromSliders());
         _hexBox.TextChanged += (_, _) => FromHexBox();
+        _wheel.Set(h, s, v);
+        _wheel.Picked += FromWheel;
+        _preview = new ColorComparePreview(Revert);
 
         var flyout = new Flyout
         {
-            Content = Ui.Column(4, Ui.Field("Hue", _hue, 70), Ui.Field("Saturation", _saturation, 70), Ui.Field("Brightness", _brightness, 70), Ui.Field("Hex", _hexBox, 70), PresetChips()),
+            Content = Ui.Column(4, Ui.Row(_wheel, _preview), Ui.Field("Hue", _hue, 70), Ui.Field("Saturation", _saturation, 70), Ui.Field("Brightness", _brightness, 70), Ui.Field("Hex", _hexBox, 70), PresetChips()),
             Placement = PlacementMode.BottomEdgeAlignedLeft,
         };
+        flyout.Opened += (_, _) => _preview.Begin(_hex);
         flyout.Closed += (_, _) => onCommit();
         Button.Flyout = flyout;
     }
@@ -88,8 +95,25 @@ internal sealed class HexColorPicker
 
     private void FromSliders()
     {
-        if (!_updating)
-            Apply(Rgb.FromHsv(_hue.Value / 360, _saturation.Value, _brightness.Value).ToHex());
+        if (_updating)
+            return;
+        _wheel.Set(_hue.Value / 360, _saturation.Value, _brightness.Value);
+        Apply(Rgb.FromHsv(_hue.Value / 360, _saturation.Value, _brightness.Value).ToHex());
+    }
+
+    private void FromWheel()
+    {
+        _updating = true;
+        _hue.Value = _wheel.Hue * 360;
+        _saturation.Value = _wheel.Saturation;
+        _updating = false;
+        Apply(Rgb.FromHsv(_wheel.Hue, _wheel.Saturation, _brightness.Value).ToHex());
+    }
+
+    private void Revert(string original)
+    {
+        SetSliders(Rgb.FromHex(original));
+        Apply(original);
     }
 
     private void FromHexBox()
@@ -107,6 +131,7 @@ internal sealed class HexColorPicker
         _hue.Value = hsv.H * 360;
         _saturation.Value = hsv.S;
         _brightness.Value = hsv.V;
+        _wheel.Set(hsv.H, hsv.S, hsv.V);
         _updating = false;
     }
 
@@ -115,6 +140,7 @@ internal sealed class HexColorPicker
         _hex = newHex.ToUpperInvariant();
         _swatch.Background = Ui.Brush(_hex);
         _hexLabel.Text = _hex;
+        _preview.Show(_hex);
         if (!fromHexBox)
             _hexBox.Text = _hex;
         _onPreview(_hex);

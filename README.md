@@ -37,6 +37,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 - Solid, colour fade, rainbow, colour cycle, chase, strobe, pulse, sparkle, gradient, colour wave, fire, lightning, heartbeat, hit
 - Presets: save a clip's whole look (effect, fades, automation) and reuse it in any show; import/export as `.lampfx`
 - Keyframe lanes for hue shift, saturation, intensity, opacity and white
+- Colour inputs open a picker with a colour wheel, a new/original preview (click the original to go back), HSB sliders, hex and presets
 - …or drive any channel directly: pan, tilt, strobe, gobo, or a raw channel number
 - Tracks stack with Normal, HTP or Add blending
 
@@ -167,9 +168,10 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 | <kbd>1</kbd>–<kbd>5</kbd> | Persp / top / front / right / toggle ortho | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
 | <kbd>Q</kbd> / <kbd>W</kbd> / <kbd>A</kbd> | Hand / move / aim tool | <kbd>F</kbd> | Frame selection |
 | <kbd>Ctrl</kbd>+<kbd>L</kbd> | Live console | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | Project settings |
+| <kbd>Ctrl</kbd>+<kbd>G</kbd> | Go to time (or click the timecode) | | |
 
 **Stage:** right-drag to orbit, middle-drag to pan, scroll to zoom, <kbd>Alt</kbd>+drag to change height.
-**Timeline:** double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.
+**Timeline:** click the timecode to type a time (`1:30`, `00:01:30:15`, `90.5`, or `+5` / `-2` from the playhead), double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.
 
 ---
 

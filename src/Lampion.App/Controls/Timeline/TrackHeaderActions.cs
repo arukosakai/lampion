@@ -31,6 +31,7 @@ internal sealed class TrackHeaderActions(EditorState state, TimelineContextMenus
                 TrackEdits.ToggleSolo(state, track);
                 break;
             case HeaderPart.Expand:
+                state.SelectTrack(track.Id);
                 TrackEdits.ToggleExpanded(state, track);
                 host.NotifyViewChanged();
                 break;

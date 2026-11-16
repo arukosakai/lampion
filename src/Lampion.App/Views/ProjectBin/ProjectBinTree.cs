@@ -20,6 +20,7 @@ internal sealed class ProjectBinTree : Border
         BorderBrush = new SolidColorBrush(Color.FromRgb(0x14, 0x14, 0x14));
         BorderThickness = new Thickness(0, 1);
         Child = _tree;
+        BinLabelToggle.Attach(_tree);
         _tree.SelectionChanged += (_, _) =>
         {
             if (!_quiet)

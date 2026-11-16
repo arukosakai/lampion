@@ -31,7 +31,7 @@ internal sealed class TrackHeaderRenderer(EditorState state)
         ctx.FillRectangle(accent, new Rect(0, y, 4, row.Height));
         if (isLight)
             TimelineText.Draw(ctx, track.Expanded ? "▾" : "▸", new Point(9, y + 7), TimelinePalette.Text, 13);
-        TimelineText.Draw(ctx, track.Name, new Point(26, y + 7), TimelinePalette.Text, 12, FontWeight.SemiBold);
+        TimelineText.Draw(ctx, track.Name, new Point(TrackHeaderLayout.NameX, y + 7), TimelinePalette.Text, TrackHeaderLayout.NameSize, TrackHeaderLayout.NameWeight);
         TimelineText.Draw(ctx, row.Caption, new Point(26, y + 25), TimelinePalette.DimText, 10);
         DrawToggle(ctx, TrackHeaderLayout.MuteRect(y), "M", track.Muted, TimelinePalette.MuteOn);
         if (isLight)

@@ -25,7 +25,9 @@ internal sealed class TimelinePanel : DockPanel
         Children.Add(_horizontal);
         SetDock(_vertical, Dock.Right);
         Children.Add(_vertical);
-        Children.Add(Timeline);
+        var timecode = new TimecodeEntryBox(state);
+        Children.Add(new Panel { Children = { Timeline, timecode } });
+        Timeline.TimecodeEntryRequested += timecode.Open;
 
         _horizontal.Scroll += (_, _) => ScrollFromBars();
         _vertical.Scroll += (_, _) => ScrollFromBars();

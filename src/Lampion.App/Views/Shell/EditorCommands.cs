@@ -57,6 +57,7 @@ internal sealed class EditorCommands
         PlayPause = new("Play / pause", state.TogglePlay, "Space");
         GoToStart = new("Go to start", () => state.Seek(0), "Home");
         GoToEnd = new("Go to end", () => state.Seek(state.Project.ContentEnd), "End");
+        GoToTime = new("Go to time…", timeline.RequestTimecodeEntry, "Ctrl+G");
         StepBack = new("Back one frame", () => state.Seek(state.Playhead - FrameStep), "Left");
         StepForward = new("Forward one frame", () => state.Seek(state.Playhead + FrameStep), "Right");
         StepBackSecond = new("Back one second", () => state.Seek(state.Playhead - 1), "Shift+Left");
@@ -146,6 +147,9 @@ internal sealed class EditorCommands
 
     /// <summary>Moves the playhead to where the content ends.</summary>
     public ShellCommand GoToEnd { get; }
+
+    /// <summary>Timeline → Go to time: type a timecode, seconds, or a +/- offset into the timeline's time readout.</summary>
+    public ShellCommand GoToTime { get; }
 
     /// <summary>Moves the playhead back one frame (1/30 s).</summary>
     public ShellCommand StepBack { get; }

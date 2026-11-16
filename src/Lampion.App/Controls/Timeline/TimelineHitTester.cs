@@ -53,7 +53,7 @@ internal sealed class TimelineHitTester(TimelineViewport viewport, TimelineLayou
             return HeaderPart.None;
         if (TrackHeaderLayout.SoloRect(rowY).Contains(p))
             return HeaderPart.Solo;
-        if (TrackHeaderLayout.ExpandRect(rowY).Contains(p))
+        if (TrackHeaderLayout.ExpandRect(rowY, row.Track.Name).Contains(p))
             return HeaderPart.Expand;
         return HeaderPart.None;
     }

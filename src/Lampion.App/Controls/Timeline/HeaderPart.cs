@@ -12,6 +12,6 @@ internal enum HeaderPart
     /// <summary>The S toggle (light tracks).</summary>
     Solo,
 
-    /// <summary>The twirl-down (light tracks).</summary>
+    /// <summary>The twirl-down arrow or the name after it (light tracks).</summary>
     Expand,
 }

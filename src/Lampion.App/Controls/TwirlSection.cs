@@ -40,8 +40,11 @@ internal sealed class TwirlSection : StackPanel
         DockPanel.SetDock(right, Dock.Right);
         bar.Children.Add(right);
         bar.Children.Add(left);
-        left.PointerPressed += (_, e) =>
+        // On the whole bar, so the label and the gaps toggle too; the trailing buttons handle their own presses.
+        bar.PointerPressed += (_, e) =>
         {
+            if (!e.GetCurrentPoint(bar).Properties.IsLeftButtonPressed)
+                return;
             open = !Body.IsVisible;
             Body.IsVisible = open;
             arrow.Text = open ? OpenGlyph : ClosedGlyph;

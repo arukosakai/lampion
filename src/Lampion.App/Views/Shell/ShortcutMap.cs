@@ -31,6 +31,7 @@ internal sealed class ShortcutMap
             new(Key.I, Ctrl: true, Shift: false, c.ImportAudio),
             new(Key.K, Ctrl: true, Shift: false, c.SplitAtPlayhead),
             new(Key.D, Ctrl: true, Shift: false, c.Duplicate),
+            new(Key.G, Ctrl: true, Shift: false, c.GoToTime),
             new(Key.C, Ctrl: true, Shift: false, c.Copy, YieldsToText: true),
             new(Key.V, Ctrl: true, Shift: false, c.Paste, YieldsToText: true),
 

@@ -63,6 +63,9 @@ public sealed class TimelineControl : Control
     /// <summary>Raised when zoom, scroll or the row layout changes, so scrollbars can follow.</summary>
     public event Action? ViewChanged;
 
+    /// <summary>Raised when the user clicks the timecode readout (or asks to go to a time), so a panel can show a box to type it in.</summary>
+    public event Action? TimecodeEntryRequested;
+
     /// <summary>Horizontal zoom in pixels per second (2..1200 when set through the zoom methods).</summary>
     public double PixelsPerSecond
     {
@@ -178,6 +181,9 @@ public sealed class TimelineControl : Control
 
     /// <summary>Raises <see cref="ViewChanged"/>; for collaborators that change the layout or the view.</summary>
     internal void NotifyViewChanged() => ViewChanged?.Invoke();
+
+    /// <summary>Asks the hosting panel to let the user type a time to go to; see <see cref="TimecodeEntryRequested"/>.</summary>
+    public void RequestTimecodeEntry() => TimecodeEntryRequested?.Invoke();
 
     /// <inheritdoc />
     protected override Size ArrangeOverride(Size finalSize)

@@ -131,7 +131,7 @@ internal sealed class BinTreeBuilder
 
     private static Control Header(Control icon, string name, string info, bool bold = false)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("22,*,Auto"), MinHeight = 20 };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("22,*,Auto"), MinHeight = 20, Background = Brushes.Transparent };
         icon.VerticalAlignment = VerticalAlignment.Center;
         grid.Children.Add(icon);
         var label = new TextBlock { Text = name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, FontWeight = bold ? FontWeight.SemiBold : FontWeight.Normal };
