@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Lampion.App.Controls;
 using Lampion.App.Editor;
 using Lampion.App.Media;
@@ -22,6 +23,7 @@ internal sealed class MainWindow : Window
     private readonly FileOperations _files;
     private readonly FrameLoop _loop;
     private readonly EditorCommands _commands;
+    private readonly Action<string, string> _proxyFailed;
     private bool _liveCloseConfirmed;
 
     /// <summary>A workspace editing <paramref name="project"/>, saved at <paramref name="path"/> (null while unsaved).</summary>
@@ -61,6 +63,8 @@ internal sealed class MainWindow : Window
         title.Refresh();
         _loop = new FrameLoop(state, _media, stage.View, video, _output, status, title);
         _loop.Start();
+        _proxyFailed = (_, message) => Dispatcher.UIThread.Post(() => status.Message = message);
+        AudioProxies.Cache.Failed += _proxyFailed;
         Opened += (_, _) => zoomToFit();
     }
 
@@ -113,6 +117,7 @@ internal sealed class MainWindow : Window
         if (!_files.ConfirmClose(e))
             return;
         _loop.Stop();
+        AudioProxies.Cache.Failed -= _proxyFailed;
         _media.Dispose();
         _output.Dispose();
     }

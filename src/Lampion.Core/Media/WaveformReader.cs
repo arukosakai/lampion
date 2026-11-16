@@ -28,7 +28,9 @@ public static class WaveformReader
 
     private static AudioPeaks ReadMp3(string path, double peaksPerSecond)
     {
-        using var mp3 = new MpegFile(path);
+        // NLayer leaks the handle when its path constructor throws on a bad file, so the stream is owned here.
+        using var input = File.OpenRead(path);
+        using var mp3 = new MpegFile(input);
         var builder = new PeakBuilder(mp3.SampleRate, mp3.Channels, peaksPerSecond);
         var buffer = new float[16384];
         int read;

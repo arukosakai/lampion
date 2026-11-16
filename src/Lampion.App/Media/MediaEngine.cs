@@ -96,6 +96,8 @@ internal sealed partial class MediaEngine : IDisposable
             {
                 if (item is not MediaClip clip)
                     continue;
+                // Resolved for every clip, not just cued ones, so MP3 proxies are made as soon as a show loads.
+                var source = AudioProxies.Cache.Resolve(clip.Path);
                 _players.TryGetValue(clip.Id, out var existing);
                 if (existing is not null)
                     existing.Seen = _generation;
@@ -103,7 +105,9 @@ internal sealed partial class MediaEngine : IDisposable
                 var cued = inside || (t >= clip.Start - Preroll && t < clip.Start);
                 if (!cued && existing is null)
                     continue;
-                var player = existing is not null && existing.Path == clip.Path ? existing : TryOpen(clip, track.Kind == TrackKind.Video, existing);
+                // A proxy that arrives mid-playback waits for the next stop, so the sound doesn't drop out.
+                var keep = existing is not null && (existing.Path == source || (playing && existing.Path == clip.Path));
+                var player = keep ? existing : TryOpen(clip, source, track.Kind == TrackKind.Video, existing);
                 if (player is null)
                     continue;
                 var expected = Math.Max(t - clip.Start, 0) + clip.MediaOffset;
@@ -132,14 +136,14 @@ internal sealed partial class MediaEngine : IDisposable
         _vlc?.Dispose();
     }
 
-    // Opens a player for the clip's file, replacing one opened for an earlier path. A missing file opens
-    // nothing and leaves any existing player alone, as if the clip were not there.
-    private ClipPlayer? TryOpen(MediaClip clip, bool video, ClipPlayer? existing)
+    // Opens a player on source (the clip's file or its proxy), replacing one opened for an earlier path. A missing
+    // file opens nothing and leaves any existing player alone, as if the clip were not there.
+    private ClipPlayer? TryOpen(MediaClip clip, string source, bool video, ClipPlayer? existing)
     {
         if (!File.Exists(clip.Path))
             return null;
         existing?.Dispose();
-        var player = new ClipPlayer(_vlc!, clip.Path, video ? Video : null) { Seen = _generation };
+        var player = new ClipPlayer(_vlc!, source, video ? Video : null) { Seen = _generation };
         _players[clip.Id] = player;
         return player;
     }

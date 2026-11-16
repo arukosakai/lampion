@@ -23,6 +23,10 @@ internal static class UserPaths
     /// <summary>Saved effect presets.</summary>
     public static string Presets => Path.Combine(Root, "Presets");
 
+    /// <summary>WAV copies of MP3s for exact seeking (<see cref="Lampion.Core.Media.AudioProxyCache"/>); a machine-local cache, safe to delete.</summary>
+    public static string AudioProxies =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lampion", "Audio Proxies");
+
     /// <summary><paramref name="name"/> with characters the file system rejects replaced by '_'; <paramref name="fallback"/> when nothing is left.</summary>
     public static string SafeFileName(string name, string fallback)
     {

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using Lampion.App.Media;
 using Lampion.Core.Model.Timeline;
 using LibVLCSharp.Shared;
 using VlcMedia = LibVLCSharp.Shared.Media;
@@ -32,7 +33,7 @@ internal sealed partial class LiveMedia
             if (_player is not null)
                 return;
             // Start position and pause are media options, so VLC opens the file there instead of seeking after opening.
-            _media = new VlcMedia(vlc, Clip.Path, FromType.FromPath);
+            _media = new VlcMedia(vlc, AudioProxies.Cache.Resolve(Clip.Path), FromType.FromPath);
             _media.AddOption(":start-time=" + position.ToString("0.000", CultureInfo.InvariantCulture));
             if (paused)
                 _media.AddOption(":start-paused");
