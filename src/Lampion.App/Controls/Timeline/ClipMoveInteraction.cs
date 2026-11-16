@@ -5,7 +5,8 @@ using Lampion.Core.Model.Timeline;
 namespace Lampion.App.Controls.Timeline;
 
 /// <summary>
-/// Dragging a clip's body: it slides in time, snapping an edge to the playhead when close, else whichever edge is closer to a candidate, and moves to
+/// Dragging a clip's body: it slides in time, snapping an edge to the playhead or its start to the previous clip's end when close, else whichever
+/// edge is closer to a candidate, and moves to
 /// another unlocked track of the same kind when the pointer crosses onto one.
 /// </summary>
 internal sealed class ClipMoveInteraction(
@@ -21,7 +22,7 @@ internal sealed class ClipMoveInteraction(
     protected override void Apply(Point p, double delta, double tolerance)
     {
         var start = Math.Max(0, OriginalStart + delta);
-        Clip.Start = Math.Max(0, Snapper.SnapSpan(start, Clip.Duration, tolerance, Clip));
+        Clip.Start = Math.Max(0, Snapper.SnapMove(start, tolerance, Clip, Track));
         if (hitTester.TryGetRow(p.Y, out var row, out _)
             && !row.IsLane
             && row.Track != Track

@@ -24,27 +24,42 @@ internal sealed class TimelineSnapper(EditorState state, TimelineViewport viewpo
         PlayheadDistance(time) < tolerance ? state.Playhead : SnapIgnoringPlayhead(time, tolerance, ignore, beats);
 
     /// <summary>
-    /// Where a span of <paramref name="duration"/> seconds starting at <paramref name="start"/> should start so that one of
-    /// its edges snaps: the playhead first (as in <see cref="Snap"/>), otherwise whichever edge moves less.
+    /// Where <paramref name="clip"/>, moved to start at <paramref name="start"/> on <paramref name="track"/>, should start
+    /// so that one of its edges snaps. In order: an edge on the playhead (as in <see cref="Snap"/>), its start butted
+    /// against the end of the previous clip on the track, otherwise whichever edge moves less.
     /// </summary>
-    /// <param name="start">The span's unsnapped start, in seconds.</param>
-    /// <param name="duration">The span's length, in seconds.</param>
+    /// <param name="start">The clip's unsnapped start, in seconds.</param>
     /// <param name="tolerance">Seconds; 0 disables snapping.</param>
-    /// <param name="ignore">A clip whose own edges are not candidates (the one being dragged), or null.</param>
-    public double SnapSpan(double start, double duration, double tolerance, Clip? ignore = null)
+    /// <param name="clip">The clip being moved; its own edges are not candidates.</param>
+    /// <param name="track">The track the clip is on now.</param>
+    public double SnapMove(double start, double tolerance, Clip clip, Track track)
     {
+        var duration = clip.Duration;
         var end = start + duration;
         var toStart = PlayheadDistance(start);
         var toEnd = PlayheadDistance(end);
         if (Math.Min(toStart, toEnd) < tolerance)
             return toStart <= toEnd ? state.Playhead : state.Playhead - duration;
-        var snappedStart = SnapIgnoringPlayhead(start, tolerance, ignore, beats: true);
-        var snappedEnd = SnapIgnoringPlayhead(end, tolerance, ignore, beats: true) - duration;
+        var previousEnd = PreviousEnd(track, start, clip);
+        if (Math.Abs(previousEnd - start) < tolerance)
+            return previousEnd;
+        var snappedStart = SnapIgnoringPlayhead(start, tolerance, clip, beats: true);
+        var snappedEnd = SnapIgnoringPlayhead(end, tolerance, clip, beats: true) - duration;
         return Math.Abs(snappedStart - start) <= Math.Abs(snappedEnd - start) ? snappedStart : snappedEnd;
     }
 
     // A playing playhead runs away from whatever snaps to it, so it only attracts while stopped.
     private double PlayheadDistance(double time) => state.IsPlaying ? double.PositiveInfinity : Math.Abs(state.Playhead - time);
+
+    // The latest end among the track's clips that start before start; -infinity (never in reach) when none do.
+    private static double PreviousEnd(Track track, double start, Clip moving)
+    {
+        var previousEnd = double.NegativeInfinity;
+        foreach (var other in track.Clips)
+            if (other.Id != moving.Id && other.Start < start && other.End > previousEnd)
+                previousEnd = other.End;
+        return previousEnd;
+    }
 
     private double SnapIgnoringPlayhead(double time, double tolerance, Clip? ignore, bool beats)
     {
