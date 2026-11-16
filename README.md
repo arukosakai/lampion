@@ -28,7 +28,8 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 - Light, audio and video tracks, with a beat grid driven by BPM and offset
 - Drag, trim, split (<kbd>Ctrl</kbd>+<kbd>K</kbd>), duplicate, copy and paste clips
 - Fade handles and transitions: crossfade, dip to black, wipe across the rig
-- Audio waveforms, markers, and snapping to beats, clip edges and the playhead (the stopped playhead wins when it's in reach, then the end of the previous clip on the track; hold Alt to drag freely)
+- Markers: the playhead snaps to them while scrubbing (Alt scrubs freely); Ctrl+click or right-click one to delete it
+- Audio waveforms, plus clips snapping to beats, markers, clip edges and the playhead (the stopped playhead wins when it's in reach, then the end of the previous clip on the track; hold Alt to drag freely)
 
 </td>
 <td width="50%" valign="top">
@@ -163,7 +164,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 | <kbd>Space</kbd> | Play / pause | <kbd>Ctrl</kbd>+<kbd>K</kbd> | Split at playhead |
 | <kbd>Home</kbd> / <kbd>End</kbd> | Start / end | <kbd>Ctrl</kbd>+<kbd>D</kbd> | Duplicate |
 | <kbd>←</kbd> / <kbd>→</kbd> | Step a frame (<kbd>Shift</kbd>: 1 s) | <kbd>Del</kbd> | Delete selection |
-| <kbd>M</kbd> | Add marker | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd> | Undo / redo |
+| <kbd>M</kbd> / <kbd>J</kbd> / <kbd>K</kbd> | Add marker / previous / next marker | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd> | Undo / redo |
 | <kbd>=</kbd> / <kbd>-</kbd> / <kbd>\\</kbd> | Zoom in / out / fit | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save |
 | <kbd>1</kbd>–<kbd>5</kbd> | Persp / top / front / right / toggle ortho | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
 | <kbd>Q</kbd> / <kbd>W</kbd> / <kbd>A</kbd> | Hand / move / aim tool | <kbd>F</kbd> | Frame selection |

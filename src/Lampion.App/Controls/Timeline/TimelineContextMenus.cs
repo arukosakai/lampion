@@ -9,7 +9,7 @@ using Lampion.Core.Model.Timeline;
 
 namespace Lampion.App.Controls.Timeline;
 
-/// <summary>The right-click menus for clips and tracks. Built fresh on each click (cold path).</summary>
+/// <summary>The right-click menus for clips, tracks and markers. Built fresh on each click (cold path).</summary>
 internal sealed class TimelineContextMenus(EditorState state, TimelineSnapper snapper, TimelineControl host)
 {
     private static readonly AutomationTarget[] LaneTargets =
@@ -54,6 +54,19 @@ internal sealed class TimelineContextMenus(EditorState state, TimelineSnapper sn
             if (TopLevel.GetTopLevel(host) is Window owner)
                 _ = PresetActions.SaveFromClip(owner, light);
         }));
+        return menu;
+    }
+
+    /// <summary>The menu for <paramref name="marker"/>: go to it, delete it, or delete every marker.</summary>
+    public ContextMenu MarkerMenu(Marker marker)
+    {
+        var menu = new ContextMenu();
+        menu.Items.Add(Item("Go to marker", () => state.Seek(marker.Time)));
+        var delete = Item("Delete marker", () => MarkerEdits.Delete(state, marker));
+        ToolTip.SetTip(delete, "Or Ctrl+click the marker");
+        menu.Items.Add(delete);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Item("Delete all markers", () => MarkerEdits.DeleteAll(state)));
         return menu;
     }
 

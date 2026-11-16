@@ -87,4 +87,11 @@ internal sealed class TimelineSnapper(EditorState state, TimelineViewport viewpo
     /// <summary><see cref="Snap"/> with the drag tolerance (<see cref="DragTolerancePixels"/> at the current zoom).</summary>
     public double SnapDrag(double time, Clip? ignore = null, bool beats = true) =>
         Snap(time, viewport.PixelsToSeconds(DragTolerancePixels), ignore, beats);
+
+    /// <summary>
+    /// Where the playhead should land for <paramref name="time"/>: on a marker when one is within the drag
+    /// tolerance (<see cref="DragTolerancePixels"/> at the current zoom), otherwise <paramref name="time"/> itself.
+    /// </summary>
+    public double SnapPlayhead(double time) =>
+        MarkerSearch.Nearest(state.Project.Markers, time, viewport.PixelsToSeconds(DragTolerancePixels))?.Time ?? time;
 }

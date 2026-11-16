@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Timeline;
@@ -6,7 +7,7 @@ namespace Lampion.App.Controls.Timeline;
 
 /// <summary>
 /// Answers "what is under the pointer" against the same geometry the renderers draw: rows, header toggles,
-/// clip zones and keyframes. Points are in control coordinates. Allocation-free.
+/// clip zones, keyframes and markers. Points are in control coordinates. Allocation-free.
 /// </summary>
 internal sealed class TimelineHitTester(TimelineViewport viewport, TimelineLayout layout)
 {
@@ -18,6 +19,7 @@ internal sealed class TimelineHitTester(TimelineViewport viewport, TimelineLayou
     private const double TransitionBand = 18;
     private const double LaneSlack = 6;
     private const double KeyGrab = 7;
+    private const double MarkerGrab = 6;
 
     /// <summary>Finds the row at <paramref name="y"/>.</summary>
     /// <param name="y">Control y coordinate.</param>
@@ -40,6 +42,35 @@ internal sealed class TimelineHitTester(TimelineViewport viewport, TimelineLayou
         row = default;
         rowY = 0;
         return false;
+    }
+
+    /// <summary>
+    /// The marker whose flag or label is under <paramref name="p"/> in the ruler. When flags overlap, the one
+    /// whose tip is nearest wins.
+    /// </summary>
+    /// <param name="markers">The project's markers.</param>
+    /// <param name="p">Pointer position in control coordinates.</param>
+    /// <param name="marker">The marker hit, when there is one.</param>
+    public bool TryHitMarker(IReadOnlyList<Marker> markers, Point p, [NotNullWhen(true)] out Marker? marker)
+    {
+        marker = null;
+        if (p.Y < MarkerRenderer.Top || p.Y > TimelineViewport.RulerHeight || p.X <= TimelineViewport.HeaderWidth)
+            return false;
+        var bestDistance = double.PositiveInfinity;
+        for (var i = 0; i < markers.Count; i++)
+        {
+            var x = viewport.TimeToX(markers[i].Time);
+            var labelRight = x + MarkerRenderer.LabelOffset + MarkerRenderer.LabelWidth(markers[i].Label);
+            if (p.X < x - MarkerGrab || p.X > Math.Max(x + MarkerGrab, labelRight))
+                continue;
+            var distance = Math.Abs(p.X - x);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                marker = markers[i];
+            }
+        }
+        return marker is not null;
     }
 
     /// <summary>The header toggle under <paramref name="p"/> on track row <paramref name="row"/> (top at <paramref name="rowY"/>).</summary>

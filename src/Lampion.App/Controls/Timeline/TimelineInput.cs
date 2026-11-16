@@ -44,13 +44,13 @@ internal sealed class TimelineInput
         _menus = new TimelineContextMenus(state, snapper, host);
         _headers = new TrackHeaderActions(state, _menus, host);
         _lanes = new KeyframeLaneActions(state, viewport, snapper, hitTester);
-        _scrub = new ScrubInteraction(state, viewport);
+        _scrub = new ScrubInteraction(state, viewport, snapper);
     }
 
     /// <summary>Whether a drag is in progress (the timeline doesn't page during playback meanwhile).</summary>
     public bool IsInteracting => _interaction is not null;
 
-    /// <summary>Handles a pointer press: scrub in the ruler, the timecode readout, header clicks, keyframes, clip drags and menus, or select-and-seek.</summary>
+    /// <summary>Handles a pointer press: scrub or marker clicks in the ruler, the timecode readout, header clicks, keyframes, clip drags and menus, or select-and-seek.</summary>
     public void Pressed(PointerPressedEventArgs e)
     {
         var p = e.GetPosition(_host);
@@ -59,13 +59,28 @@ internal sealed class TimelineInput
 
         if (p.Y < TimelineViewport.RulerHeight)
         {
-            if (p.X > TimelineViewport.HeaderWidth)
+            if (p.X <= TimelineViewport.HeaderWidth)
             {
-                Begin(_scrub, e);
-                _scrub.Seek(p);
+                if (!rightButton)
+                    _host.RequestTimecodeEntry();
+                return;
             }
-            else if (!rightButton)
-                _host.RequestTimecodeEntry();
+            if (_hitTester.TryHitMarker(_state.Project.Markers, p, out var marker))
+            {
+                if (rightButton)
+                {
+                    _menus.MarkerMenu(marker).Open(_host);
+                    return;
+                }
+                // Ctrl+click deletes a marker, as in After Effects.
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                {
+                    MarkerEdits.Delete(_state, marker);
+                    return;
+                }
+            }
+            Begin(_scrub, e);
+            _scrub.Seek(p, e.KeyModifiers);
             return;
         }
 
@@ -117,7 +132,7 @@ internal sealed class TimelineInput
             return;
         }
         _state.SelectTrack(row.Track.Id);
-        _state.Seek(Math.Max(0, _viewport.XToTime(p.X)));
+        _scrub.Seek(p, e.KeyModifiers);
     }
 
     /// <summary>Feeds the drag in progress, or updates the hover cursor when there is none.</summary>
@@ -177,6 +192,8 @@ internal sealed class TimelineInput
         var cursor = _arrowCursor;
         if (p.Y < TimelineViewport.RulerHeight && p.X <= TimelineViewport.HeaderWidth)
             cursor = _textCursor;
+        else if (_hitTester.TryHitMarker(_state.Project.Markers, p, out _))
+            cursor = _handCursor;
         else if (p.X > TimelineViewport.HeaderWidth
             && _hitTester.TryGetRow(p.Y, out var row, out var rowY)
             && !row.IsLane

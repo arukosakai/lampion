@@ -14,7 +14,7 @@ internal static class MainMenu
             {
                 Top("_File", c.NewProject, c.Open, c.Save, c.SaveAs, null, c.ProjectSettings, null, c.ImportAudio, c.ImportVideo, null, c.ExportQlc, null, c.Exit),
                 Top("_Edit", c.Undo, c.Redo, null, c.Copy, c.Paste, c.Duplicate, c.Delete),
-                Top("_Timeline", c.PlayPause, c.GoToStart, c.GoToTime, c.SplitAtPlayhead, c.AddMarker, c.NewLightTrack, c.ZoomToFit),
+                Top("_Timeline", c.PlayPause, c.GoToStart, c.GoToTime, c.SplitAtPlayhead, null, c.AddMarker, c.PreviousMarker, c.NextMarker, c.DeleteMarkerAtPlayhead, c.DeleteAllMarkers, null, c.NewLightTrack, c.ZoomToFit),
                 Top(
                     "_Stage",
                     c.PerspectiveView,

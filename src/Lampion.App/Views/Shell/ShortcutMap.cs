@@ -41,6 +41,8 @@ internal sealed class ShortcutMap
             new(Key.Delete, Ctrl: false, Shift: false, c.Delete),
             new(Key.Back, Ctrl: false, Shift: false, c.Delete),
             new(Key.M, Ctrl: false, Shift: false, c.AddMarker),
+            new(Key.J, Ctrl: false, Shift: false, c.PreviousMarker),
+            new(Key.K, Ctrl: false, Shift: false, c.NextMarker),
             new(Key.OemPlus, Ctrl: false, Shift: false, c.ZoomIn),
             new(Key.Add, Ctrl: false, Shift: false, c.ZoomIn),
             new(Key.OemMinus, Ctrl: false, Shift: false, c.ZoomOut),

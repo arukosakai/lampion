@@ -64,6 +64,10 @@ internal sealed class EditorCommands
         StepForwardSecond = new("Forward one second", () => state.Seek(state.Playhead + 1), "Shift+Right");
         SplitAtPlayhead = new("Split at playhead", () => TimelineOps.SplitAtPlayhead(state), "Ctrl+K");
         AddMarker = new("Add marker", () => TimelineOps.AddMarker(state), "M");
+        PreviousMarker = new("Previous marker", () => MarkerEdits.GoToPrevious(state), "J");
+        NextMarker = new("Next marker", () => MarkerEdits.GoToNext(state), "K");
+        DeleteMarkerAtPlayhead = new("Delete marker at playhead", () => MarkerEdits.DeleteAtPlayhead(state));
+        DeleteAllMarkers = new("Delete all markers", () => MarkerEdits.DeleteAll(state));
         NewLightTrack = new("New light track", () => TimelineOps.AddLightTrack(state, state.SelectedFixtureIds));
         ZoomIn = new("Zoom in", () => timeline.ZoomAround(ZoomStep, zoomAnchor), "OemPlus");
         ZoomOut = new("Zoom out", () => timeline.ZoomAround(1 / ZoomStep, zoomAnchor), "OemMinus");
@@ -168,6 +172,18 @@ internal sealed class EditorCommands
 
     /// <summary>Timeline → Add marker.</summary>
     public ShellCommand AddMarker { get; }
+
+    /// <summary>Timeline → Previous marker: the playhead jumps to the last marker before it.</summary>
+    public ShellCommand PreviousMarker { get; }
+
+    /// <summary>Timeline → Next marker: the playhead jumps to the first marker after it.</summary>
+    public ShellCommand NextMarker { get; }
+
+    /// <summary>Timeline → Delete marker at playhead (within two frames of it).</summary>
+    public ShellCommand DeleteMarkerAtPlayhead { get; }
+
+    /// <summary>Timeline → Delete all markers, as one undo step.</summary>
+    public ShellCommand DeleteAllMarkers { get; }
 
     /// <summary>Timeline → New light track (for the selected fixtures).</summary>
     public ShellCommand NewLightTrack { get; }
