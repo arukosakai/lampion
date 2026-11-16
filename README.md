@@ -1,8 +1,8 @@
-| <kbd>Ctrl</kbd>+<kbd>L</kbd> | Live console | <div align="center">
+<div align="center">
 
 # 🏮 Lampion
 
-**Design light shows on a timeline, see them in real 3D, and send them to QLC+.**
+**Design light shows on a timeline, see them in real 3D, send them to QLC+ or run them live.**
 
 [![Release](https://github.com/arukosakai/lampion/actions/workflows/release.yml/badge.svg)](https://github.com/arukosakai/lampion/actions/workflows/release.yml)
 [![Latest release](https://img.shields.io/github/v/release/arukosakai/lampion?include_prereleases&sort=semver)](https://github.com/arukosakai/lampion/releases)
@@ -10,11 +10,11 @@
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2D8CEB)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-lightgrey)](LICENSE)
 
-<img src="docs/screenshot.png" alt="Lampion: fixtures on the left, the 3D stage in the middle, effect controls on the right and the timeline below" width="900">
+<img src="docs/screenshot.png" alt="Lampion playing the festival showcase: groups and fixtures on the left, the lit 3D festival stage in the middle, a chase clip's effect controls on the right and the timeline below" width="900">
 
 </div>
 
-You patch your DMX fixtures, build the venue in metres, and lay your lights out on an After Effects-style timeline next to the music and video. Lampion previews the show live in GPU-rendered 3D, works out every DMX value itself, and exports a ready-to-run QLC+ workspace.
+You patch your DMX fixtures, build the venue in metres, and lay your lights out on an After Effects-style timeline next to the music and video. Lampion previews the show live in GPU-rendered 3D, works out every DMX value itself, and exports a ready-to-run QLC+ workspace. On show night, the live console plays a set list of your shows in sync with the music, with faders, effect pads and a MIDI controller on top.
 
 ---
 
@@ -59,6 +59,26 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 - A stage builder in metres: truss (lying, standing as towers, or built into arches and cubes with lights), risers, walls and LED screens that play your video; every set piece and fixture can be yawed, pitched and rolled
 - A Unity-style scene gizmo for axis views and ortho, move gizmos, grid snapping, an aim tool, and throw and spot-size readouts
 - Stage layouts you save once and reuse in every project
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🎚️ Live console
+- A set list of shows, cut to with **GO**, with the song as the master clock for the lights
+- Faders for intensity, colour or any channel, and launchpad-style effect pads
+- MIDI learn, plus one-click mapping for the Akai APC mini mk2 with lit pads
+- A 100 Hz engine on its own thread, built to keep running through errors on show night
+
+</td>
+<td valign="top">
+
+### 🎵 Music & video
+- Audio and video clips on the timeline, with waveforms and a beat grid to edit against
+- MP3s are conformed to WAV in the background so playback starts on the right spot anywhere in the song
+- LED screens on the stage play your video
+- The QLC+ export brings the audio and video along at their timeline positions
 
 </td>
 </tr>
@@ -146,7 +166,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 | <kbd>=</kbd> / <kbd>-</kbd> / <kbd>\\</kbd> | Zoom in / out / fit | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save |
 | <kbd>1</kbd>–<kbd>5</kbd> | Persp / top / front / right / toggle ortho | <kbd>Ctrl</kbd>+<kbd>E</kbd> | Export to QLC+ |
 | <kbd>Q</kbd> / <kbd>W</kbd> / <kbd>A</kbd> | Hand / move / aim tool | <kbd>F</kbd> | Frame selection |
-| | | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | Project settings |
+| <kbd>Ctrl</kbd>+<kbd>L</kbd> | Live console | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> | Project settings |
 
 **Stage:** right-drag to orbit, middle-drag to pan, scroll to zoom, <kbd>Alt</kbd>+drag to change height.
 **Timeline:** double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.
@@ -165,9 +185,9 @@ dotnet test                                       # engine tests
 
 | Project | Contents |
 | --- | --- |
-| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net and USB DMX output, stage layouts, 3D model import (glTF/OBJ). No UI dependencies. |
-| `src/Lampion.App` | Avalonia UI, the OpenGL stage renderer and LibVLC media playback |
-| `tests/Lampion.Core.Tests` | xUnit tests for the engine and the exporter |
+| `src/Lampion.Core` | Model, show evaluator, DMX mapping, QLC+ export, Art-Net and USB DMX output, the live engine and MIDI, stage layouts, 3D model import (glTF/OBJ). No UI dependencies. |
+| `src/Lampion.App` | Avalonia UI, the live console window, the OpenGL stage renderer and LibVLC media playback |
+| `tests/Lampion.Core.Tests` | xUnit tests for the engine, the exporter, the live engine and MIDI, including fuzz and allocation tests |
 
 ### Releasing
 
