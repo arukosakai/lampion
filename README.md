@@ -28,7 +28,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 - Light, audio and video tracks, with a beat grid driven by BPM and offset
 - Drag, trim, split (<kbd>Ctrl</kbd>+<kbd>K</kbd>), duplicate, copy and paste clips
 - Fade handles and transitions: crossfade, dip to black, wipe across the rig
-- Audio waveforms, markers, and snapping to beats, clip edges and the playhead
+- Audio waveforms, markers, and snapping to beats, clip edges and the playhead (the stopped playhead wins when it's in reach; hold Alt to drag freely)
 
 </td>
 <td width="50%" valign="top">
