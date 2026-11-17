@@ -1086,7 +1086,74 @@
           "fadeOut": 2,
           "fadeEasing": "EaseInOut",
           "transitionIn": null,
-          "automation": [],
+          "automation": [
+            {
+              "id": "a-sparkle-rate",
+              "target": "EffectParameter",
+              "role": "Strobe",
+              "channel": 1,
+              "parameter": "rate",
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "EaseIn"
+                },
+                {
+                  "time": 5,
+                  "value": 9,
+                  "easing": "Hold"
+                },
+                {
+                  "time": 6,
+                  "value": 4,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-sparkle-decay",
+              "target": "EffectParameter",
+              "role": "Strobe",
+              "channel": 1,
+              "parameter": "decay",
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.6,
+                  "easing": "Linear"
+                },
+                {
+                  "time": 8,
+                  "value": 0.1,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            },
+            {
+              "id": "a-sparkle-unknown",
+              "target": "EffectParameter",
+              "role": "Strobe",
+              "channel": 1,
+              "parameter": "stepTime",
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 2,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            }
+          ],
           "effectOffset": 0,
           "effectSpan": null,
           "id": "c-sparkle",
@@ -2175,7 +2242,30 @@
           "fadeOut": 0,
           "fadeEasing": "Linear",
           "transitionIn": null,
-          "automation": [],
+          "automation": [
+            {
+              "id": "a-chase-step",
+              "target": "EffectParameter",
+              "role": "Strobe",
+              "channel": 1,
+              "parameter": "stepTime",
+              "enabled": true,
+              "animated": true,
+              "keys": [
+                {
+                  "time": 0,
+                  "value": 0.5,
+                  "easing": "EaseInOut"
+                },
+                {
+                  "time": 8,
+                  "value": 0.08,
+                  "easing": "Linear"
+                }
+              ],
+              "defaultValue": 0
+            }
+          ],
           "effectOffset": 0,
           "effectSpan": null,
           "id": "c-forward",
@@ -2335,7 +2425,74 @@
       "fadeOut": 2,
       "fadeEasing": "EaseInOut",
       "transitionIn": null,
-      "automation": [],
+      "automation": [
+        {
+          "id": "a-sparkle-rate",
+          "target": "EffectParameter",
+          "role": "Strobe",
+          "channel": 1,
+          "parameter": "rate",
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 1,
+              "easing": "EaseIn"
+            },
+            {
+              "time": 5,
+              "value": 9,
+              "easing": "Hold"
+            },
+            {
+              "time": 6,
+              "value": 4,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-sparkle-decay",
+          "target": "EffectParameter",
+          "role": "Strobe",
+          "channel": 1,
+          "parameter": "decay",
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.6,
+              "easing": "Linear"
+            },
+            {
+              "time": 8,
+              "value": 0.1,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        },
+        {
+          "id": "a-sparkle-unknown",
+          "target": "EffectParameter",
+          "role": "Strobe",
+          "channel": 1,
+          "parameter": "stepTime",
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 2,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        }
+      ],
       "effectOffset": 0,
       "effectSpan": null,
       "id": "c-sparkle",
@@ -3327,7 +3484,30 @@
       "fadeOut": 0,
       "fadeEasing": "Linear",
       "transitionIn": null,
-      "automation": [],
+      "automation": [
+        {
+          "id": "a-chase-step",
+          "target": "EffectParameter",
+          "role": "Strobe",
+          "channel": 1,
+          "parameter": "stepTime",
+          "enabled": true,
+          "animated": true,
+          "keys": [
+            {
+              "time": 0,
+              "value": 0.5,
+              "easing": "EaseInOut"
+            },
+            {
+              "time": 8,
+              "value": 0.08,
+              "easing": "Linear"
+            }
+          ],
+          "defaultValue": 0
+        }
+      ],
       "effectOffset": 0,
       "effectSpan": null,
       "id": "c-forward",

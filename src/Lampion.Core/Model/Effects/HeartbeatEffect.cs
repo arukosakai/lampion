@@ -17,6 +17,19 @@ public sealed class HeartbeatEffect : Effect
     /// <summary>Phase offset between neighbouring fixtures, in cycles.</summary>
     public double Phase { get; set; }
 
+    private const int RateSlot = 0;
+    private const int MinimumSlot = 1;
+    private const int PhaseSlot = 2;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<HeartbeatEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v),
+        AnimatableParameter.Plain<HeartbeatEffect>("minimum", "Minimum", e => e.Minimum, (e, v) => e.Minimum = v),
+        AnimatableParameter.Plain<HeartbeatEffect>("phase", "Phase", e => e.Phase, (e, v) => e.Phase = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Heartbeat";
 
@@ -26,9 +39,10 @@ public sealed class HeartbeatEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var p = EffectMath.Frac(ctx.Time * Rate + Phase * ctx.Index);
+        var p = EffectMath.Frac(ctx.Time * ctx.Parameter(RateSlot, Rate) + ctx.Parameter(PhaseSlot, Phase) * ctx.Index);
+        var minimum = ctx.Parameter(MinimumSlot, Minimum);
         var shape = Math.Max(Beat(p, 0.08, 0.05), 0.6 * Beat(p, 0.3, 0.06));
-        return new(Rgb.FromHex(Color), Intensity * (Minimum + (1 - Minimum) * shape));
+        return new(Rgb.FromHex(Color), Intensity * (minimum + (1 - minimum) * shape));
     }
 
     /// <summary>A Gaussian bump at <paramref name="center"/> on the wrapped 0..1 phase circle.</summary>

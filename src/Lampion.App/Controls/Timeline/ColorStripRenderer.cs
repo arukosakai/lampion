@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
 using Lampion.Core.Color;
-using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
 
 namespace Lampion.App.Controls.Timeline;
@@ -31,13 +30,12 @@ internal sealed class ColorStripRenderer(TimelineViewport viewport, ColorBrushCa
         var count = Math.Max(1, fixtureCount);
         var visibleLeft = Math.Max(rect.Left, TimelineViewport.HeaderWidth);
         var visibleRight = Math.Min(rect.Right, viewport.Width);
-        var span = clip.EffectSpan ?? clip.Duration;
         var top = rect.Top + NameBarHeight;
         var height = rect.Height - NameBarHeight;
         for (var x = visibleLeft; x < visibleRight; x += Step)
         {
             var local = viewport.XToTime(x + Step / 2) - clip.Start;
-            var sample = clip.Effect.Sample(new EffectContext(local + clip.EffectOffset, span, count / 2, count));
+            var sample = clip.Effect.Sample(clip.EffectContextAt(local, count / 2, count));
             var color = (sample.Color * Math.Clamp(sample.Intensity, 0, 1) * clip.Envelope(local)).Clamped();
             var brush = brushes.Get(Rgb.ToByte(color.R), Rgb.ToByte(color.G), Rgb.ToByte(color.B));
             ctx.FillRectangle(brush, new Rect(x, top, Step + 0.5, height));

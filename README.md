@@ -38,6 +38,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 - Solid, colour fade, rainbow, colour cycle, chase, strobe, pulse, sparkle, gradient, colour wave, fire, lightning, heartbeat, hit
 - Presets: save a clip's whole look (effect, fades, automation) and reuse it in any show; import/export as `.lampfx`
 - Keyframe lanes for hue shift, saturation, intensity, opacity and white
+- Animate any numeric effect parameter (sparkle rate, chase step time, strobe duty, decay, ...) with its ⏱ stopwatch; keyframed speeds ramp smoothly instead of jumping, and a split clip carries on exactly where it was
 - Colour inputs open a picker with a colour wheel, a new/original preview (click the original to go back), HSB sliders, hex and presets
 - …or drive any channel directly: pan, tilt, strobe, gobo, or a raw channel number
 - Tracks stack with Normal, HTP or Add blending

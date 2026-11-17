@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Lampion.App.Controls;
 using Lampion.Core.Model.Animation;
+using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
 
 namespace Lampion.App.Views.Inspector;
@@ -29,9 +30,21 @@ internal sealed class AnimatableProperty : IInspectorRefreshable
     /// <param name="range">Limits, drag speed and display of the value.</param>
     /// <param name="removable">Adds ✕ to delete the lane, for channel lanes the user added.</param>
     /// <param name="tip">Optional tooltip on the label.</param>
-    public AnimatableProperty(InspectorContext context, LightClip clip, LaneKey key, string name, ScrubRange range, bool removable = false, string? tip = null)
+    /// <param name="parameter">The effect parameter behind an <see cref="AutomationTarget.EffectParameter"/> key, whose static value lives on the effect.</param>
+    /// <param name="staticEditor">Shown instead of the plain scrub while the stopwatch is off, e.g. a tempo row with tap and BPM.</param>
+    public AnimatableProperty(
+        InspectorContext context,
+        LightClip clip,
+        LaneKey key,
+        string name,
+        ScrubRange range,
+        bool removable = false,
+        string? tip = null,
+        AnimatableParameter? parameter = null,
+        Control? staticEditor = null
+    )
     {
-        _binding = new LaneBinding(context.State, clip, key);
+        _binding = new LaneBinding(context.State, clip, key, parameter);
         var animated = _binding.IsAnimated;
 
         Action<double> set = _binding.Set;
@@ -71,7 +84,7 @@ internal sealed class AnimatableProperty : IInspectorRefreshable
                 context.Rebuild();
             }));
 
-        Row = new PropertyRow(name, _scrub, stopwatch, navigator, tip);
+        Row = new PropertyRow(name, animated ? _scrub : staticEditor ?? _scrub, stopwatch, navigator, tip);
         context.Track(this);
     }
 

@@ -106,7 +106,7 @@ internal sealed class TimelineLayout
                 continue;
             foreach (var lane in light.Automation)
             {
-                if (!lane.Animated)
+                if (!LaneTarget.IsShown(light, lane))
                     continue;
                 var target = LaneTarget.Of(lane);
                 if (_lanes.Contains(target))

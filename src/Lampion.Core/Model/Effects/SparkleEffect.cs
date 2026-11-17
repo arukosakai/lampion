@@ -17,6 +17,17 @@ public sealed class SparkleEffect : Effect
     /// <summary>Picks a different, but repeatable, random pattern.</summary>
     public int Seed { get; set; } = 7;
 
+    private const int RateSlot = 0;
+    private const int DecaySlot = 1;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<SparkleEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v, minimum: 0.05),
+        AnimatableParameter.Plain<SparkleEffect>("decay", "Decay", e => e.Decay, (e, v) => e.Decay = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Sparkle";
 
@@ -28,8 +39,8 @@ public sealed class SparkleEffect : Effect
     {
         // Each fixture's timeline is split into 1/Rate slots with one twinkle at a hashed instant per slot,
         // so the result depends only on time — scrubbing and export see exactly what playback does.
-        var slotLength = 1 / Math.Max(0.05, Rate);
-        var decay = Math.Max(0.01, Decay);
+        var slotLength = 1 / Math.Max(0.05, ctx.Parameter(RateSlot, Rate));
+        var decay = Math.Max(0.01, ctx.Parameter(DecaySlot, Decay));
         var slot = EffectMath.Slot(ctx.Time / slotLength);
         var level = 0.0;
         for (var s = slot - 2; s <= slot; s++)

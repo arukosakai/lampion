@@ -26,11 +26,17 @@ public sealed class LightClip : Clip
     /// <summary>Automation lanes, applied in order.</summary>
     public List<AutomationLane> Automation { get; } = [];
 
-    /// <summary>Seconds the effect is already into its run when the clip starts; set when a clip is split.</summary>
+    /// <summary>Seconds the effect is already into its run when the clip starts, at the speed it starts with; set when a clip is split.</summary>
     public double EffectOffset { get; set; }
 
     /// <summary>Length the effect is timed over (e.g. a colour fade's full span), when it differs from the clip; null means the clip's duration.</summary>
     public double? EffectSpan { get; set; }
+
+    /// <summary>
+    /// The context the effect is sampled with at <paramref name="localTime"/> seconds into the clip, for fixture
+    /// <paramref name="index"/> of <paramref name="count"/>: effect time, span and keyframed effect parameters. Allocation-free.
+    /// </summary>
+    public EffectContext EffectContextAt(double localTime, int index, int count) => EffectParameterAutomation.Context(this, localTime, index, count);
 
     /// <inheritdoc />
     public override Clip Clone()

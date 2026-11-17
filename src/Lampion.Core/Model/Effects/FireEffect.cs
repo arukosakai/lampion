@@ -20,6 +20,17 @@ public sealed class FireEffect : Effect
     /// <summary>Picks a different, but repeatable, flicker.</summary>
     public int Seed { get; set; } = 3;
 
+    private const int RateSlot = 0;
+    private const int MinimumSlot = 1;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<FireEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v, minimum: 0.05),
+        AnimatableParameter.Plain<FireEffect>("minimum", "Minimum", e => e.Minimum, (e, v) => e.Minimum = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Fire";
 
@@ -29,8 +40,9 @@ public sealed class FireEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var x = ctx.Time * Math.Max(0.05, Rate);
+        var x = ctx.Time * Math.Max(0.05, ctx.Parameter(RateSlot, Rate));
+        var minimum = ctx.Parameter(MinimumSlot, Minimum);
         var heat = 0.65 * EffectMath.Noise(x, ctx.Index, Seed) + 0.35 * EffectMath.Noise(x * 2.3, ctx.Index, Seed + 1);
-        return new(Rgb.Lerp(Rgb.FromHex(Ember), Rgb.FromHex(Flame), heat), Intensity * (Minimum + (1 - Minimum) * heat));
+        return new(Rgb.Lerp(Rgb.FromHex(Ember), Rgb.FromHex(Flame), heat), Intensity * (minimum + (1 - minimum) * heat));
     }
 }

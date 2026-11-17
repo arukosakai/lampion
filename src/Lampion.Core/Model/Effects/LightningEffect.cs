@@ -20,6 +20,17 @@ public sealed class LightningEffect : Effect
     /// <summary>Picks a different, but repeatable, storm.</summary>
     public int Seed { get; set; } = 11;
 
+    private const int RateSlot = 0;
+    private const int DecaySlot = 1;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<LightningEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v, minimum: 0.02),
+        AnimatableParameter.Plain<LightningEffect>("decay", "Decay", e => e.Decay, (e, v) => e.Decay = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Lightning";
 
@@ -30,8 +41,8 @@ public sealed class LightningEffect : Effect
     public override EffectSample Sample(in EffectContext ctx)
     {
         // One strike per 1/Rate slot at a hashed instant; each strike is 1–3 quick flashes, the later ones dimmer.
-        var slotLength = 1 / Math.Max(0.02, Rate);
-        var decay = Math.Max(0.01, Decay);
+        var slotLength = 1 / Math.Max(0.02, ctx.Parameter(RateSlot, Rate));
+        var decay = Math.Max(0.01, ctx.Parameter(DecaySlot, Decay));
         var key = Mode == LightningMode.Together ? 0 : ctx.Index;
         var slot = EffectMath.Slot(ctx.Time / slotLength);
         var level = 0.0;

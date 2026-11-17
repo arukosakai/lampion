@@ -24,7 +24,7 @@ internal sealed class ChannelLanesSection(InspectorContext context)
     public void Build(Panel root, LightClip clip)
     {
         var addButton = new GlyphButton("+", "Drive a fixture channel directly (pan, tilt, strobe…)", () => { }) { Flyout = AddMenu(clip) };
-        var lanes = clip.Automation.Where(l => Array.IndexOf(LightTargets, l.Target) < 0).ToList();
+        var lanes = clip.Automation.Where(l => Array.IndexOf(LightTargets, l.Target) < 0 && l.Target != AutomationTarget.EffectParameter).ToList();
         var section = InspectorLayout.Section(root, "channels", lanes.Count == 0 ? "Channels" : $"Channels ({lanes.Count})", true, addButton);
         if (lanes.Count == 0)
         {

@@ -17,6 +17,21 @@ public sealed class RainbowEffect : Effect
     /// <summary>Hue at time 0 for the first fixture, in turns (0 = red).</summary>
     public double StartHue { get; set; }
 
+    private const int SpeedSlot = 0;
+    private const int SpreadSlot = 1;
+    private const int SaturationSlot = 2;
+    private const int StartHueSlot = 3;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<RainbowEffect>("speed", "Speed", e => e.Speed, (e, v) => e.Speed = v),
+        AnimatableParameter.Plain<RainbowEffect>("spread", "Spread", e => e.Spread, (e, v) => e.Spread = v),
+        AnimatableParameter.Plain<RainbowEffect>("saturation", "Saturation", e => e.Saturation, (e, v) => e.Saturation = v),
+        AnimatableParameter.Plain<RainbowEffect>("startHue", "Start hue", e => e.StartHue, (e, v) => e.StartHue = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Rainbow";
 
@@ -26,7 +41,7 @@ public sealed class RainbowEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var hue = StartHue + ctx.Time * Speed + ctx.Spread * Spread * (ctx.Count <= 1 ? 0 : (ctx.Count - 1.0) / ctx.Count);
-        return new(Rgb.FromHsv(hue, Saturation, 1), Intensity);
+        var hue = ctx.Parameter(StartHueSlot, StartHue) + ctx.Time * ctx.Parameter(SpeedSlot, Speed) + ctx.Spread * ctx.Parameter(SpreadSlot, Spread) * (ctx.Count <= 1 ? 0 : (ctx.Count - 1.0) / ctx.Count);
+        return new(Rgb.FromHsv(hue, ctx.Parameter(SaturationSlot, Saturation), 1), Intensity);
     }
 }

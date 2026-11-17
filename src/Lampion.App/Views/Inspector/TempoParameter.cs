@@ -21,6 +21,9 @@ internal sealed class TempoParameter<TEffect>(string label, TempoScale scale, Fu
     where TEffect : LightEffect
 {
     /// <inheritdoc />
+    public override ScrubRange KeyRange => TempoUnits.Current(scale);
+
+    /// <inheritdoc />
     public override Control CreateEditor(LightEffect effect, InspectorFields fields)
     {
         var typed = (TEffect)effect;

@@ -18,6 +18,15 @@ public sealed class ColorFadeEffect : Effect
     /// <summary>Curve of the fade.</summary>
     public Easing Easing { get; set; } = Easing.Linear;
 
+    private const int OffsetSlot = 0;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Plain<ColorFadeEffect>("offset", "Offset", e => e.Offset, (e, v) => e.Offset = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Color Fade";
 
@@ -27,8 +36,9 @@ public sealed class ColorFadeEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var span = Math.Max(1e-6, ctx.Duration - Offset * Math.Max(0, ctx.Count - 1));
-        var t = Rgb.Clamp01((ctx.Time - Offset * ctx.Index) / span);
+        var offset = ctx.Parameter(OffsetSlot, Offset);
+        var span = Math.Max(1e-6, ctx.Duration - offset * Math.Max(0, ctx.Count - 1));
+        var t = Rgb.Clamp01((ctx.Time - offset * ctx.Index) / span);
         return new(Rgb.Lerp(Rgb.FromHex(From), Rgb.FromHex(To), EasingCurve.Apply(Easing, t)), Intensity);
     }
 }

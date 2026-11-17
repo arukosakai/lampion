@@ -23,6 +23,17 @@ public sealed class EvenSparkleEffect : Effect
     /// <summary>Picks a different, but repeatable, shuffle. Ignored when <see cref="Order"/> is sequential.</summary>
     public int Seed { get; set; } = 7;
 
+    private const int RateSlot = 0;
+    private const int DecaySlot = 1;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<EvenSparkleEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v, minimum: 0.05),
+        AnimatableParameter.Plain<EvenSparkleEffect>("decay", "Decay", e => e.Decay, (e, v) => e.Decay = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Even Sparkle";
 
@@ -34,7 +45,7 @@ public sealed class EvenSparkleEffect : Effect
     {
         var count = Math.Max(1, ctx.Count);
         var index = Math.Clamp(ctx.Index, 0, count - 1);
-        var interval = 1 / Math.Max(0.05, Rate);
+        var interval = 1 / Math.Max(0.05, ctx.Parameter(RateSlot, Rate));
         var round = (int)Math.Floor(ctx.Time / (interval * count));
 
         // Only the latest flash matters: it is the brightest. It is in this round, or the previous one if
@@ -42,7 +53,7 @@ public sealed class EvenSparkleEffect : Effect
         var flashAt = FlashTime(round, index, count, interval);
         if (flashAt > ctx.Time)
             flashAt = FlashTime(round - 1, index, count, interval);
-        var level = Math.Max(0, 1 - (ctx.Time - flashAt) / Math.Max(0.01, Decay));
+        var level = Math.Max(0, 1 - (ctx.Time - flashAt) / Math.Max(0.01, ctx.Parameter(DecaySlot, Decay)));
         return new(Rgb.FromHex(Color), Intensity * level);
     }
 

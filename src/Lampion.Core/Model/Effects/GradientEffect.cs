@@ -25,6 +25,17 @@ public sealed class GradientEffect : Effect
     /// <summary>Palette lengths the gradient scrolls per second; 0 holds it still.</summary>
     public double Speed { get; set; }
 
+    private const int RepeatSlot = 0;
+    private const int SpeedSlot = 1;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Plain<GradientEffect>("repeat", "Repeat", e => e.Repeat, (e, v) => e.Repeat = v),
+        AnimatableParameter.Frequency<GradientEffect>("speed", "Speed", e => e.Speed, (e, v) => e.Speed = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Gradient";
 
@@ -38,7 +49,7 @@ public sealed class GradientEffect : Effect
         if (colors.Count == 0)
             return new(Rgb.Black, 0);
         var across = ctx.Count <= 1 ? 0 : ctx.Index / (double)ctx.Count;
-        var position = EffectMath.Frac(across * Repeat + ctx.Time * Speed) * colors.Count;
+        var position = EffectMath.Frac(across * ctx.Parameter(RepeatSlot, Repeat) + ctx.Time * ctx.Parameter(SpeedSlot, Speed)) * colors.Count;
         var step = (int)Math.Floor(position);
         var from = Rgb.FromHex(colors[step % colors.Count]);
         var to = Rgb.FromHex(colors[(step + 1) % colors.Count]);

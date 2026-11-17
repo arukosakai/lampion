@@ -1,5 +1,6 @@
 using Lampion.App.Editor;
 using Lampion.Core.Model.Animation;
+using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
 
 namespace Lampion.App.Views.Inspector;
@@ -7,12 +8,14 @@ namespace Lampion.App.Views.Inspector;
 /// <summary>
 /// The model side of an animatable property: one lane on one clip, read and written at the playhead the
 /// way After Effects does it. No lane means the default value; a static lane holds one value; an animated
-/// lane holds keyframes. Mutators don't notify; wrap them in <see cref="InspectorContext.Edit(Action, bool)"/>.
+/// lane holds keyframes. An effect parameter keeps its static value on the effect itself and only has a lane while
+/// animated. Mutators don't notify; wrap them in <see cref="InspectorContext.Edit(Action, bool)"/>.
 /// </summary>
 /// <param name="state">The editor state, for the playhead and seeking.</param>
 /// <param name="clip">The clip that owns the lane.</param>
 /// <param name="key">Which lane.</param>
-internal sealed class LaneBinding(EditorState state, LightClip clip, LaneKey key)
+/// <param name="parameter">The effect parameter the lane drives, for <see cref="AutomationTarget.EffectParameter"/> keys; else null.</param>
+internal sealed class LaneBinding(EditorState state, LightClip clip, LaneKey key, AnimatableParameter? parameter = null)
 {
     // Keys closer than this to the playhead count as "at" it (seconds).
     private const double KeyTolerance = 1e-3;
@@ -27,7 +30,7 @@ internal sealed class LaneBinding(EditorState state, LightClip clip, LaneKey key
     public double LocalTime => Math.Clamp(state.Playhead - clip.Start, 0, clip.Duration);
 
     /// <summary>The property's value at the playhead. Allocation-free.</summary>
-    public double Current => Lane is { } lane ? lane.Evaluate(LocalTime) : key.DefaultValue;
+    public double Current => Lane is { } lane ? lane.Evaluate(LocalTime) : parameter?.Get(clip.Effect) ?? key.DefaultValue;
 
     /// <summary>The keyframe at the playhead on an animated lane, or null. Allocation-free.</summary>
     public Keyframe? KeyAtPlayhead()
@@ -48,6 +51,11 @@ internal sealed class LaneBinding(EditorState state, LightClip clip, LaneKey key
         var lane = Lane;
         if (lane is null)
         {
+            if (parameter is not null)
+            {
+                parameter.Set(clip.Effect, value);
+                return;
+            }
             lane = key.NewLane(animated: false);
             clip.Automation.Add(lane);
         }
@@ -77,6 +85,12 @@ internal sealed class LaneBinding(EditorState state, LightClip clip, LaneKey key
         var lane = Lane;
         if (lane is { Animated: true })
         {
+            if (parameter is not null)
+            {
+                parameter.Set(clip.Effect, value);
+                clip.Automation.Remove(lane);
+                return;
+            }
             lane.Animated = false;
             lane.Keys.Clear();
             lane.Keys.Add(new Keyframe { Value = value });

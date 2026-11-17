@@ -44,6 +44,30 @@ public abstract class Effect
     [JsonIgnore]
     public string Kind => EffectCatalog.KindOf(this);
 
+    /// <summary>The numeric parameters automation can keyframe, in slot order; shared, never mutated. Colours, seeds and choices aren't animatable.</summary>
+    [JsonIgnore]
+    public IReadOnlyList<AnimatableParameter> AnimatableParameters => DeclaredParameters;
+
+    /// <summary>The animatable parameter saved as <paramref name="key"/>, or null if this effect has none by that name.</summary>
+    public AnimatableParameter? FindParameter(string? key)
+    {
+        var slot = SlotOf(key);
+        return slot < 0 ? null : AnimatableParameters[slot];
+    }
+
+    /// <summary>The slot of the animatable parameter saved as <paramref name="key"/>, or -1. Allocation-free.</summary>
+    internal int SlotOf(string? key)
+    {
+        var parameters = AnimatableParameters;
+        for (var i = 0; i < parameters.Count; i++)
+            if (string.Equals(parameters[i].Key, key, StringComparison.Ordinal))
+                return i;
+        return -1;
+    }
+
+    // Not virtual on the public property: JSON would write an override even though the base is ignored.
+    private protected virtual IReadOnlyList<AnimatableParameter> DeclaredParameters => [];
+
     /// <summary>The colour and intensity for one fixture at one instant. Pure and allocation-free.</summary>
     public abstract EffectSample Sample(in EffectContext ctx);
 

@@ -17,6 +17,19 @@ public sealed class HitEffect : Effect
     /// <summary>Seconds each fixture's hit lands after the previous one's, for a rolling hit.</summary>
     public double Offset { get; set; }
 
+    private const int DecaySlot = 0;
+    private const int IntervalSlot = 1;
+    private const int OffsetSlot = 2;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Plain<HitEffect>("decay", "Decay", e => e.Decay, (e, v) => e.Decay = v),
+        AnimatableParameter.Plain<HitEffect>("interval", "Interval", e => e.Interval, (e, v) => e.Interval = v),
+        AnimatableParameter.Plain<HitEffect>("offset", "Offset", e => e.Offset, (e, v) => e.Offset = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Hit";
 
@@ -26,12 +39,13 @@ public sealed class HitEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var age = ctx.Time - Offset * ctx.Index;
+        var interval = ctx.Parameter(IntervalSlot, Interval);
+        var age = ctx.Time - ctx.Parameter(OffsetSlot, Offset) * ctx.Index;
         if (age < 0)
             return new(Rgb.FromHex(Color), 0);
-        if (Interval > 0.01)
-            age %= Interval;
-        var fall = Math.Max(0, 1 - age / Math.Max(0.01, Decay));
+        if (interval > 0.01)
+            age %= interval;
+        var fall = Math.Max(0, 1 - age / Math.Max(0.01, ctx.Parameter(DecaySlot, Decay)));
         return new(Rgb.FromHex(Color), Intensity * fall * fall);
     }
 }

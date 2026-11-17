@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lampion.App.Controls;
+using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
 using LightEffect = Lampion.Core.Model.Effects.Effect;
@@ -33,7 +34,20 @@ internal sealed class EffectSection(InspectorFields fields)
 
         var parameters = EffectParameterTable.For(effect);
         for (var i = 0; i < parameters.Count; i++)
-            InspectorLayout.Row(section, parameters[i].Label, parameters[i].CreateEditor(effect, fields));
+            AddRow(section, clip, parameters[i]);
+    }
+
+    // Rows Core can keyframe get the stopwatch; the rest (colours, choices, seeds) stay plain.
+    private void AddRow(TwirlSection section, LightClip clip, EffectParameter row)
+    {
+        var editor = row.CreateEditor(clip.Effect, fields);
+        if (row is not { AnimationKey: { } key, KeyRange: { } range } || clip.Effect.FindParameter(key) is not { } parameter)
+        {
+            InspectorLayout.Row(section, row.Label, editor);
+            return;
+        }
+        var lane = new LaneKey(AutomationTarget.EffectParameter, Parameter: key);
+        section.Body.Children.Add(new AnimatableProperty(Context, clip, lane, row.Label, range, parameter: parameter, staticEditor: editor).Row);
     }
 
     private static StackPanel Header(string name) =>

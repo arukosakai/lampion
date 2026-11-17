@@ -20,6 +20,19 @@ public sealed class PulseEffect : Effect
     /// <summary>Phase offset between neighbouring fixtures, in cycles.</summary>
     public double Phase { get; set; }
 
+    private const int RateSlot = 0;
+    private const int MinimumSlot = 1;
+    private const int PhaseSlot = 2;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<PulseEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v),
+        AnimatableParameter.Plain<PulseEffect>("minimum", "Minimum", e => e.Minimum, (e, v) => e.Minimum = v),
+        AnimatableParameter.Plain<PulseEffect>("phase", "Phase", e => e.Phase, (e, v) => e.Phase = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Pulse";
 
@@ -29,7 +42,8 @@ public sealed class PulseEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var shape = EffectMath.Shape(Wave, EffectMath.Frac(ctx.Time * Rate + Phase * ctx.Index));
-        return new(Rgb.FromHex(Color), Intensity * (Minimum + (1 - Minimum) * shape));
+        var minimum = ctx.Parameter(MinimumSlot, Minimum);
+        var shape = EffectMath.Shape(Wave, EffectMath.Frac(ctx.Time * ctx.Parameter(RateSlot, Rate) + ctx.Parameter(PhaseSlot, Phase) * ctx.Index));
+        return new(Rgb.FromHex(Color), Intensity * (minimum + (1 - minimum) * shape));
     }
 }

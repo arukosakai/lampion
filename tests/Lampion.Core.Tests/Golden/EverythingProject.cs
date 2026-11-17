@@ -153,6 +153,12 @@ internal static class EverythingProject
                 FadeOut = 2,
                 FadeEasing = Easing.EaseInOut,
                 Effect = new SparkleEffect { Color = "#AACCFF", Rate = 3, Decay = 0.25, Seed = 42 },
+                Automation =
+                {
+                    new AutomationLane { Id = "a-sparkle-rate", Target = AutomationTarget.EffectParameter, Parameter = "rate", Keys = { K(0, 1, Easing.EaseIn), K(5, 9, Easing.Hold), K(6, 4) } },
+                    new AutomationLane { Id = "a-sparkle-decay", Target = AutomationTarget.EffectParameter, Parameter = "decay", Keys = { K(0, 0.6), K(8, 0.1) } },
+                    new AutomationLane { Id = "a-sparkle-unknown", Target = AutomationTarget.EffectParameter, Parameter = "stepTime", Keys = { K(0, 2) } },
+                },
             }
         );
         top.Clips.Add(
@@ -402,7 +408,7 @@ internal static class EverythingProject
             }
         );
         bottom.Clips.Add(new LightClip { Id = "c-empty-chase", Name = "Empty chase", Start = 8, Duration = 6, FadeIn = 1, FadeOut = 1, Effect = new ChaseEffect { Colors = [], StepTime = 0.5 } });
-        bottom.Clips.Add(new LightClip { Id = "c-forward", Name = "Forward chase", Start = 20, Duration = 8, Effect = new ChaseEffect { Colors = ["#FFAA00"], StepTime = 0.2, Tail = 3 } });
+        bottom.Clips.Add(new LightClip { Id = "c-forward", Name = "Forward chase", Start = 20, Duration = 8, Effect = new ChaseEffect { Colors = ["#FFAA00"], StepTime = 0.2, Tail = 3 }, Automation = { new AutomationLane { Id = "a-chase-step", Target = AutomationTarget.EffectParameter, Parameter = "stepTime", Keys = { K(0, 0.5, Easing.EaseInOut), K(8, 0.08) } } } });
 
         var empty = new Track { Id = "t-empty", Name = "No targets" };
         empty.Clips.Add(new LightClip { Id = "c-orphan", Name = "Orphan", Start = 0, Duration = 10 });

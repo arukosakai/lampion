@@ -8,7 +8,8 @@ namespace Lampion.App.Controls.Timeline;
 
 /// <summary>
 /// Dragging a keyframe: time follows the pointer within the clip (snapping to beats unless Alt is held),
-/// value follows its height. Hue keys keep 3 decimals and may leave 0..1; other values are clamped to it.
+/// value follows its height. Hue and effect-parameter keys keep 3 decimals and may leave 0..1 (parameters stop at
+/// their minimum); other values are clamped to it.
 /// </summary>
 internal sealed class KeyframeDragInteraction(
     EditorState state,
@@ -29,7 +30,12 @@ internal sealed class KeyframeDragInteraction(
         var beats = !modifiers.HasFlag(KeyModifiers.Alt);
         key.Time = snapper.SnapDrag(clip.Start + time, beats: beats) - clip.Start;
         var value = scale.YToValue(p.Y);
-        key.Value = lane.Target == AutomationTarget.HueShift ? Math.Round(value, 3) : Math.Clamp(value, 0, 1);
+        key.Value = lane.Target switch
+        {
+            AutomationTarget.HueShift => Math.Round(value, 3),
+            AutomationTarget.EffectParameter => Math.Round(Math.Max(clip.Effect.FindParameter(lane.Parameter)?.Minimum ?? 0, value), 3),
+            _ => Math.Clamp(value, 0, 1),
+        };
         lane.SortKeys();
         _moved = true;
         state.Touch();

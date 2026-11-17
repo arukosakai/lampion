@@ -114,15 +114,17 @@ internal static class ClipEdits
         {
             case LightClip left when right is LightClip r:
                 // The left half keeps the fade-in and transition, the right half the fade-out; automation
-                // keys are rebased so both halves keep playing exactly what the whole clip did.
+                // keys are rebased so both halves keep playing exactly what the whole clip did. The right half
+                // picks the effect up where the left leaves it, which a keyframed speed has warped.
                 left.FadeOut = 0;
                 r.FadeIn = 0;
                 r.TransitionIn = null;
                 left.EffectSpan = r.EffectSpan = left.EffectSpan ?? cut + right.Duration;
-                r.EffectOffset = left.EffectOffset + cut;
-                foreach (var lane in r.Automation)
+                r.EffectOffset = left.EffectContextAt(cut, 0, 1).Time;
+                for (var i = 0; i < r.Automation.Count; i++)
                 {
-                    var startValue = left.Automation.First(l => l.Target == lane.Target && l.Role == lane.Role && l.Channel == lane.Channel).Evaluate(cut);
+                    var lane = r.Automation[i];
+                    var startValue = left.Automation[i].Evaluate(cut);
                     var kept = lane.Keys.Where(k => k.Time > cut).Select(k => new Keyframe { Time = k.Time - cut, Value = k.Value, Easing = k.Easing }).ToList();
                     lane.Keys.Clear();
                     lane.Keys.AddRange(kept);

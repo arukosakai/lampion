@@ -1,3 +1,4 @@
+using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
 using LightEffect = Lampion.Core.Model.Effects.Effect;
@@ -10,7 +11,8 @@ internal static class EffectSwap
     /// <summary>Puts <paramref name="replacement"/> on <paramref name="clip"/>; a clip still named after its old effect is renamed.</summary>
     /// <param name="clip">The clip to change.</param>
     /// <param name="replacement">A fresh effect, owned by the clip from now on.</param>
-    /// <param name="keepLook">Carries over the intensity and, between single-colour effects, the colour the user picked.</param>
+    /// <param name="keepLook">Carries over the intensity and, between single-colour effects, the colour the user picked.
+    /// Keyframed parameters the new effect also has are kept; without it (a reset) every parameter keyframe goes.</param>
     public static void Replace(LightClip clip, LightEffect replacement, bool keepLook)
     {
         var old = clip.Effect;
@@ -22,6 +24,7 @@ internal static class EffectSwap
         if (clip.Name == old.DisplayName)
             clip.Name = replacement.DisplayName;
         clip.Effect = replacement;
+        clip.Automation.RemoveAll(lane => lane.Target == AutomationTarget.EffectParameter && (!keepLook || replacement.FindParameter(lane.Parameter) is null));
     }
 
     // The effects with a single "Color" parameter; palettes and two-colour effects keep their defaults.

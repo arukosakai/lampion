@@ -20,6 +20,17 @@ public sealed class ColorWaveEffect : Effect
     /// <summary>Shape of the wave.</summary>
     public Waveform Wave { get; set; } = Waveform.Sine;
 
+    private const int RateSlot = 0;
+    private const int WavelengthSlot = 1;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Frequency<ColorWaveEffect>("rate", "Rate", e => e.Rate, (e, v) => e.Rate = v),
+        AnimatableParameter.Plain<ColorWaveEffect>("wavelength", "Wavelength", e => e.Wavelength, (e, v) => e.Wavelength = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Color Wave";
 
@@ -29,7 +40,7 @@ public sealed class ColorWaveEffect : Effect
     /// <inheritdoc />
     public override EffectSample Sample(in EffectContext ctx)
     {
-        var shape = EffectMath.Shape(Wave, EffectMath.Frac(ctx.Time * Rate - ctx.Index / Math.Max(0.1, Wavelength)));
+        var shape = EffectMath.Shape(Wave, EffectMath.Frac(ctx.Time * ctx.Parameter(RateSlot, Rate) - ctx.Index / Math.Max(0.1, ctx.Parameter(WavelengthSlot, Wavelength))));
         return new(Rgb.Lerp(Rgb.FromHex(Base), Rgb.FromHex(Color), shape), Intensity);
     }
 }

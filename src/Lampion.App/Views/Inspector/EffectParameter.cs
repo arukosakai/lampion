@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Lampion.App.Controls;
 using LightEffect = Lampion.Core.Model.Effects.Effect;
 
 namespace Lampion.App.Views.Inspector;
@@ -12,6 +13,12 @@ internal abstract class EffectParameter(string label)
 {
     /// <summary>Row label, e.g. "Step time".</summary>
     public string Label { get; } = label;
+
+    /// <summary>The Core <see cref="Lampion.Core.Model.Effects.AnimatableParameter.Key"/> this row edits when it can be keyframed, else null.</summary>
+    public string? AnimationKey { get; init; }
+
+    /// <summary>How a keyframed value of this parameter is scrubbed; null for rows that can't be keyframed.</summary>
+    public virtual ScrubRange? KeyRange => null;
 
     /// <summary>Builds an editor that writes into <paramref name="effect"/>.</summary>
     /// <param name="effect">An instance of the effect type this descriptor was declared for.</param>

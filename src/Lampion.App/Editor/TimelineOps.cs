@@ -67,12 +67,13 @@ internal static class TimelineOps
             .DistinctBy(x => x.Key)
             .ToList();
 
-    /// <summary>A string naming what <paramref name="lane"/> drives, e.g. "role:Pan", "ch:3" or "Intensity". Allocates.</summary>
+    /// <summary>A string naming what <paramref name="lane"/> drives, e.g. "role:Pan", "ch:3", "fx:rate" or "Intensity". Allocates.</summary>
     public static string LaneKey(AutomationLane lane) =>
         lane.Target switch
         {
             AutomationTarget.Role => $"role:{lane.Role}",
             AutomationTarget.Channel => $"ch:{lane.Channel}",
+            AutomationTarget.EffectParameter => $"fx:{lane.Parameter}",
             _ => lane.Target.ToString(),
         };
 }

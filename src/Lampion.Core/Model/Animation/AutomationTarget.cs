@@ -38,4 +38,10 @@ public enum AutomationTarget
 
     /// <summary>A fixed 1-based channel within each fixture's footprint.</summary>
     Channel,
+
+    /// <summary>
+    /// One of the clip's effect parameters, named by <see cref="AutomationLane.Parameter"/>, in that parameter's own
+    /// unit (Hz, seconds, 0..1, ...). Replaces the effect's value while the lane is on.
+    /// </summary>
+    EffectParameter,
 }

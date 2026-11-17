@@ -23,7 +23,7 @@ internal static class ClipEvaluator
     {
         var local = time - clip.Start;
         var envelopeTime = clampToClip ? Math.Clamp(local, 0, clip.Duration) : local;
-        var sample = clip.Effect.Sample(new EffectContext(local + clip.EffectOffset, clip.EffectSpan ?? clip.Duration, index, count));
+        var sample = clip.Effect.Sample(clip.EffectContextAt(local, index, count));
         var color = sample.Color;
         var intensity = sample.Intensity;
         var opacity = clip.Envelope(envelopeTime);

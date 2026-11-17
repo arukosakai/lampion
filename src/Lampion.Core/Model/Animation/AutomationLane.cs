@@ -18,6 +18,10 @@ public sealed class AutomationLane
     /// <summary>1-based channel within the fixture, for <see cref="AutomationTarget.Channel"/>; channels outside the footprint are ignored.</summary>
     public int Channel { get; set; } = 1;
 
+    /// <summary>The <see cref="Effects.AnimatableParameter.Key"/> driven when <see cref="Target"/> is <see cref="AutomationTarget.EffectParameter"/>; a key the clip's effect doesn't have is ignored.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Parameter { get; set; }
+
     /// <summary>Disabled lanes are kept but have no effect.</summary>
     public bool Enabled { get; set; } = true;
 
@@ -38,16 +42,17 @@ public sealed class AutomationLane
             AutomationTarget.HueShift => "Hue shift",
             AutomationTarget.Role => $"{Role} channel",
             AutomationTarget.Channel => $"Channel {Channel}",
+            AutomationTarget.EffectParameter => Effects.AnimatableParameter.LabelFor(Parameter),
             _ => Target.ToString(),
         };
 
-    /// <summary>The value range the timeline draws: 0..1, widened for hue lanes whose keys run past it. Allocation-free.</summary>
+    /// <summary>The value range the timeline draws: 0..1, widened for hue and effect-parameter lanes whose keys run past it. Allocation-free.</summary>
     [JsonIgnore]
     public (double Min, double Max) DisplayRange
     {
         get
         {
-            if (Target != AutomationTarget.HueShift || Keys.Count == 0)
+            if (Target is not (AutomationTarget.HueShift or AutomationTarget.EffectParameter) || Keys.Count == 0)
                 return (0, 1);
             var min = Keys[0].Value;
             var max = Keys[0].Value;
@@ -111,6 +116,7 @@ public sealed class AutomationLane
             Target = Target,
             Role = Role,
             Channel = Channel,
+            Parameter = Parameter,
             Enabled = Enabled,
             Animated = Animated,
         };

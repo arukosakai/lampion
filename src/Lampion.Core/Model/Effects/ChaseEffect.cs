@@ -31,6 +31,19 @@ public sealed class ChaseEffect : Effect
     /// <summary>Intensity of fixtures the chase is not on, 0..1.</summary>
     public double Background { get; set; }
 
+    private const int StepTimeSlot = 0;
+    private const int TailSlot = 1;
+    private const int BackgroundSlot = 2;
+
+    private static readonly AnimatableParameter[] Animatable =
+    [
+        AnimatableParameter.Period<ChaseEffect>("stepTime", "Step time", e => e.StepTime, (e, v) => e.StepTime = v, minimum: 0.01),
+        AnimatableParameter.Plain<ChaseEffect>("tail", "Tail", e => e.Tail, (e, v) => e.Tail = v),
+        AnimatableParameter.Plain<ChaseEffect>("background", "Background", e => e.Background, (e, v) => e.Background = v),
+    ];
+
+    private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
+
     /// <inheritdoc />
     public override string DisplayName => "Chase";
 
@@ -41,7 +54,7 @@ public sealed class ChaseEffect : Effect
     public override EffectSample Sample(in EffectContext ctx)
     {
         var count = Math.Max(1, ctx.Count);
-        var position = ctx.Time / Math.Max(0.01, StepTime);
+        var position = ctx.Time / Math.Max(0.01, ctx.Parameter(StepTimeSlot, StepTime));
         var laps = position / count;
         var lap = (int)Math.Floor(laps);
         var head = Direction switch
@@ -56,8 +69,9 @@ public sealed class ChaseEffect : Effect
             behind = ((behind % count) + count) % count;
         else
             behind = Math.Abs(behind);
-        var level = behind < 1 ? 1 : Tail <= 0 ? 0 : Math.Max(0, 1 - (behind - 1) / Tail);
-        level = Math.Max(level, Background);
+        var tail = ctx.Parameter(TailSlot, Tail);
+        var level = behind < 1 ? 1 : tail <= 0 ? 0 : Math.Max(0, 1 - (behind - 1) / tail);
+        level = Math.Max(level, ctx.Parameter(BackgroundSlot, Background));
         var colors = Colors;
         var color = colors.Count == 0 ? Rgb.White : Rgb.FromHex(colors[EffectMath.Mod(lap, colors.Count)]);
         return new(color, Intensity * level);

@@ -14,6 +14,9 @@ internal sealed class NumberParameter<TEffect>(string label, ScrubRange range, F
     where TEffect : LightEffect
 {
     /// <inheritdoc />
+    public override ScrubRange KeyRange => range;
+
+    /// <inheritdoc />
     public override Control CreateEditor(LightEffect effect, InspectorFields fields)
     {
         var typed = (TEffect)effect;
