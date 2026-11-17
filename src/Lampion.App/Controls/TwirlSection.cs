@@ -3,14 +3,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Controls;
 
 /// <summary>A twirl-down group, like the sections in After Effects' Effect Controls.</summary>
 internal sealed class TwirlSection : StackPanel
 {
-    private const string OpenGlyph = "▾";
-    private const string ClosedGlyph = "▸";
 
     private static readonly IBrush BarBrush = new SolidColorBrush(Color.FromRgb(0x2C, 0x2C, 0x2E));
     private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
@@ -27,7 +26,7 @@ internal sealed class TwirlSection : StackPanel
     {
         var open = Remembered.GetValueOrDefault(key, openByDefault);
         Body = new StackPanel { Spacing = 1, Margin = new Thickness(16, 2, 0, 6), IsVisible = open };
-        var arrow = new TextBlock { Text = open ? OpenGlyph : ClosedGlyph, Width = 14, Foreground = Brushes.Gray, VerticalAlignment = VerticalAlignment.Center };
+        var arrow = new LucideIcon(open ? Lucide.ChevronDown : Lucide.ChevronRight, 13) { Foreground = Brushes.Gray, Margin = new Thickness(0, 0, 3, 0) };
         var bar = new DockPanel { Background = BarBrush, Height = 24, Cursor = HandCursor };
         var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, Margin = new Thickness(4, 0), Children = { arrow, header } };
         header.VerticalAlignment = VerticalAlignment.Center;
@@ -47,7 +46,7 @@ internal sealed class TwirlSection : StackPanel
                 return;
             open = !Body.IsVisible;
             Body.IsVisible = open;
-            arrow.Text = open ? OpenGlyph : ClosedGlyph;
+            arrow.Icon = open ? Lucide.ChevronDown : Lucide.ChevronRight;
             Remembered[key] = open;
             e.Handled = true;
         };
@@ -66,4 +65,17 @@ internal sealed class TwirlSection : StackPanel
     /// <param name="trailing">Right-aligned buttons in the header bar.</param>
     public static TwirlSection Titled(string key, string title, bool openByDefault = true, params Control[] trailing) =>
         new(key, new TextBlock { Text = title, FontWeight = FontWeight.SemiBold }, openByDefault, trailing);
+
+    /// <summary>A section titled with a Lucide <paramref name="icon"/> and semi-bold <paramref name="title"/>.</summary>
+    /// <param name="key">Identifies the section across rebuilds.</param>
+    /// <param name="icon">A <see cref="Lucide"/> icon shown before the title.</param>
+    /// <param name="title">Header text.</param>
+    /// <param name="openByDefault">Initial state the first time this key is shown.</param>
+    /// <param name="trailing">Right-aligned buttons in the header bar.</param>
+    public static TwirlSection Titled(string key, Geometry icon, string title, bool openByDefault = true, params Control[] trailing)
+    {
+        var header = new IconLabel(icon, title);
+        header.Text.FontWeight = FontWeight.SemiBold;
+        return new(key, header, openByDefault, trailing);
+    }
 }

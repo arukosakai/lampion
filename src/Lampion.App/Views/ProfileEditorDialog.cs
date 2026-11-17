@@ -24,7 +24,7 @@ public static class ProfileEditorDialog
         return window.Saved;
     }
 
-    /// <summary>A fresh one-channel (dimmer) profile, the starting point for ＋ New → Fixture profile.</summary>
+    /// <summary>A fresh one-channel (dimmer) profile, the starting point for New → Fixture profile.</summary>
     internal static FixtureProfile NewCustomProfile() =>
         new() { Model = "Custom fixture", Channels = { new FixtureChannel { Name = "Dimmer", Role = ChannelRole.Dimmer } } };
 }

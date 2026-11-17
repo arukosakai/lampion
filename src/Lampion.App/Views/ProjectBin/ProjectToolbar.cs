@@ -3,10 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Views.ProjectBin;
 
-/// <summary>The strip under the bin: the ＋ New menu, the fixture/group count and Delete.</summary>
+/// <summary>The strip under the bin: the New menu, the fixture/group count and Delete.</summary>
 internal sealed class ProjectToolbar : DockPanel
 {
     private readonly TextBlock _count = new() { Foreground = Brushes.Gray, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
@@ -27,9 +28,9 @@ internal sealed class ProjectToolbar : DockPanel
         Add(menu, "Import audio…", () => _ = importAudio());
         Add(menu, "Import video…", () => _ = importVideo());
 
-        var newButton = new Button { Content = "＋ New", Flyout = menu, Padding = new Thickness(8, 2) };
+        var newButton = new Button { Content = new IconLabel(Lucide.Plus, "New"), Flyout = menu, Padding = new Thickness(8, 2) };
         ToolTip.SetTip(newButton, "New fixtures, groups, profiles, or import media");
-        var delete = new GlyphButton("🗑", "Delete the selected items (Del)", commands.DeleteSelected);
+        var delete = new GlyphButton(Lucide.Trash2, "Delete the selected items (Del)", commands.DeleteSelected);
         SetDock(newButton, Dock.Left);
         SetDock(delete, Dock.Right);
         SetDock(_count, Dock.Left);

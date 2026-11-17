@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 
 namespace Lampion.App.Views.Start;
@@ -39,7 +40,7 @@ internal sealed class RecentShowsList : StackPanel
     {
         var exists = File.Exists(path);
         var when = exists ? File.GetLastWriteTime(path).ToString("g") : "file not found";
-        var remove = new Button { Content = "✕", Padding = new Thickness(6, 0), MinHeight = 22, VerticalAlignment = VerticalAlignment.Center, Background = Brushes.Transparent };
+        var remove = new Button { Content = new LucideIcon(Lucide.X, 13), Padding = new Thickness(6, 0), MinHeight = 22, VerticalAlignment = VerticalAlignment.Center, Background = Brushes.Transparent };
         ToolTip.SetTip(remove, "Remove from the list");
         remove.Click += (_, e) =>
         {
@@ -67,7 +68,7 @@ internal sealed class RecentShowsList : StackPanel
             if (exists)
                 _actions.Open(path);
             else
-                _actions.ShowError($"{path} no longer exists. Remove it with ✕, or open it from its new location.");
+                _actions.ShowError($"{path} no longer exists. Remove it with the X, or open it from its new location.");
         });
     }
 }

@@ -15,7 +15,7 @@ namespace Lampion.App.Views;
 public sealed class ProjectPanel : DockPanel
 {
     private readonly EditorState _state;
-    private readonly TextBox _search = new() { PlaceholderText = "🔍  Search", MinHeight = 24, Margin = new Thickness(6, 4) };
+    private readonly TextBox _search = new() { PlaceholderText = "Search", InnerLeftContent = Ui.SearchIcon(), MinHeight = 24, Margin = new Thickness(6, 4) };
     private readonly ProjectBinTree _tree = new();
     private readonly ProjectInfoHeader _info;
     private readonly ProjectToolbar _toolbar;
@@ -27,8 +27,8 @@ public sealed class ProjectPanel : DockPanel
     /// <summary>Builds the panel and keeps it in step with <paramref name="state"/> from then on.</summary>
     /// <param name="state">The project, selection and undo the panel works on.</param>
     /// <param name="timeline">Where fixtures and groups dragged out of the bin are dropped.</param>
-    /// <param name="importAudio">Runs ＋ New → Import audio…</param>
-    /// <param name="importVideo">Runs ＋ New → Import video…</param>
+    /// <param name="importAudio">Runs New → Import audio…</param>
+    /// <param name="importVideo">Runs New → Import video…</param>
     public ProjectPanel(EditorState state, TimelineControl timeline, Func<Task> importAudio, Func<Task> importVideo)
     {
         _state = state;

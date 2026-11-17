@@ -110,7 +110,7 @@ internal sealed class LaneBinding(EditorState state, LightClip clip, LaneKey key
             found.Track.Expanded = true;
     }
 
-    /// <summary>The ◆ button: removes the key at the playhead (never the last one) or adds one with the current value.</summary>
+    /// <summary>The key diamond button: removes the key at the playhead (never the last one) or adds one with the current value.</summary>
     public void ToggleKeyAtPlayhead()
     {
         if (Lane is not { } lane)

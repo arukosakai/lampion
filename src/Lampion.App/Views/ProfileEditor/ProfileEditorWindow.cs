@@ -51,7 +51,7 @@ internal sealed class ProfileEditorWindow : Window
         root.Children.Add(body);
         Content = root;
 
-        // However the window goes (Save, Cancel, ✕), the patched fixtures go back to the show.
+        // However the window goes (Save, Cancel, closing it), the patched fixtures go back to the show.
         Closed += (_, _) => state.Test = null;
         _session.NotifyChannelsChanged();
     }

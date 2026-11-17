@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
@@ -9,17 +10,14 @@ namespace Lampion.App.Views.Inspector;
 
 /// <summary>
 /// An automation-lane property row with the After Effects stopwatch and keyframe navigator
-/// (◀ ◆ ▶). With the stopwatch on, changing the value at the playhead sets a keyframe there.
-/// Tracks itself with the context, so the value and ◆ follow the playhead without a rebuild.
+/// (previous, key, next). With the stopwatch on, changing the value at the playhead sets a keyframe there.
+/// Tracks itself with the context, so the value and the key diamond follow the playhead without a rebuild.
 /// </summary>
 internal sealed class AnimatableProperty : IInspectorRefreshable
 {
-    private const string KeyGlyph = "◆";
-    private const string NoKeyGlyph = "◇";
-
     private readonly LaneBinding _binding;
     private readonly ScrubValue _scrub;
-    private readonly GlyphButton? _diamond;
+    private readonly LucideIcon? _diamond;
     private bool _keyShown;
 
     /// <summary>Builds the row and registers it with <paramref name="context"/> for playhead refreshes.</summary>
@@ -28,7 +26,7 @@ internal sealed class AnimatableProperty : IInspectorRefreshable
     /// <param name="key">Which lane.</param>
     /// <param name="name">Row label.</param>
     /// <param name="range">Limits, drag speed and display of the value.</param>
-    /// <param name="removable">Adds ✕ to delete the lane, for channel lanes the user added.</param>
+    /// <param name="removable">Adds an X to delete the lane, for channel lanes the user added.</param>
     /// <param name="tip">Optional tooltip on the label.</param>
     /// <param name="parameter">The effect parameter behind an <see cref="AutomationTarget.EffectParameter"/> key, whose static value lives on the effect.</param>
     /// <param name="staticEditor">Shown instead of the plain scrub while the stopwatch is off, e.g. a tempo row with tap and BPM.</param>
@@ -53,7 +51,7 @@ internal sealed class AnimatableProperty : IInspectorRefreshable
         _scrub.Committed += v => context.Edit(set, v);
 
         var stopwatch = new GlyphButton(
-            "⏱",
+            Lucide.Timer,
             animated ? "Stop animating — keyframes are removed, the current value stays" : "Animate this property: keyframes go at the playhead",
             () =>
             {
@@ -67,18 +65,19 @@ internal sealed class AnimatableProperty : IInspectorRefreshable
         if (animated)
         {
             _keyShown = _binding.KeyAtPlayhead() is not null;
-            _diamond = new GlyphButton(_keyShown ? KeyGlyph : NoKeyGlyph, "Add or remove a keyframe at the playhead (right-click: curve)", () =>
+            _diamond = new LucideIcon(Lucide.Diamond, 13) { Filled = _keyShown };
+            var diamondButton = new GlyphButton("", "Add or remove a keyframe at the playhead (right-click: curve)", () =>
             {
                 context.Edit(_binding.ToggleKeyAtPlayhead);
                 context.Rebuild();
-            }, active: true);
-            _diamond.ContextMenu = CurveMenu(context);
-            navigator.Children.Add(new GlyphButton("◀", "Previous keyframe", () => _binding.Jump(forward: false)));
-            navigator.Children.Add(_diamond);
-            navigator.Children.Add(new GlyphButton("▶", "Next keyframe", () => _binding.Jump(forward: true)));
+            }, active: true) { Content = _diamond };
+            diamondButton.ContextMenu = CurveMenu(context);
+            navigator.Children.Add(new GlyphButton(Lucide.ChevronLeft, "Previous keyframe", () => _binding.Jump(forward: false)));
+            navigator.Children.Add(diamondButton);
+            navigator.Children.Add(new GlyphButton(Lucide.ChevronRight, "Next keyframe", () => _binding.Jump(forward: true)));
         }
         if (removable)
-            navigator.Children.Add(new GlyphButton("✕", "Stop driving this channel", () =>
+            navigator.Children.Add(new GlyphButton(Lucide.X, "Stop driving this channel", () =>
             {
                 context.Edit(_binding.Remove);
                 context.Rebuild();
@@ -101,7 +100,7 @@ internal sealed class AnimatableProperty : IInspectorRefreshable
         if (keyHere == _keyShown)
             return;
         _keyShown = keyHere;
-        _diamond.Content = keyHere ? KeyGlyph : NoKeyGlyph;
+        _diamond.Filled = keyHere;
     }
 
     private ContextMenu CurveMenu(InspectorContext context)

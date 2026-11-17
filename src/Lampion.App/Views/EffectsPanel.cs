@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.App.Views.EffectsLibrary;
 using Lampion.Core.Model.Effects;
@@ -18,7 +19,7 @@ internal sealed class EffectsPanel : DockPanel
 {
     private readonly EditorState _state;
     private readonly TimelineControl _timeline;
-    private readonly TextBox _search = new() { PlaceholderText = "🔍  Search effects", MinHeight = 24, Margin = new Thickness(6, 6, 6, 4) };
+    private readonly TextBox _search = new() { PlaceholderText = "Search effects", InnerLeftContent = Ui.SearchIcon(), MinHeight = 24, Margin = new Thickness(6, 6, 6, 4) };
     private readonly StackPanel _list = new() { Spacing = 1, Margin = new Thickness(4, 0, 4, 8) };
 
     /// <summary>Creates the panel; it refills itself when the search text or the user's presets change.</summary>
@@ -68,7 +69,7 @@ internal sealed class EffectsPanel : DockPanel
         var effects = EffectCatalog.Entries.Where(e => match(e.Name) || match(e.Description)).ToList();
         if (effects.Count == 0)
             return;
-        var folder = TwirlSection.Titled("fx-light", "📁  Light effects");
+        var folder = TwirlSection.Titled("fx-light", Lucide.Folder, "Light effects");
         foreach (var (kind, name, description) in effects)
             folder.Body.Children.Add(Item(EffectSwatch.Create(EffectCatalog.Create(kind)), name, description, () => AddEffect(kind), p => _timeline.PreviewDrop(p, DropKind.Effect), p => _timeline.Drop(kind, p)));
         _list.Children.Add(folder);
@@ -78,7 +79,7 @@ internal sealed class EffectsPanel : DockPanel
     {
         var presets = PresetActions.Library().Where(p => match(p.Preset.Name) || match(p.Preset.Description) || match(p.Preset.Effect.DisplayName)).ToList();
         var import = new GlyphButton("Import…", "Add a preset file (" + EffectPreset.Extension + ") to your presets", () => WithOwner(PresetActions.Import));
-        var folder = TwirlSection.Titled("fx-presets", "📁  Presets", true, import);
+        var folder = TwirlSection.Titled("fx-presets", Lucide.Folder, "Presets", true, import);
         foreach (var (path, preset) in presets)
         {
             var tip = (preset.Description.Length > 0 ? preset.Description + "\n" : "") + $"{preset.Effect.DisplayName}, {preset.Duration:0.##} s" + (path is null ? " · built in" : "");
@@ -97,9 +98,9 @@ internal sealed class EffectsPanel : DockPanel
         var transitions = TransitionEntry.All.Where(t => match(t.Name) || match(t.Description)).ToList();
         if (transitions.Count == 0)
             return;
-        var folder = TwirlSection.Titled("fx-transitions", "📁  Transitions");
+        var folder = TwirlSection.Titled("fx-transitions", Lucide.Folder, "Transitions");
         foreach (var (kind, name, description) in transitions)
-            folder.Body.Children.Add(Item(new TextBlock { Text = "⧖", FontSize = 13 }, name, description, () => ApplyTransition(kind), p => _timeline.PreviewDrop(p, DropKind.Transition), p => _timeline.DropTransition(kind, p)));
+            folder.Body.Children.Add(Item(new LucideIcon(Lucide.Blend), name, description, () => ApplyTransition(kind), p => _timeline.PreviewDrop(p, DropKind.Transition), p => _timeline.DropTransition(kind, p)));
         _list.Children.Add(folder);
     }
 

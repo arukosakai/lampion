@@ -4,11 +4,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Views.ProfileEditor;
 
 /// <summary>
-/// The live 3D preview of the profile being edited, with its Orbit / ◎ Aim switch. Shows the session's test
+/// The live 3D preview of the profile being edited, with its Orbit / Aim switch. Shows the session's test
 /// values and, in aim mode, turns clicks on the set into pan/tilt for <see cref="Aimed"/>.
 /// </summary>
 internal sealed class ProfilePreviewSection
@@ -16,7 +17,7 @@ internal sealed class ProfilePreviewSection
     private readonly ProfileEditSession _session;
     private readonly FixturePreview _preview;
     private readonly ToggleButton _orbit = new() { Content = "Orbit", IsChecked = true, Padding = new Thickness(10, 2), CornerRadius = new CornerRadius(3, 0, 0, 3) };
-    private readonly ToggleButton _aim = new() { Content = "◎ Aim", Padding = new Thickness(10, 2), CornerRadius = new CornerRadius(0, 3, 3, 0) };
+    private readonly ToggleButton _aim = new() { Content = new IconLabel(Lucide.Crosshair, "Aim"), Padding = new Thickness(10, 2), CornerRadius = new CornerRadius(0, 3, 3, 0) };
     private readonly StackPanel _modeSwitch;
     private readonly TextBlock _hint = new() { Foreground = ProfileEditorUi.Muted, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
 

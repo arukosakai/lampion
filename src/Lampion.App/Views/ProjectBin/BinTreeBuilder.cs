@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.Core.Model.Rig;
 using Lampion.Core.Model.Timeline;
@@ -62,7 +63,7 @@ internal sealed class BinTreeBuilder
         {
             var used = project.Fixtures.Count(f => f.ProfileId == profile.Id);
             var info = used > 0 ? $"{profile.Channels.Count} ch · {used}×" : $"{profile.Channels.Count} ch";
-            profiles.Items.Add(Node(new BinItem(BinItemKind.Profile, profile.Id), Glyph("⚙"), profile.Model, info));
+            profiles.Items.Add(Node(new BinItem(BinItemKind.Profile, profile.Id), Glyph(Lucide.Settings), profile.Model, info));
         }
         AddFolder(items, profiles, filter);
 
@@ -72,7 +73,7 @@ internal sealed class BinTreeBuilder
         {
             var isVideo = project.Tracks.Any(t => t.Kind == TrackKind.Video && t.Clips.Contains(clip));
             var info = File.Exists(clip.Path) ? $"{clip.Duration:0.0} s" : "missing";
-            mediaFolder.Items.Add(Node(new BinItem(BinItemKind.Media, clip.Id), Glyph(isVideo ? "▶" : "♪"), clip.Name, info));
+            mediaFolder.Items.Add(Node(new BinItem(BinItemKind.Media, clip.Id), Glyph(isVideo ? Lucide.Film : Lucide.Music), clip.Name, info));
         }
         AddFolder(items, mediaFolder, filter);
     }
@@ -90,7 +91,7 @@ internal sealed class BinTreeBuilder
     {
         var folder = new TreeViewItem
         {
-            Header = Header(Glyph("📁"), name, $"{count}", bold: true),
+            Header = Header(Glyph(Lucide.Folder), name, $"{count}", bold: true),
             Tag = new BinItem(BinItemKind.Folder, key),
         };
         RememberExpansion(folder, key);
@@ -100,7 +101,7 @@ internal sealed class BinTreeBuilder
     private TreeViewItem FixtureNode(Fixture fixture)
     {
         var profile = _state.Project.ProfileOf(fixture);
-        return Node(new BinItem(BinItemKind.Fixture, fixture.Id), Glyph("💡"), fixture.Name, $"{fixture.Universe}.{fixture.Address:000}", tooltip: profile?.DisplayName);
+        return Node(new BinItem(BinItemKind.Fixture, fixture.Id), Glyph(Lucide.Lightbulb), fixture.Name, $"{fixture.Universe}.{fixture.Address:000}", tooltip: profile?.DisplayName);
     }
 
     private TreeViewItem Node(BinItem item, Control icon, string name, string info, string? expandKey = null, string? tooltip = null)
@@ -143,7 +144,7 @@ internal sealed class BinTreeBuilder
         return grid;
     }
 
-    private static TextBlock Glyph(string glyph) => new() { Text = glyph, FontSize = 12 };
+    private static LucideIcon Glyph(Geometry icon) => new(icon, 13);
 
     private static Control Chip(string color) => new Border { Width = 12, Height = 12, CornerRadius = new CornerRadius(3), Background = Ui.Brush(color) };
 }

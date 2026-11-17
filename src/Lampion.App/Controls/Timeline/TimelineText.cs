@@ -13,6 +13,11 @@ internal static class TimelineText
     /// <param name="brush">A shared brush (it's part of the cache key).</param>
     /// <param name="size">Font size in pixels.</param>
     /// <param name="weight">Font weight.</param>
-    public static void Draw(DrawingContext ctx, string text, Point at, IBrush brush, double size, FontWeight weight = FontWeight.Normal) =>
-        ctx.DrawText(TextCache.Get(text, size, brush, weight), at);
+    /// <returns>The label's width in pixels, e.g. to draw an icon after it.</returns>
+    public static double Draw(DrawingContext ctx, string text, Point at, IBrush brush, double size, FontWeight weight = FontWeight.Normal)
+    {
+        var formatted = TextCache.Get(text, size, brush, weight);
+        ctx.DrawText(formatted, at);
+        return formatted.Width;
+    }
 }

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Live;
 using Lampion.App.Output;
 using Lampion.Core.Live;
@@ -17,7 +18,7 @@ internal sealed class LiveStatusLine : StackPanel
     private readonly LiveSession _session;
     private readonly DmxOutput _output;
     private readonly TextBlock _engine = new() { FontSize = 11 };
-    private readonly TextBlock _midi = new() { FontSize = 11, Foreground = Brushes.Gray, MinWidth = 150 };
+    private readonly IconLabel _midi = new(Lucide.CircleDot, size: 11, iconAfter: true) { MinWidth = 150 };
     private readonly TextBlock _problem = new() { FontSize = 11, Foreground = Brushes.IndianRed, TextWrapping = TextWrapping.Wrap };
     private readonly CheckBox _send = new() { Content = "Send DMX" };
     private readonly ContentControl _devices = new();
@@ -45,6 +46,9 @@ internal sealed class LiveStatusLine : StackPanel
         Children.Add(_engine);
         Children.Add(_problem);
         _midi.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        _midi.Text.FontSize = 11;
+        _midi.Text.Foreground = Brushes.Gray;
+        _midi.Icon.Foreground = Brushes.MediumSeaGreen;
     }
 
     /// <summary>Updates the readouts. Call every UI tick; text is rebuilt only when it changed.</summary>
@@ -62,9 +66,12 @@ internal sealed class LiveStatusLine : StackPanel
             _engine.Text = $"Engine {stats.Rate:0.0} Hz (target {target:0}) · render avg {stats.AverageRenderMs:0.000} ms, worst {stats.WorstRenderMs:0.000} ms · worst lateness {stats.WorstLateMs:0.00} ms · overruns {stats.Overruns}";
             _engine.Foreground = stats.Overruns > 0 || stats.Rate < target * 0.95 ? Brushes.IndianRed : Brushes.MediumSeaGreen;
         }
-        var midi = _session.LastMidi is { } last ? "MIDI ● " + last : _session.IsLearning ? "Waiting for MIDI…" : "MIDI idle";
+        var midi = _session.LastMidi is { } last ? "MIDI " + last : _session.IsLearning ? "Waiting for MIDI…" : "MIDI idle";
         if (!ReferenceEquals(midi, _shownMidi) && midi != _shownMidi)
-            _midi.Text = _shownMidi = midi;
+        {
+            _midi.SetText(_shownMidi = midi);
+            _midi.Icon.IsVisible = _session.LastMidi is not null;
+        }
         var problem = _session.Problem ?? (_output.IsSending ? _output.Problem : null);
         if (problem != _shownProblem)
         {

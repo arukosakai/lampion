@@ -2,12 +2,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Views.ProfileEditor;
 
 /// <summary>
 /// The Channels part of the profile editor: a heading with the channel count, one <see cref="ChannelRowView"/>
-/// per channel, the ＋ Add channel menu and a note on which roles the timeline fills in.
+/// per channel, the Add channel menu and a note on which roles the timeline fills in.
 /// </summary>
 internal sealed class ChannelListEditor : StackPanel
 {
@@ -36,7 +37,7 @@ internal sealed class ChannelListEditor : StackPanel
             item.Click += (_, _) => session.AddChannel(role);
             addMenu.Items.Add(item);
         }
-        var add = new Button { Content = "＋ Add channel ▾", Flyout = addMenu, Margin = new Thickness(0, 4, 0, 0) };
+        var add = new Button { Content = new IconLabel(Lucide.Plus, "Add channel"), Flyout = addMenu, Margin = new Thickness(0, 4, 0, 0) };
 
         Children.Add(header);
         Children.Add(_rows);

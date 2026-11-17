@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.App.Rendering;
 using Lampion.Core.Model.Stage;
@@ -20,6 +21,7 @@ internal sealed class StagePanel : DockPanel
     private readonly EditorState _state;
     private readonly Dictionary<BuilderTool, ToggleButton> _tools = [];
     private readonly Button _snapButton;
+    private readonly IconLabel _snapLabel = new(Lucide.Grid3x3);
 
     /// <summary>A stage panel over <paramref name="state"/>.</summary>
     public StagePanel(EditorState state)
@@ -30,17 +32,18 @@ internal sealed class StagePanel : DockPanel
         var gizmo = new ViewGizmo(View) { HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 8, 10, 0) };
 
         var tools = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 1 };
-        tools.Children.Add(Tool(BuilderTool.Hand, "✋", "Hand (Q) — look around without editing"));
-        tools.Children.Add(Tool(BuilderTool.Move, "✥", "Move (W) — drag fixtures and set pieces; Alt+drag for height"));
-        tools.Children.Add(Tool(BuilderTool.Aim, "◎", "Aim (A) — click the stage to point the selected fixtures there"));
+        tools.Children.Add(Tool(BuilderTool.Hand, Lucide.Hand, "Hand (Q) — look around without editing"));
+        tools.Children.Add(Tool(BuilderTool.Move, Lucide.Move, "Move (W) — drag fixtures and set pieces; Alt+drag for height"));
+        tools.Children.Add(Tool(BuilderTool.Aim, Lucide.Crosshair, "Aim (A) — click the stage to point the selected fixtures there"));
 
-        _snapButton = new Button { Content = SnapLabel(), Padding = new Thickness(8, 1), Flyout = SnapMenu() };
+        _snapLabel.SetText(SnapText());
+        _snapButton = new Button { Content = _snapLabel, Padding = new Thickness(8, 1), Flyout = SnapMenu() };
         ToolTip.SetTip(_snapButton, "Snap step for moving things");
 
-        var add = new Button { Content = "＋", Padding = new Thickness(8, 1), Flyout = AddMenu() };
+        var add = new Button { Content = new LucideIcon(Lucide.Plus), Padding = new Thickness(8, 1), Flyout = AddMenu() };
         ToolTip.SetTip(add, "Add a set piece: truss, tower, riser, wall, screen or a whole truss structure");
 
-        var viewMenu = new Button { Content = "View ▾", Padding = new Thickness(8, 1), Flyout = new Flyout { Content = new StageViewOptions(View, state), Placement = PlacementMode.BottomEdgeAlignedRight } };
+        var viewMenu = new Button { Content = new IconLabel(Lucide.ChevronDown, "View", 12, iconAfter: true), Padding = new Thickness(8, 1), Flyout = new Flyout { Content = new StageViewOptions(View, state), Placement = PlacementMode.BottomEdgeAlignedRight } };
         ToolTip.SetTip(viewMenu, "Labels, light bounce, haze and stage quality");
 
         var bar = new DockPanel { Height = 30, Background = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x26)), LastChildFill = false };
@@ -59,7 +62,7 @@ internal sealed class StagePanel : DockPanel
         stack.Children.Add(gizmo);
         Children.Add(stack);
         SetTool(View.Tool);
-        state.ProjectReplaced += () => _snapButton.Content = SnapLabel();
+        state.ProjectReplaced += () => _snapLabel.SetText(SnapText());
     }
 
     /// <summary>The 3D view; the main window drives its scene and camera.</summary>
@@ -82,9 +85,9 @@ internal sealed class StagePanel : DockPanel
             button.IsChecked = key == tool;
     }
 
-    private ToggleButton Tool(BuilderTool tool, string glyph, string tip)
+    private ToggleButton Tool(BuilderTool tool, Geometry icon, string tip)
     {
-        var button = new ToggleButton { Content = glyph, Width = 30, MinHeight = 24, Padding = new Thickness(0), FontSize = 14, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var button = new ToggleButton { Content = new LucideIcon(icon, 15), Width = 30, MinHeight = 24, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center };
         ToolTip.SetTip(button, tip);
         button.Click += (_, _) => SetTool(tool);
         _tools[tool] = button;
@@ -93,7 +96,7 @@ internal sealed class StagePanel : DockPanel
 
     private static Control Divider() => new Border { Width = 1, Height = 18, Background = new SolidColorBrush(Color.FromRgb(0x3A, 0x3A, 0x3E)), Margin = new Thickness(2, 0) };
 
-    private string SnapLabel() => $"⊞ {_state.Project.Stage.GridStep:0.##} m";
+    private string SnapText() => $"{_state.Project.Stage.GridStep:0.##} m";
 
     private MenuFlyout SnapMenu()
     {
@@ -105,7 +108,7 @@ internal sealed class StagePanel : DockPanel
             {
                 _state.Project.Stage.GridStep = step;
                 _state.Commit();
-                _snapButton.Content = SnapLabel();
+                _snapLabel.SetText(SnapText());
             };
             menu.Items.Add(item);
         }
@@ -136,7 +139,7 @@ internal sealed class StagePanel : DockPanel
     /// <summary>Blender's split gizmo button: the icon flips every gizmo at once, the arrow picks which kinds show.</summary>
     private Control GizmoToggle(ViewGizmo navigation)
     {
-        var toggle = new ToggleButton { Content = "↗", IsChecked = View.ShowGizmos, Width = 28, MinHeight = 24, Padding = new Thickness(0), FontSize = 14, HorizontalContentAlignment = HorizontalAlignment.Center };
+        var toggle = new ToggleButton { Content = new LucideIcon(Lucide.Move3d, 15), IsChecked = View.ShowGizmos, Width = 28, MinHeight = 24, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center };
         ToolTip.SetTip(toggle, "Show gizmos");
 
         var kinds = new StackPanel { Spacing = 4, Width = 180 };
@@ -144,7 +147,7 @@ internal sealed class StagePanel : DockPanel
         kinds.Children.Add(GizmoCheck("Navigate", View.ShowNavigation, v => View.ShowNavigation = v));
         kinds.Children.Add(GizmoCheck("Move handles", View.ShowMoveHandles, v => View.ShowMoveHandles = v));
         kinds.Children.Add(GizmoCheck("Measurements", View.ShowMeasurements, v => View.ShowMeasurements = v));
-        var dropdown = new Button { Content = "▾", Width = 18, MinHeight = 24, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center, Flyout = new Flyout { Content = kinds, Placement = PlacementMode.BottomEdgeAlignedRight } };
+        var dropdown = new Button { Content = new LucideIcon(Lucide.ChevronDown, 12), Width = 18, MinHeight = 24, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center, Flyout = new Flyout { Content = kinds, Placement = PlacementMode.BottomEdgeAlignedRight } };
         ToolTip.SetTip(dropdown, "Choose which gizmos show");
 
         void Apply()

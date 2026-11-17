@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 
 namespace Lampion.App.Views;
@@ -12,11 +13,9 @@ namespace Lampion.App.Views;
 /// </summary>
 internal sealed class TimelineTransportBar : WrapPanel
 {
-    private const string PlayGlyph = "▶";
-    private const string PauseGlyph = "⏸";
-
     private readonly EditorState _state;
     private readonly Button _play;
+    private readonly LucideIcon _playIcon = new(Lucide.Play);
     private bool _showsPause;
 
     /// <summary>A bar driving <paramref name="state"/>'s transport and zooming <paramref name="timeline"/>.</summary>
@@ -24,9 +23,11 @@ internal sealed class TimelineTransportBar : WrapPanel
     {
         _state = state;
         Margin = new Thickness(6, 4);
-        _play = Ui.Button(PlayGlyph, state.TogglePlay, "Play / pause (Space)");
+        _play = Ui.Button("", state.TogglePlay, "Play / pause (Space)");
+        _play.Content = _playIcon;
+        _play.HorizontalContentAlignment = HorizontalAlignment.Center;
         _play.Width = 40;
-        var loop = Ui.Toggle("⟲", state.Loop, on => state.Loop = on, "Loop playback");
+        var loop = Ui.Toggle(Lucide.Repeat, null, state.Loop, on => state.Loop = on, "Loop playback");
         var bpm = ProjectNumber(() => state.Project.Bpm, v => state.Project.Bpm = v, 20, 300, 1, "0.#", "Tempo — the beat grid and snapping follow it");
         var offset = ProjectNumber(() => state.Project.BeatOffset, v => state.Project.BeatOffset = v, 0, 60, 0.01, "0.00", "Seconds to the first downbeat, to line the grid up with the music");
         var length = ProjectNumber(() => state.Project.Duration, v => state.Project.Duration = v, 1, 36000, 1, "0.#", "Show length in seconds");
@@ -39,9 +40,9 @@ internal sealed class TimelineTransportBar : WrapPanel
 
         foreach (var c in new Control[]
                  {
-                     Ui.Button("⏮", () => state.Seek(0), "Go to start (Home)"),
+                     Ui.Button(Lucide.SkipBack, null, () => state.Seek(0), "Go to start (Home)"),
                      _play,
-                     Ui.Button("⏹", () =>
+                     Ui.Button(Lucide.Square, null, () =>
                      {
                          state.Pause();
                          state.Seek(0);
@@ -51,8 +52,8 @@ internal sealed class TimelineTransportBar : WrapPanel
                      Ui.Label("BPM"), bpm, Ui.Label("Offset"), offset, Ui.Label("Length"), length,
                      Gap(),
                      Ui.Button("+ Light track", () => TimelineOps.AddLightTrack(state, state.SelectedFixtureIds), "New light track (with the selected fixtures)"),
-                     Ui.Button("✂ Split", () => TimelineOps.SplitAtPlayhead(state), "Split at playhead (Ctrl+K)"),
-                     Ui.Button("◆ Marker", () => TimelineOps.AddMarker(state), "Add marker at playhead (M)"),
+                     Ui.Button(Lucide.Scissors, "Split", () => TimelineOps.SplitAtPlayhead(state), "Split at playhead (Ctrl+K)"),
+                     Ui.Button(Lucide.Flag, "Marker", () => TimelineOps.AddMarker(state), "Add marker at playhead (M)"),
                      Gap(),
                      Ui.Button("−", () => timeline.ZoomStep(zoomIn: false), "Zoom out (-)"),
                      Ui.Button("Fit", timeline.ZoomToFit, "Zoom to fit (\\)"),
@@ -91,6 +92,6 @@ internal sealed class TimelineTransportBar : WrapPanel
         if (playing == _showsPause)
             return;
         _showsPause = playing;
-        _play.Content = playing ? PauseGlyph : PlayGlyph;
+        _playIcon.Icon = playing ? Lucide.Pause : Lucide.Play;
     }
 }

@@ -10,7 +10,7 @@ namespace Lampion.App.Views;
 /// <summary>
 /// Effect Controls, modelled on After Effects: twirl-down sections, blue values you scrub or type, and a
 /// stopwatch on every animatable property. With the stopwatch on, changing a value at the playhead sets a
-/// keyframe there; ◀ ◆ ▶ step between keys.
+/// keyframe there; the arrows either side of the key diamond step between keys.
 /// </summary>
 /// <remarks>
 /// A thin host: it picks the editor for the selection and rebuilds the control tree only when the selection

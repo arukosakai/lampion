@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.Core.Model.Rig;
 using Lampion.Core.Model.Timeline;
@@ -15,10 +16,10 @@ namespace Lampion.App.Views.ProjectBin;
 internal sealed class ProjectInfoHeader : ContentControl
 {
     private readonly EditorState _state;
-    private readonly TextBlock _icon = new() { FontSize = 22, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    private readonly LucideIcon _icon = new(Lucide.LampCeiling, 24) { HorizontalAlignment = HorizontalAlignment.Center };
     private readonly TextBlock _title = new() { FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis };
     private readonly TextBlock _line1 = new() { Foreground = Brushes.Gray, FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis };
-    private readonly TextBlock _line2 = new() { FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis };
+    private readonly IconLabel _line2 = new(Lucide.TriangleAlert, size: 11) { Spacing = 4 };
     private readonly StackPanel _text;
     private IReadOnlyList<string> _problems = [];
 
@@ -26,6 +27,9 @@ internal sealed class ProjectInfoHeader : ContentControl
     public ProjectInfoHeader(EditorState state)
     {
         _state = state;
+        _line2.Text.FontSize = 11;
+        _line2.Text.TextTrimming = TextTrimming.CharacterEllipsis;
+        _line2.Icon.Foreground = Brushes.Orange;
         Margin = new Thickness(8, 6);
         MinHeight = 54;
         _text = new StackPanel { Children = { _title, _line1, _line2 } };
@@ -56,19 +60,21 @@ internal sealed class ProjectInfoHeader : ContentControl
     {
         var info = Describe(items);
         var problems = items.Count == 0 ? _problems : [];
-        _icon.Text = info.Icon;
+        _icon.Icon = info.Icon;
         _title.Text = info.Title;
         _line1.Text = info.Line1;
         if (problems.Count > 0)
         {
-            _line2.Text = $"⚠ {problems.Count} patch problem{(problems.Count == 1 ? "" : "s")}";
-            _line2.Foreground = Brushes.Orange;
+            _line2.SetText($"{problems.Count} patch problem{(problems.Count == 1 ? "" : "s")}");
+            _line2.Text.Foreground = Brushes.Orange;
+            _line2.Icon.IsVisible = true;
             ToolTip.SetTip(_text, string.Join("\n", problems));
         }
         else
         {
-            _line2.Text = info.Line2;
-            _line2.Foreground = Brushes.Gray;
+            _line2.SetText(info.Line2);
+            _line2.Text.Foreground = Brushes.Gray;
+            _line2.Icon.IsVisible = false;
             ToolTip.SetTip(_text, null);
         }
     }
@@ -78,19 +84,19 @@ internal sealed class ProjectInfoHeader : ContentControl
         if (items.Count == 0)
             return ProjectSummary();
         if (items.Count > 1)
-            return new BinItemInfo($"{items.Count} items selected", "Drag them onto the timeline to light them", "", "▦");
+            return new BinItemInfo($"{items.Count} items selected", "Drag them onto the timeline to light them", "", Lucide.LayoutGrid);
         var project = _state.Project;
         return items[0] switch
         {
             { Kind: BinItemKind.Fixture } f when project.FixtureById(f.Id) is { } fixture => DescribeFixture(fixture),
-            { Kind: BinItemKind.Group } g when project.Groups.Find(x => x.Id == g.Id) is { } group => new BinItemInfo(group.Name, $"{group.FixtureIds.Count} fixtures", "Drag onto the timeline for a light track", "▣"),
+            { Kind: BinItemKind.Group } g when project.Groups.Find(x => x.Id == g.Id) is { } group => new BinItemInfo(group.Name, $"{group.FixtureIds.Count} fixtures", "Drag onto the timeline for a light track", Lucide.Layers),
             { Kind: BinItemKind.Profile } p when project.Profiles.Find(x => x.Id == p.Id) is { } profile => new BinItemInfo(
                 profile.Model,
                 $"{profile.Manufacturer} · {profile.Channels.Count} channels · {profile.Beam}",
                 "Double-click to edit the channel layout",
-                "⚙"
+                Lucide.Settings
             ),
-            { Kind: BinItemKind.Media } m when _state.FindClip(m.Id)?.Clip is MediaClip clip => new BinItemInfo(clip.Name, Path.GetFileName(clip.Path), $"{clip.Duration:0.00} s at {clip.Start:0.00} s", "♪"),
+            { Kind: BinItemKind.Media } m when _state.FindClip(m.Id)?.Clip is MediaClip clip => new BinItemInfo(clip.Name, Path.GetFileName(clip.Path), $"{clip.Duration:0.00} s at {clip.Start:0.00} s", Lucide.Music),
             _ => ProjectSummary(),
         };
     }
@@ -104,7 +110,7 @@ internal sealed class ProjectInfoHeader : ContentControl
             fixture.Name,
             profile?.DisplayName ?? "no profile",
             $"DMX {fixture.Universe}.{fixture.Address:000}–{last:000} · {position.X:0.##}, {position.Y:0.##}, {position.Z:0.##} m",
-            "💡"
+            Lucide.Lightbulb
         );
     }
 
@@ -116,7 +122,7 @@ internal sealed class ProjectInfoHeader : ContentControl
             project.Name,
             $"{project.Fixtures.Count} fixtures in {universes} universe{(universes == 1 ? "" : "s")}",
             $"{project.Tracks.Count} tracks · {project.AllClips.Count()} clips",
-            "🏮"
+            Lucide.LampCeiling
         );
     }
 }

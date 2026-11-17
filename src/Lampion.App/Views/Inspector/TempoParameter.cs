@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Model.Timeline;
 using LightEffect = Lampion.Core.Model.Effects.Effect;
 
@@ -36,7 +37,7 @@ internal sealed class TempoParameter<TEffect>(string label, TempoScale scale, Fu
             TempoUnits.Toggle();
             context.Rebuild();
         });
-        var match = new GlyphButton("♩", "Match the show's BPM (once per beat)", () =>
+        var match = new GlyphButton(Lucide.Music2, "Match the show's BPM (once per beat)", () =>
         {
             var value = scale.FromBpm(context.State.Project.Bpm, get(typed));
             scrub.Show(value);

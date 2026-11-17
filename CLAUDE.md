@@ -61,6 +61,9 @@ reveal detail, drag from a library onto the timeline.
   implement them.
 - Reuse the shared building blocks (`Ui`, `ScrubValue`, `TwirlSection`, `PropertyRow`, ...) instead of
   hand-rolling another one.
+- Icons are [Lucide](https://lucide.dev), never emoji or symbol characters: `LucideIcon`, `IconLabel` and `IconText` in
+  controls, `IconPainter` in custom-drawn ones. To add an icon, put its name in `tools/lucide/icons.json` and run
+  `node tools/lucide/generate.mjs`, which rewrites `Controls/Icons/Lucide.cs`.
 
 ### One type per file
 

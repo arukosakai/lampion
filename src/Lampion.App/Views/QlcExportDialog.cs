@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Export;
 using Lampion.Core.Model;
 
@@ -31,12 +32,12 @@ internal static class QlcExportDialog
             options.BaseWorkspacePath = path;
             baseLabel.Text = path ?? NoBase;
         });
-        var clearBase = Ui.Button("✕", () =>
+        var clearBase = Ui.Button(Lucide.X, null, () =>
         {
             options.BaseWorkspacePath = null;
             baseLabel.Text = NoBase;
         });
-        var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.Gray };
+        var status = new StackPanel { Spacing = 4 };
         var export = new Button { Content = "Export…", MinWidth = 100, HorizontalAlignment = HorizontalAlignment.Right };
         export.Click += async (_, _) => await Export(window, project, options, status);
         window.Content = new StackPanel
@@ -62,7 +63,7 @@ internal static class QlcExportDialog
         await window.ShowDialog(owner);
     }
 
-    private static async Task Export(Window window, Project project, QlcExportOptions options, TextBlock status)
+    private static async Task Export(Window window, Project project, QlcExportOptions options, StackPanel status)
     {
         var suggested = (options.BaseWorkspacePath is { } b ? Path.GetFileNameWithoutExtension(b) : project.Name) + ".qxw";
         var target = await Dialogs.PickSave(window, "Save QLC+ workspace", suggested, "qxw", "QLC+ workspace");
@@ -71,17 +72,27 @@ internal static class QlcExportDialog
         options.OutputDirectory = Path.GetDirectoryName(target);
         try
         {
-            status.Text = "Rendering show…";
+            Report(status, Brushes.Gray, "Rendering show…");
             var result = await Task.Run(() => new QlcExporter(project, options).Export());
             await File.WriteAllTextAsync(target, result.Xml);
-            var warnings = result.Warnings.Count == 0 ? "No warnings." : string.Join("\n", result.Warnings.Select(w => "⚠ " + w));
-            status.Foreground = Brushes.Gainsboro;
-            status.Text = $"Saved {Path.GetFileName(target)}: {result.FixtureCount} fixtures, {result.StepCount} sequence steps.\n{warnings}\n\nIn QLC+, open the workspace and play the show from the Show Manager. Media files are referenced relative to the .qxw.";
+            Report(status, Brushes.Gainsboro, $"Saved {Path.GetFileName(target)}: {result.FixtureCount} fixtures, {result.StepCount} sequence steps.");
+            if (result.Warnings.Count == 0)
+                status.Children.Add(Line(Brushes.Gainsboro, "No warnings."));
+            foreach (var warning in result.Warnings)
+                status.Children.Add(new IconText(Lucide.TriangleAlert, warning, fontSize: 12) { Foreground = Brushes.Orange });
+            status.Children.Add(Line(Brushes.Gainsboro, "In QLC+, open the workspace and play the show from the Show Manager. Media files are referenced relative to the .qxw."));
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
         {
-            status.Foreground = Brushes.OrangeRed;
-            status.Text = "Export failed: " + ex.Message;
+            Report(status, Brushes.OrangeRed, "Export failed: " + ex.Message);
         }
     }
+
+    private static void Report(StackPanel status, IBrush brush, string text)
+    {
+        status.Children.Clear();
+        status.Children.Add(Line(brush, text));
+    }
+
+    private static TextBlock Line(IBrush brush, string text) => new() { Text = text, Foreground = brush, TextWrapping = TextWrapping.Wrap };
 }

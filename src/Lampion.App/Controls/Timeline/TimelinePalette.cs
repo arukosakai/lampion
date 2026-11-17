@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Controls.Timeline;
 
@@ -37,6 +38,12 @@ internal static class TimelinePalette
 
     /// <summary>Keyframes and the keyframe-row captions.</summary>
     public static readonly IBrush Key = Solid(0xFF, 0xC8, 0x3A);
+
+    /// <summary>Strokes icons in <see cref="Text"/>.</summary>
+    public static readonly IPen TextIcon = IconPainter.Pen(Text);
+
+    /// <summary>Strokes icons in <see cref="Key"/>.</summary>
+    public static readonly IPen KeyIcon = IconPainter.Pen(Key);
 
     /// <summary>The bar behind a clip's name.</summary>
     public static readonly IBrush NameBar = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));

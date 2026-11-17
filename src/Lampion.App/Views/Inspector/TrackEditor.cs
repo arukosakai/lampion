@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Model.Timeline;
 
 namespace Lampion.App.Views.Inspector;
@@ -25,12 +26,12 @@ internal sealed class TrackEditor(InspectorFields fields)
         targets.Body.Children.Add(InspectorLayout.Hint("Tip: drag fixtures or groups from the Project panel onto the track.", new Thickness(20, 0, 0, 4)));
         var project = fields.Context.State.Project;
         foreach (var group in project.Groups)
-            targets.Body.Children.Add(TargetCheck($"▣ {group.Name} ({group.FixtureIds.Count})", track.GroupIds, group.Id));
+            targets.Body.Children.Add(TargetCheck(new IconLabel(Lucide.Layers, $"{group.Name} ({group.FixtureIds.Count})"), track.GroupIds, group.Id));
         foreach (var fixture in project.Fixtures)
             targets.Body.Children.Add(TargetCheck(fixture.Name, track.FixtureIds, fixture.Id));
     }
 
-    private CheckBox TargetCheck(string label, List<string> ids, string id)
+    private CheckBox TargetCheck(object label, List<string> ids, string id)
     {
         var box = new CheckBox { Content = label, IsChecked = ids.Contains(id), Margin = new Thickness(20, 0, 0, 0), MinHeight = 24 };
         box.IsCheckedChanged += (_, _) => fields.Context.Edit(() =>

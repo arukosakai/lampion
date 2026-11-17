@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Views.Start;
 
@@ -53,7 +54,7 @@ internal static class StartCard
     }
 
     /// <summary>A sidebar action: an icon, a title and a line of explanation.</summary>
-    public static Border Action(string icon, string title, string subtitle, Action onClick) =>
+    public static Border Action(Geometry icon, string title, string subtitle, Action onClick) =>
         Create(
             new StackPanel
             {
@@ -61,7 +62,7 @@ internal static class StartCard
                 Spacing = 12,
                 Children =
                 {
-                    new TextBlock { Text = icon, FontSize = 20, Width = 26, VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Center },
+                    new LucideIcon(icon, 22) { Margin = new Thickness(2, 0) },
                     new StackPanel
                     {
                         Children =

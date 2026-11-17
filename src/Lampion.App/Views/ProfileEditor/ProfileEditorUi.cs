@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 
 namespace Lampion.App.Views.ProfileEditor;
 
@@ -57,11 +58,11 @@ internal static class ProfileEditorUi
     }
 
     /// <summary>A small square glyph button; when not <paramref name="enabled"/> it is faded and ignores clicks.</summary>
-    public static Button IconButton(string glyph, string tip, bool enabled, Action onClick)
+    public static Button IconButton(Geometry icon, string tip, bool enabled, Action onClick)
     {
         var button = new Button
         {
-            Content = glyph,
+            Content = new LucideIcon(icon, 13),
             Width = 24,
             MinHeight = 24,
             Padding = new Thickness(0),

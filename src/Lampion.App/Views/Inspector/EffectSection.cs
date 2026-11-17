@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Lampion.App.Controls;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Model.Animation;
 using Lampion.Core.Model.Effects;
 using Lampion.Core.Model.Timeline;
@@ -22,9 +23,9 @@ internal sealed class EffectSection(InspectorFields fields)
     public void Build(Panel root, LightClip clip)
     {
         var effect = clip.Effect;
-        var changeButton = new GlyphButton("⇄", "Change effect", () => { }) { Flyout = ChangeMenu(clip) };
+        var changeButton = new GlyphButton(Lucide.ArrowLeftRight, "Change effect", () => { }) { Flyout = ChangeMenu(clip) };
         var reset = new GlyphButton("Reset", "Reset the effect's parameters", () => Replace(clip, EffectCatalog.Create(effect.Kind), keepLook: false));
-        var save = new GlyphButton("★", "Save this clip's look (effect, fades, light automation) as a preset", () =>
+        var save = new GlyphButton(Lucide.Star, "Save this clip's look (effect, fades, light automation) as a preset", () =>
         {
             if (Context.Owner is { } owner)
                 _ = PresetActions.SaveFromClip(owner, clip);

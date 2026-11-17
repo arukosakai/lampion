@@ -18,7 +18,7 @@ internal static class InspectorLayout
         root.Children.Add(new TextBlock { Text = subtitle ?? "", Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(4, 0, 0, 8) });
     }
 
-    /// <summary>Adds a titled twirl-down section to <paramref name="root"/>; see <see cref="TwirlSection.Titled"/>.</summary>
+    /// <summary>Adds a titled twirl-down section to <paramref name="root"/>; see <see cref="TwirlSection.Titled(string, string, bool, Control[])"/>.</summary>
     public static TwirlSection Section(Panel root, string key, string title, bool open = true, params Control[] trailing)
     {
         var section = TwirlSection.Titled(key, title, open, trailing);

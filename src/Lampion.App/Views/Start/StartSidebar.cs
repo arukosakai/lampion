@@ -2,6 +2,7 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 
 namespace Lampion.App.Views.Start;
@@ -19,7 +20,7 @@ internal sealed class StartSidebar : DockPanel
             Spacing = 2,
             Children =
             {
-                new TextBlock { Text = "🏮 Lampion", FontSize = 30, FontWeight = FontWeight.Bold },
+                Title(),
                 new TextBlock { Text = "Light shows on a timeline", Foreground = Brushes.Gray, FontSize = 13 },
             },
         };
@@ -37,15 +38,23 @@ internal sealed class StartSidebar : DockPanel
         Children.Add(new Border { Padding = new Thickness(18, 0), Child = Actions(actions) });
     }
 
+    private static IconLabel Title()
+    {
+        var title = new IconLabel(Lucide.LampCeiling, "Lampion", 30) { Spacing = 10 };
+        title.Text.FontSize = 30;
+        title.Text.FontWeight = FontWeight.Bold;
+        return title;
+    }
+
     private static StackPanel Actions(StartActions actions)
     {
         var list = new StackPanel { Spacing = 8 };
-        list.Children.Add(StartCard.Action("✚", "New empty show", "A bare stage, no fixtures yet", actions.NewEmpty));
+        list.Children.Add(StartCard.Action(Lucide.Plus, "New empty show", "A bare stage, no fixtures yet", actions.NewEmpty));
         if (UserData.DefaultLayout() is { } layout)
-            list.Children.Add(StartCard.Action("★", "New from your default", $"\"{layout.Name}\" · {layout.Fixtures.Count} fixtures", () => actions.NewFromLayout(layout)));
-        list.Children.Add(StartCard.Action("📂", "Open show…", "A .lampion file from disk", () => _ = actions.OpenFile()));
-        list.Children.Add(StartCard.Action("🎆", "Open the showcase", "A 90 s festival show: 48 fixtures, truss, pixel towers, every effect", actions.OpenShowcase));
-        list.Children.Add(StartCard.Action("✨", "Open the demo", "A short show with pars, moving heads and a rainbow", actions.OpenDemo));
+            list.Children.Add(StartCard.Action(Lucide.Star, "New from your default", $"\"{layout.Name}\" · {layout.Fixtures.Count} fixtures", () => actions.NewFromLayout(layout)));
+        list.Children.Add(StartCard.Action(Lucide.FolderOpen, "Open show…", "A .lampion file from disk", () => _ = actions.OpenFile()));
+        list.Children.Add(StartCard.Action(Lucide.PartyPopper, "Open the showcase", "A 90 s festival show: 48 fixtures, truss, pixel towers, every effect", actions.OpenShowcase));
+        list.Children.Add(StartCard.Action(Lucide.Sparkles, "Open the demo", "A short show with pars, moving heads and a rainbow", actions.OpenDemo));
         return list;
     }
 }

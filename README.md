@@ -206,5 +206,6 @@ The [release workflow](.github/workflows/release.yml) runs the tests, then build
 ---
 
 <div align="center">
-<sub>Released into the public domain under the <a href="LICENSE">Unlicense</a>.</sub>
+<sub>Released into the public domain under the <a href="LICENSE">Unlicense</a>.</sub><br>
+<sub>Icons from <a href="https://lucide.dev">Lucide</a> (ISC licence, see <code>src/Lampion.App/Controls/Icons/LUCIDE-LICENSE.txt</code>).</sub>
 </div>

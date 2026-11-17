@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Color;
 
 namespace Lampion.App.Views;
@@ -37,6 +38,14 @@ internal static class Ui
         return button;
     }
 
+    /// <summary>A push button showing a Lucide <paramref name="icon"/> and optional <paramref name="text"/>.</summary>
+    public static Button Button(Geometry icon, string? text, Action onClick, string? tip = null)
+    {
+        var button = Button("", onClick, tip);
+        button.Content = new IconLabel(icon, text);
+        return button;
+    }
+
     /// <summary>A toggle button; <paramref name="onChange"/> gets the new state on every change.</summary>
     public static ToggleButton Toggle(string text, bool initial, Action<bool> onChange, string? tip = null)
     {
@@ -46,6 +55,17 @@ internal static class Ui
             ToolTip.SetTip(toggle, tip);
         return toggle;
     }
+
+    /// <summary>A toggle button showing a Lucide <paramref name="icon"/> and optional <paramref name="text"/>.</summary>
+    public static ToggleButton Toggle(Geometry icon, string? text, bool initial, Action<bool> onChange, string? tip = null)
+    {
+        var toggle = Toggle("", initial, onChange, tip);
+        toggle.Content = new IconLabel(icon, text);
+        return toggle;
+    }
+
+    /// <summary>A grey magnifier for a search box's <see cref="TextBox.InnerLeftContent"/>.</summary>
+    public static LucideIcon SearchIcon() => new(Lucide.Search, 13) { Foreground = Brushes.Gray, Margin = new Thickness(6, 0, 0, 0) };
 
     /// <summary>Controls side by side, 4 px apart.</summary>
     public static StackPanel Row(params Control[] children)

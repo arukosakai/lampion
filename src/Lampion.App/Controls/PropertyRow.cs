@@ -4,7 +4,7 @@ using Avalonia.Media;
 
 namespace Lampion.App.Controls;
 
-/// <summary>One property line: [stopwatch] name ........ value [◀ ◆ ▶].</summary>
+/// <summary>One property line: [stopwatch] name ........ value [previous, key, next].</summary>
 internal sealed class PropertyRow : Grid
 {
     private static readonly IBrush LabelBrush = new SolidColorBrush(Color.FromRgb(0xC8, 0xC8, 0xC8));

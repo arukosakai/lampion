@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.Core.Model;
 using Lampion.Core.Model.Rig;
@@ -22,7 +23,7 @@ internal sealed class PatchSettingsForm : StackPanel
     private readonly List<(string Label, StageObject? Truss)> _placements;
     private readonly ComboBox _placement;
     private readonly CheckBox _makeGroup = new() { Content = "Put them in a new group", IsChecked = true };
-    private readonly TextBlock _range = new() { Foreground = Brushes.Gray, FontSize = 11 };
+    private readonly IconText _range = new(Lucide.TriangleAlert, showIcon: false) { Foreground = Brushes.Gray };
     private FixtureProfile? _profile;
 
     /// <param name="project">The project being patched: its free addresses and trusses.</param>
@@ -81,7 +82,7 @@ internal sealed class PatchSettingsForm : StackPanel
     {
         if (_profile is not { } profile)
         {
-            _range.Text = "";
+            _range.Show(null, showIcon: false);
             return;
         }
         var count = (int)(_quantity.Value ?? 1);
@@ -91,8 +92,12 @@ internal sealed class PatchSettingsForm : StackPanel
             _startAddress.Value = Math.Max(1, PatchPlanner.NextFreeAddress(_project, universe, footprint));
         var start = (int)(_startAddress.Value ?? 1);
         var end = start + count * footprint - 1;
-        _range.Text = end > 512
-            ? $"⚠ {count} × {footprint} ch from {universe}.{start:000} runs past channel 512 — later ones move to the next universe"
-            : $"Patches {universe}.{start:000} – {universe}.{end:000}";
+        var overflows = end > 512;
+        _range.Show(
+            overflows
+                ? $"{count} × {footprint} ch from {universe}.{start:000} runs past channel 512 — later ones move to the next universe"
+                : $"Patches {universe}.{start:000} – {universe}.{end:000}",
+            overflows
+        );
     }
 }

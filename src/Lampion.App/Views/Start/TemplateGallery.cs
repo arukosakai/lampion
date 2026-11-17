@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.Core.Persistence;
 
@@ -65,7 +66,7 @@ internal sealed class TemplateGallery : WrapPanel
             {
                 top,
                 new TextBlock { Text = description, Foreground = Brushes.Gray, FontSize = 11, TextWrapping = TextWrapping.Wrap, Height = 44 },
-                new TextBlock { Text = $"💡 {layout.Fixtures.Count} fixtures · {layout.Groups.Count} groups", FontSize = 11 },
+                FixtureCount(layout),
                 Swatches(layout),
             },
         };
@@ -79,6 +80,13 @@ internal sealed class TemplateGallery : WrapPanel
         return card;
     }
 
+    private static IconLabel FixtureCount(StageLayout layout)
+    {
+        var line = new IconLabel(Lucide.Lightbulb, $"{layout.Fixtures.Count} fixtures · {layout.Groups.Count} groups", 11) { Spacing = 4 };
+        line.Text.FontSize = 11;
+        return line;
+    }
+
     private Border BrowseTile() =>
         StartCard.Tile(
             new StackPanel
@@ -87,7 +95,7 @@ internal sealed class TemplateGallery : WrapPanel
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Children =
                 {
-                    new TextBlock { Text = "📐", FontSize = 26, HorizontalAlignment = HorizontalAlignment.Center },
+                    new LucideIcon(Lucide.DraftingCompass, 26) { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 4) },
                     new TextBlock { Text = "Layout file…", FontWeight = FontWeight.SemiBold, HorizontalAlignment = HorizontalAlignment.Center },
                     new TextBlock { Text = "Any .lampstage", Foreground = Brushes.Gray, FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center },
                 },

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.Core.Model.Rig;
 
 namespace Lampion.App.Views.ProfileEditor;
@@ -73,9 +74,9 @@ internal sealed class ChannelRowView : Border
         ProfileEditorUi.Place(grid, testCell, 4);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
-        actions.Children.Add(ProfileEditorUi.IconButton("↑", "Move up", index > 0, () => session.SwapChannels(index, index - 1)));
-        actions.Children.Add(ProfileEditorUi.IconButton("↓", "Move down", index < channels.Count - 1, () => session.SwapChannels(index, index + 1)));
-        actions.Children.Add(ProfileEditorUi.IconButton("✕", "Remove channel", true, () => session.RemoveChannel(index)));
+        actions.Children.Add(ProfileEditorUi.IconButton(Lucide.ArrowUp, "Move up", index > 0, () => session.SwapChannels(index, index - 1)));
+        actions.Children.Add(ProfileEditorUi.IconButton(Lucide.ArrowDown, "Move down", index < channels.Count - 1, () => session.SwapChannels(index, index + 1)));
+        actions.Children.Add(ProfileEditorUi.IconButton(Lucide.X, "Remove channel", true, () => session.RemoveChannel(index)));
         ProfileEditorUi.Place(grid, actions, 5);
 
         var body = new StackPanel { Spacing = 3, Children = { grid } };
@@ -112,13 +113,10 @@ internal sealed class ChannelRowView : Border
             _session.SetTestValue(_index, value);
     }
 
-    private static TextBlock DuplicateRoleWarning(int firstOfRole, ChannelRole role) =>
-        new()
+    private static IconText DuplicateRoleWarning(int firstOfRole, ChannelRole role) =>
+        new(Lucide.TriangleAlert, $"Channel {firstOfRole + 1} is already {ChannelRoleStyle.NameOf(role)}; only the first one is driven, this one stays at its default.")
         {
-            Text = $"⚠ Channel {firstOfRole + 1} is already {ChannelRoleStyle.NameOf(role)}; only the first one is driven, this one stays at its default.",
             Foreground = ProfileEditorUi.Warning,
-            FontSize = 11,
             Margin = new Thickness(42, 0, 0, 0),
-            TextWrapping = TextWrapping.Wrap,
         };
 }

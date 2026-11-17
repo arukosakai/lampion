@@ -23,15 +23,13 @@ internal sealed class TimelineRenderer
         _viewport = viewport;
         _layout = layout;
         var brushes = new ColorBrushCache();
-        var labels = new ClipLabelCache();
         var lights = new LightClipRenderer(
             viewport,
             new ColorStripRenderer(viewport, brushes),
             new FadeRenderer(new FadeGeometryCache()),
             new TransitionRenderer(viewport),
-            brushes,
-            labels);
-        var media = new MediaClipRenderer(state, new WaveformRenderer(viewport), labels);
+            brushes);
+        var media = new MediaClipRenderer(state, new WaveformRenderer(viewport));
         _trackArea = new TrackAreaRenderer(
             viewport,
             layout,

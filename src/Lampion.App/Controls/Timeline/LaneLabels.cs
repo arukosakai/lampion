@@ -3,7 +3,7 @@ using Lampion.Core.Model.Animation;
 namespace Lampion.App.Controls.Timeline;
 
 /// <summary>
-/// Keyframe-row captions ("◆ Pan channel"), built once per <see cref="LaneTarget"/> because
+/// Keyframe-row captions ("Pan channel"; the header draws the key diamond), built once per <see cref="LaneTarget"/> because
 /// <see cref="AutomationLane.Label"/> allocates. UI thread only.
 /// </summary>
 internal static class LaneLabels
@@ -15,7 +15,7 @@ internal static class LaneLabels
     {
         if (!Captions.TryGetValue(target, out var caption))
         {
-            caption = "◆ " + lane.Label;
+            caption = lane.Label;
             Captions[target] = caption;
         }
         return caption;

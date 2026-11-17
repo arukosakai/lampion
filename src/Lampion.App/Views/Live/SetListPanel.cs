@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Editor;
 using Lampion.App.Live;
 using Lampion.Core.Model.Live;
@@ -24,7 +26,7 @@ internal sealed class SetListPanel : DockPanel
     private readonly TextBlock _now = new() { FontSize = 13, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock _time = new() { FontSize = 12 };
     private readonly ProgressBar _progress = new() { Minimum = 0, Maximum = 1, Height = 6 };
-    private readonly TextBlock _music = new() { FontSize = 11, Foreground = Brushes.Gray, TextWrapping = TextWrapping.Wrap };
+    private readonly IconText _music = new(Lucide.Music, showIcon: false) { Foreground = Brushes.Gray };
     private readonly ContentControl _showMidi = new();
     private LiveShow? _showMidiFor;
     private bool _syncingSelection;
@@ -70,8 +72,8 @@ internal sealed class SetListPanel : DockPanel
                 Ui.Button("−", () => { if (Selected is { } s) LiveEdits.RemoveShow(_state, s); }, "Remove the selected show")
             ),
             Ui.Row(
-                Ui.Button("↑", () => { if (Selected is { } s) LiveEdits.MoveShow(_state, s, -1); }, "Move up"),
-                Ui.Button("↓", () => { if (Selected is { } s) LiveEdits.MoveShow(_state, s, 1); }, "Move down"),
+                Ui.Button(Lucide.ArrowUp, null, () => { if (Selected is { } s) LiveEdits.MoveShow(_state, s, -1); }, "Move up"),
+                Ui.Button(Lucide.ArrowDown, null, () => { if (Selected is { } s) LiveEdits.MoveShow(_state, s, 1); }, "Move down"),
                 _loop
             )
         );
@@ -135,17 +137,34 @@ internal sealed class SetListPanel : DockPanel
             return;
         _shownMusic = clip;
         _shownErrorMs = errorMs;
-        _music.Text = clip is null
-            ? (_session.Cue is null ? "" : "No music playing: the lights run on their own clock.")
-            : $"♪ {Path.GetFileName(clip.Path)} · lights follow the music (last correction {errorMs:+0;-0;0} ms)";
+        _music.Show(
+            clip is null
+                ? (_session.Cue is null ? "" : "No music playing: the lights run on their own clock.")
+                : $"{Path.GetFileName(clip.Path)} · lights follow the music (last correction {errorMs:+0;-0;0} ms)",
+            showIcon: clip is not null
+        );
     }
+
+    // The playing show gets a play icon, looping shows a repeat icon; the hidden play icon keeps names lined up.
+    private StackPanel ShowRow(LiveShow show) =>
+        new()
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 6,
+            Children =
+            {
+                new LucideIcon(Lucide.Play, 12) { Opacity = ReferenceEquals(show, _session.Playing) ? 1 : 0 },
+                new TextBlock { Text = show.Name, VerticalAlignment = VerticalAlignment.Center },
+                new LucideIcon(Lucide.Repeat, 12) { IsVisible = show.Loop, Foreground = Brushes.Gray },
+            },
+        };
 
     private void Rebuild()
     {
         var index = _list.SelectedIndex;
         var shows = _state.Project.Live.Shows;
         _syncingSelection = true;
-        _list.ItemsSource = shows.Select(s => (ReferenceEquals(s, _session.Playing) ? "▶ " : "   ") + s.Name + (s.Loop ? "  ⟳" : "")).ToList();
+        _list.ItemsSource = shows.Select(ShowRow).ToList();
         var next = _session.Next is { } n ? shows.IndexOf(n) : -1;
         _list.SelectedIndex = next >= 0 ? next : Math.Min(Math.Max(index, 0), shows.Count - 1);
         _syncingSelection = false;
