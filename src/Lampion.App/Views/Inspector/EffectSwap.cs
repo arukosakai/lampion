@@ -59,6 +59,9 @@ internal static class EffectSwap
             case HitEffect e:
                 e.Color = hex;
                 break;
+            case MorseEffect e:
+                e.Color = hex;
+                break;
         }
     }
 }

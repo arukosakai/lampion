@@ -51,6 +51,9 @@ internal static class Lucide
     /// <summary>Lucide "flag".</summary>
     public static Geometry Flag { get; } = Geometry.Parse("M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528");
 
+    /// <summary>Lucide "fold-vertical".</summary>
+    public static Geometry FoldVertical { get; } = Geometry.Parse("M10 12H8 M12 22v-6 M12 8V2 M15 19 l-3-3-3 3 M15 5 l-3 3-3-3 M16 12h-2 M22 12h-2 M4 12H2");
+
     /// <summary>Lucide "folder".</summary>
     public static Geometry Folder { get; } = Geometry.Parse("M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z");
 

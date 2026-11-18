@@ -20,6 +20,7 @@ internal static class EffectParameterTable
     private static readonly ScrubRange Wavelength = new(0.25, 32, 0.02, Unit: " fx");
     private static readonly ScrubRange Repeat = new(0, 8, 0.01, Unit: "×");
     private static readonly ScrubRange Phase = new(-1, 1, 0.005);
+    private static readonly ScrubRange FixtureShift = new(-12, 12, 0.02, Unit: " fx");
 
     private static readonly EffectParameter Intensity = new NumberParameter<LightEffect>("Intensity", Percent, e => e.Intensity, (e, v) => e.Intensity = v);
 
@@ -59,6 +60,7 @@ internal static class EffectParameterTable
         Number<ChaseEffect>("Tail", Tail, e => e.Tail, (e, v) => e.Tail = v, "tail"),
         Choice<ChaseEffect, ChaseDirection>("Direction", e => e.Direction, (e, v) => e.Direction = v),
         Number<ChaseEffect>("Background", Percent, e => e.Background, (e, v) => e.Background = v, "background"),
+        Number<ChaseEffect>("Offset", FixtureShift, e => e.Offset, (e, v) => e.Offset = v, "offset"),
         Intensity,
     ];
 
@@ -149,9 +151,21 @@ internal static class EffectParameterTable
     private static readonly EffectParameter[] Hit =
     [
         Color<HitEffect>("Color", e => e.Color, (e, v) => e.Color = v),
+        Choice<HitEffect, HitColorMode>("Color mode", e => e.ColorMode, (e, v) => e.ColorMode = v),
+        new PaletteParameter<HitEffect>("Cycle colors", e => e.Colors),
         Number<HitEffect>("Decay", Seconds, e => e.Decay, (e, v) => e.Decay = v, "decay"),
         Tempo<HitEffect>("Interval", TempoScale.Interval, e => e.Interval, (e, v) => e.Interval = v, "interval"),
         Number<HitEffect>("Offset", Seconds, e => e.Offset, (e, v) => e.Offset = v, "offset"),
+        Intensity,
+    ];
+
+    private static readonly EffectParameter[] Morse =
+    [
+        new TextParameter<MorseEffect>("Text", e => e.Text, (e, v) => e.Text = v),
+        Color<MorseEffect>("Color", e => e.Color, (e, v) => e.Color = v),
+        Tempo<MorseEffect>("Dot time", TempoScale.StepTime, e => e.DotTime, (e, v) => e.DotTime = v, "dotTime"),
+        new CheckParameter<MorseEffect>("Repeat", e => e.Repeat, (e, v) => e.Repeat = v),
+        Number<MorseEffect>("Background", Percent, e => e.Background, (e, v) => e.Background = v, "background"),
         Intensity,
     ];
 
@@ -174,6 +188,7 @@ internal static class EffectParameterTable
             LightningEffect => Lightning,
             HeartbeatEffect => Heartbeat,
             HitEffect => Hit,
+            MorseEffect => Morse,
             _ => [],
         };
 

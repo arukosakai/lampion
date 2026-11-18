@@ -24,6 +24,9 @@ public sealed class Track
     /// <summary>Whether the timeline shows the automation lanes (the twirl-down).</summary>
     public bool Expanded { get; set; }
 
+    /// <summary>Whether the timeline draws the track as a thin row (name and clip names only), to fit more tracks on screen.</summary>
+    public bool Compact { get; set; }
+
     /// <summary>How the track combines with the tracks below it.</summary>
     public BlendMode Blend { get; set; } = BlendMode.Normal;
 

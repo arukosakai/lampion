@@ -1037,6 +1037,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Htp",
       "order": "CenterOut",
       "fixtureIds": [
@@ -1229,6 +1230,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Add",
       "order": "RightToLeft",
       "fixtureIds": [],
@@ -1266,11 +1268,17 @@
           "effect": {
             "type": "hit",
             "color": "#FF00FF",
+            "colorMode": "Cycle",
+            "colors": [
+              "#FF0000",
+              "#00FF00",
+              "#0000FF"
+            ],
             "decay": 0.3,
             "interval": 0.5,
             "offset": 0.1,
             "displayName": "Hit",
-            "swatchColor": "#FF00FF",
+            "swatchColor": "#FF0000",
             "intensity": 1
           },
           "fadeIn": 0.5,
@@ -1493,6 +1501,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Normal",
       "order": "LeftToRight",
       "fixtureIds": [],
@@ -1513,6 +1522,7 @@
             "tail": 2,
             "direction": "Bounce",
             "background": 0.05,
+            "offset": 0,
             "displayName": "Chase",
             "swatchColor": "#FF0000",
             "intensity": 1
@@ -1710,6 +1720,7 @@
             "tail": 0,
             "direction": "Backward",
             "background": 0,
+            "offset": 0,
             "displayName": "Chase",
             "swatchColor": "#FFFFFF",
             "intensity": 1
@@ -1821,6 +1832,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Normal",
       "order": "OutsideIn",
       "fixtureIds": [
@@ -2123,6 +2135,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Normal",
       "order": "AsListed",
       "fixtureIds": [
@@ -2161,6 +2174,7 @@
       "solo": false,
       "locked": true,
       "expanded": true,
+      "compact": true,
       "blend": "Normal",
       "order": "AsListed",
       "fixtureIds": [
@@ -2207,6 +2221,7 @@
             "tail": 1,
             "direction": "Forward",
             "background": 0,
+            "offset": 0,
             "displayName": "Chase",
             "swatchColor": "#FFFFFF",
             "intensity": 1
@@ -2234,6 +2249,7 @@
             "tail": 3,
             "direction": "Forward",
             "background": 0,
+            "offset": 1.5,
             "displayName": "Chase",
             "swatchColor": "#FFAA00",
             "intensity": 1
@@ -2272,6 +2288,31 @@
           "name": "Forward chase",
           "start": 20,
           "duration": 8
+        },
+        {
+          "kind": "light",
+          "effect": {
+            "type": "morse",
+            "text": "Hi 5?",
+            "color": "#00FFAA",
+            "dotTime": 0.1,
+            "repeat": true,
+            "background": 0.1,
+            "displayName": "Morse Code",
+            "swatchColor": "#00FFAA",
+            "intensity": 1
+          },
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "fadeEasing": "Linear",
+          "transitionIn": null,
+          "automation": [],
+          "effectOffset": 0,
+          "effectSpan": null,
+          "id": "c-morse",
+          "name": "Morse",
+          "start": 29,
+          "duration": 7
         }
       ]
     },
@@ -2283,6 +2324,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Normal",
       "order": "AsListed",
       "fixtureIds": [],
@@ -2319,6 +2361,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Normal",
       "order": "AsListed",
       "fixtureIds": [],
@@ -2345,6 +2388,7 @@
       "solo": false,
       "locked": false,
       "expanded": false,
+      "compact": false,
       "blend": "Normal",
       "order": "AsListed",
       "fixtureIds": [],
@@ -2588,11 +2632,17 @@
       "effect": {
         "type": "hit",
         "color": "#FF00FF",
+        "colorMode": "Cycle",
+        "colors": [
+          "#FF0000",
+          "#00FF00",
+          "#0000FF"
+        ],
         "decay": 0.3,
         "interval": 0.5,
         "offset": 0.1,
         "displayName": "Hit",
-        "swatchColor": "#FF00FF",
+        "swatchColor": "#FF0000",
         "intensity": 1
       },
       "fadeIn": 0.5,
@@ -2818,6 +2868,7 @@
         "tail": 2,
         "direction": "Bounce",
         "background": 0.05,
+        "offset": 0,
         "displayName": "Chase",
         "swatchColor": "#FF0000",
         "intensity": 1
@@ -3015,6 +3066,7 @@
         "tail": 0,
         "direction": "Backward",
         "background": 0,
+        "offset": 0,
         "displayName": "Chase",
         "swatchColor": "#FFFFFF",
         "intensity": 1
@@ -3449,6 +3501,7 @@
         "tail": 1,
         "direction": "Forward",
         "background": 0,
+        "offset": 0,
         "displayName": "Chase",
         "swatchColor": "#FFFFFF",
         "intensity": 1
@@ -3476,6 +3529,7 @@
         "tail": 3,
         "direction": "Forward",
         "background": 0,
+        "offset": 1.5,
         "displayName": "Chase",
         "swatchColor": "#FFAA00",
         "intensity": 1
@@ -3514,6 +3568,31 @@
       "name": "Forward chase",
       "start": 20,
       "duration": 8
+    },
+    {
+      "kind": "light",
+      "effect": {
+        "type": "morse",
+        "text": "Hi 5?",
+        "color": "#00FFAA",
+        "dotTime": 0.1,
+        "repeat": true,
+        "background": 0.1,
+        "displayName": "Morse Code",
+        "swatchColor": "#00FFAA",
+        "intensity": 1
+      },
+      "fadeIn": 0,
+      "fadeOut": 0,
+      "fadeEasing": "Linear",
+      "transitionIn": null,
+      "automation": [],
+      "effectOffset": 0,
+      "effectSpan": null,
+      "id": "c-morse",
+      "name": "Morse",
+      "start": 29,
+      "duration": 7
     },
     {
       "kind": "light",

@@ -134,6 +134,8 @@ public class AllocationTests
         effects.Add(new ColorCycleEffect { Colors = [] });
         effects.Add(new GradientEffect { Colors = [] });
         effects.Add(new LightningEffect { Mode = LightningMode.Scattered });
+        effects.Add(new HitEffect { ColorMode = HitColorMode.Cycle, Interval = 0.3, Offset = 0.05 });
+        effects.Add(new ChaseEffect { Offset = -2.5, Direction = ChaseDirection.Bounce });
         effects.Add(new PulseEffect { Wave = Waveform.Triangle });
         effects.Add(new SolidEffect { Color = " #abc " });
         Assert.Equal(

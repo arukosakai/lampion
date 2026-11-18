@@ -14,7 +14,7 @@ internal static class MainMenu
             {
                 Top("_File", c.NewProject, c.Open, c.Save, c.SaveAs, null, c.ProjectSettings, null, c.ImportAudio, c.ImportVideo, null, c.ExportQlc, null, c.Exit),
                 Top("_Edit", c.Undo, c.Redo, null, c.Copy, c.Paste, c.Duplicate, c.Delete),
-                Top("_Timeline", c.PlayPause, c.GoToStart, c.GoToTime, c.SplitAtPlayhead, null, c.AddMarker, c.PreviousMarker, c.NextMarker, c.DeleteMarkerAtPlayhead, c.DeleteAllMarkers, null, c.NewLightTrack, c.ZoomToFit),
+                Top("_Timeline", c.PlayPause, c.GoToStart, c.GoToTime, c.SplitAtPlayhead, null, c.AddMarker, c.PreviousMarker, c.NextMarker, c.DeleteMarkerAtPlayhead, c.DeleteAllMarkers, null, c.NewLightTrack, c.ZoomToFit, c.CompactTracks),
                 Top(
                     "_Stage",
                     c.PerspectiveView,
@@ -45,6 +45,13 @@ internal static class MainMenu
         var menu = new MenuItem { Header = header };
         foreach (var command in commands)
             menu.Items.Add(command is null ? new Separator() : Item(command));
+        // Check marks can change from elsewhere (a header double-click, the transport bar), so re-read them on open.
+        menu.SubmenuOpened += (_, _) =>
+        {
+            for (var i = 0; i < commands.Length; i++)
+                if (commands[i]?.IsChecked is { } isChecked && menu.Items[i] is MenuItem item)
+                    item.IsChecked = isChecked();
+        };
         return menu;
     }
 

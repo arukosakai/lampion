@@ -3,7 +3,10 @@ using Lampion.App.Editor;
 
 namespace Lampion.App.Controls.Timeline;
 
-/// <summary>Clicks on track headers: the mute, solo and twirl-down toggles, selecting the track, and its context menu.</summary>
+/// <summary>
+/// Clicks on track headers: the mute, solo and twirl-down toggles, selecting the track, double-clicking to make
+/// it compact or full height again, and its context menu.
+/// </summary>
 internal sealed class TrackHeaderActions(EditorState state, TimelineContextMenus menus, TimelineControl host)
 {
     /// <summary>Handles a press at <paramref name="p"/> on the header of <paramref name="row"/> (top at <paramref name="rowY"/>).</summary>
@@ -11,7 +14,8 @@ internal sealed class TrackHeaderActions(EditorState state, TimelineContextMenus
     /// <param name="rowY">The row's top in control coordinates.</param>
     /// <param name="p">Pointer position.</param>
     /// <param name="rightButton">True for a right-click, which opens the track menu (keyframe rows included).</param>
-    public void Press(in TimelineRow row, double rowY, Point p, bool rightButton)
+    /// <param name="clickCount">2 for the second press of a double-click.</param>
+    public void Press(in TimelineRow row, double rowY, Point p, bool rightButton, int clickCount)
     {
         var track = row.Track;
         if (rightButton)
@@ -37,6 +41,11 @@ internal sealed class TrackHeaderActions(EditorState state, TimelineContextMenus
                 break;
             default:
                 state.SelectTrack(track.Id);
+                if (clickCount == 2)
+                {
+                    TrackEdits.ToggleCompact(state, track);
+                    host.NotifyViewChanged();
+                }
                 break;
         }
     }

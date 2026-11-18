@@ -25,7 +25,7 @@ public class EffectTests
     [Fact]
     public void NewEffectsStayInRangeAndRepeatExactly()
     {
-        foreach (var kind in new[] { "even-sparkle", "gradient", "wave", "fire", "lightning", "heartbeat", "hit" })
+        foreach (var kind in new[] { "even-sparkle", "gradient", "wave", "fire", "lightning", "heartbeat", "hit", "morse" })
         {
             var effect = EffectCatalog.Create(kind);
             for (var t = 0.0; t < 20; t += 0.037)
@@ -58,6 +58,71 @@ public class EffectTests
 
         var repeating = new HitEffect { Decay = 0.5, Interval = 1 };
         Assert.Equal(1, repeating.Sample(new EffectContext(2, 4, 0, 1)).Intensity, 6);
+    }
+
+    [Fact]
+    public void ChaseOffsetStartsTheHeadThatManyFixturesAhead()
+    {
+        int Head(ChaseEffect chase, double t) => Enumerable.Range(0, 4).Single(i => chase.Sample(new EffectContext(t, 8, i, 4)).Intensity > 0.99);
+
+        var plain = new ChaseEffect { StepTime = 1, Tail = 0 };
+        var shifted = new ChaseEffect { StepTime = 1, Tail = 0, Offset = 2 };
+        var back = new ChaseEffect { StepTime = 1, Tail = 0, Offset = -1, Direction = ChaseDirection.Bounce };
+        Assert.Equal(0, Head(plain, 0.5));
+        Assert.Equal(2, Head(shifted, 0.5));
+        Assert.Equal(3, Head(shifted, 1.5));
+        Assert.Equal(1, Head(back, 0));
+    }
+
+    [Fact]
+    public void HitCycleModeTakesTheNextColourEveryHit()
+    {
+        var hit = new HitEffect { ColorMode = HitColorMode.Cycle, Colors = ["#FF0000", "#00FF00", "#0000FF"], Interval = 1, Offset = 0.5 };
+        string ColorAt(double t, int fixture) => hit.Sample(new EffectContext(t, 8, fixture, 2)).Color.ToHex();
+
+        Assert.Equal(["#FF0000", "#00FF00", "#0000FF", "#FF0000"], new[] { 0.1, 1.1, 2.1, 3.1 }.Select(t => ColorAt(t, 0)));
+        // The second fixture lands half a second later, so its colour changes with its own hit.
+        Assert.Equal("#FF0000", ColorAt(1.1, 1));
+        Assert.Equal("#00FF00", ColorAt(1.6, 1));
+
+        hit.ColorMode = HitColorMode.Single;
+        Assert.Equal("#FFFFFF", ColorAt(1.1, 0));
+    }
+
+    [Fact]
+    public void MorseBlinksDotsDashesAndGapsInDotUnits()
+    {
+        // S = ..., O = ---: on 0,2,4 | 8-10,12-14,16-18 | 22,24,26, then a 7-unit gap before repeating at 34.
+        var morse = new MorseEffect { Text = "sos", DotTime = 1 };
+        var lit = Enumerable.Range(0, 34).Where(u => morse.Sample(new EffectContext(u + 0.5, 40, 0, 1)).Intensity > 0.5);
+        Assert.Equal([0, 2, 4, 8, 9, 10, 12, 13, 14, 16, 17, 18, 22, 24, 26], lit);
+        Assert.Equal(1, morse.Sample(new EffectContext(34.5, 40, 0, 1)).Intensity);
+
+        morse.Repeat = false;
+        Assert.Equal(0, morse.Sample(new EffectContext(34.5, 40, 0, 1)).Intensity);
+    }
+
+    [Fact]
+    public void MorseSkipsUnknownCharactersAndSeparatesWords()
+    {
+        // "E E": a dot, a 7-unit word gap, a dot; the emoji and the doubled space change nothing.
+        var morse = new MorseEffect { Text = "E 😀 E", DotTime = 1, Repeat = false };
+        var lit = Enumerable.Range(0, 12).Where(u => morse.Sample(new EffectContext(u + 0.5, 20, 0, 1)).Intensity > 0.5);
+        Assert.Equal([0, 8], lit);
+
+        var silent = new MorseEffect { Text = "~~", Background = 0.25 };
+        Assert.Equal(0.25, silent.Sample(new EffectContext(1, 4, 0, 1)).Intensity);
+    }
+
+    [Fact]
+    public void MorseTextSurvivesJson()
+    {
+        var clip = new LightClip { Effect = new MorseEffect { Text = "Lampion", DotTime = 0.2 } };
+        var morse = Assert.IsType<MorseEffect>(EffectPreset.Deserialize(EffectPreset.Serialize(EffectPreset.From(clip, "x"))).Effect);
+        Assert.Equal("Lampion", morse.Text);
+        // The code is rebuilt from the loaded text: L starts with a dot at unit 0, then off at unit 1.
+        Assert.Equal(1, morse.Sample(new EffectContext(0.1, 4, 0, 1)).Intensity);
+        Assert.Equal(0, morse.Sample(new EffectContext(0.3, 4, 0, 1)).Intensity);
     }
 
     [Theory]

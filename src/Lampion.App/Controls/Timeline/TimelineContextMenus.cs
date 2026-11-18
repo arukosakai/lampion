@@ -89,6 +89,8 @@ internal sealed class TimelineContextMenus(EditorState state, TimelineSnapper sn
         menu.Items.Add(Item("Move up", () => TrackEdits.Move(state, track, -1)));
         menu.Items.Add(Item("Move down", () => TrackEdits.Move(state, track, 1)));
         menu.Items.Add(Item(track.Locked ? "Unlock" : "Lock", () => TrackEdits.ToggleLock(state, track)));
+        menu.Items.Add(Item(track.Compact ? "Full height" : "Compact", () => ToggleCompact(track)));
+        menu.Items.Add(Item(TrackEdits.AllCompact(state) ? "Full height for all tracks" : "Compact all tracks", host.ToggleCompactAll));
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("Delete track", () => TrackEdits.Delete(state, track)));
         return menu;
@@ -99,6 +101,12 @@ internal sealed class TimelineContextMenus(EditorState state, TimelineSnapper sn
         TimelineOps.AddLane(state, clip, target, role);
         track.Expanded = true;
         state.Touch();
+        host.NotifyViewChanged();
+    }
+
+    private void ToggleCompact(Track track)
+    {
+        TrackEdits.ToggleCompact(state, track);
         host.NotifyViewChanged();
     }
 

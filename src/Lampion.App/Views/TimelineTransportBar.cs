@@ -58,6 +58,8 @@ internal sealed class TimelineTransportBar : WrapPanel
                      Ui.Button("−", () => timeline.ZoomStep(zoomIn: false), "Zoom out (-)"),
                      Ui.Button("Fit", timeline.ZoomToFit, "Zoom to fit (\\)"),
                      Ui.Button("+", () => timeline.ZoomStep(zoomIn: true), "Zoom in (=)"),
+                     Gap(),
+                     Ui.Button(Lucide.FoldVertical, null, timeline.ToggleCompactAll, "Compact all tracks, or make them full height again (or double-click a track header)"),
                  })
         {
             c.Margin = new Thickness(0, 0, 4, 0);

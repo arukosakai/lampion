@@ -203,7 +203,7 @@ internal static class EverythingProject
                 Duration = 4,
                 FadeIn = 0.5,
                 FadeEasing = Easing.EaseOut,
-                Effect = new HitEffect { Color = "#FF00FF", Decay = 0.3, Interval = 0.5, Offset = 0.1 },
+                Effect = new HitEffect { Color = "#FF00FF", ColorMode = HitColorMode.Cycle, Colors = ["#FF0000", "#00FF00", "#0000FF"], Decay = 0.3, Interval = 0.5, Offset = 0.1 },
             }
         );
         adder.Clips.Add(
@@ -408,7 +408,10 @@ internal static class EverythingProject
             }
         );
         bottom.Clips.Add(new LightClip { Id = "c-empty-chase", Name = "Empty chase", Start = 8, Duration = 6, FadeIn = 1, FadeOut = 1, Effect = new ChaseEffect { Colors = [], StepTime = 0.5 } });
-        bottom.Clips.Add(new LightClip { Id = "c-forward", Name = "Forward chase", Start = 20, Duration = 8, Effect = new ChaseEffect { Colors = ["#FFAA00"], StepTime = 0.2, Tail = 3 }, Automation = { new AutomationLane { Id = "a-chase-step", Target = AutomationTarget.EffectParameter, Parameter = "stepTime", Keys = { K(0, 0.5, Easing.EaseInOut), K(8, 0.08) } } } });
+        bottom.Clips.Add(new LightClip { Id = "c-forward", Name = "Forward chase", Start = 20, Duration = 8, Effect = new ChaseEffect { Colors = ["#FFAA00"], StepTime = 0.2, Tail = 3, Offset = 1.5 }, Automation = { new AutomationLane { Id = "a-chase-step", Target = AutomationTarget.EffectParameter, Parameter = "stepTime", Keys = { K(0, 0.5, Easing.EaseInOut), K(8, 0.08) } } } });
+
+        bottom.Clips.Add(new LightClip { Id = "c-morse", Name = "Morse", Start = 29, Duration = 7, Effect = new MorseEffect { Text = "Hi 5?", Color = "#00FFAA", DotTime = 0.1, Background = 0.1 } });
+        bottom.Compact = true;
 
         var empty = new Track { Id = "t-empty", Name = "No targets" };
         empty.Clips.Add(new LightClip { Id = "c-orphan", Name = "Orphan", Start = 0, Duration = 10 });

@@ -72,6 +72,7 @@ internal sealed class EditorCommands
         ZoomIn = new("Zoom in", () => timeline.ZoomAround(ZoomStep, zoomAnchor), "OemPlus");
         ZoomOut = new("Zoom out", () => timeline.ZoomAround(1 / ZoomStep, zoomAnchor), "OemMinus");
         ZoomToFit = new("Zoom to fit", timeline.ZoomToFit, "OemPipe");
+        CompactTracks = new("Compact all tracks", timeline.ToggleCompactAll) { IsChecked = () => TrackEdits.AllCompact(state) };
 
         PerspectiveView = new("Perspective view", () => stage.SetPreset(ViewPreset.Free), "D1");
         TopView = new("Top view", () => stage.SetPreset(ViewPreset.Top), "D2");
@@ -196,6 +197,9 @@ internal sealed class EditorCommands
 
     /// <summary>Timeline → Zoom to fit.</summary>
     public ShellCommand ZoomToFit { get; }
+
+    /// <summary>Timeline → Compact all tracks: thin rows for every track, or full height again when checked.</summary>
+    public ShellCommand CompactTracks { get; }
 
     /// <summary>Stage → Perspective view.</summary>
     public ShellCommand PerspectiveView { get; }

@@ -34,7 +34,8 @@ internal sealed class TrackHeaderRenderer(EditorState state)
         if (isLight)
             IconPainter.Draw(ctx, track.Expanded ? Lucide.ChevronDown : Lucide.ChevronRight, new Rect(8, y + 9, 13, 13), TimelinePalette.TextIcon);
         TimelineText.Draw(ctx, track.Name, new Point(TrackHeaderLayout.NameX, y + 7), TimelinePalette.Text, TrackHeaderLayout.NameSize, TrackHeaderLayout.NameWeight);
-        TimelineText.Draw(ctx, row.Caption, new Point(26, y + 25), TimelinePalette.DimText, 10);
+        if (!track.Compact)
+            TimelineText.Draw(ctx, row.Caption, new Point(26, y + 25), TimelinePalette.DimText, 10);
         DrawToggle(ctx, TrackHeaderLayout.MuteRect(y), "M", track.Muted, TimelinePalette.MuteOn);
         if (isLight)
             DrawToggle(ctx, TrackHeaderLayout.SoloRect(y), "S", track.Solo, TimelinePalette.SoloOn);

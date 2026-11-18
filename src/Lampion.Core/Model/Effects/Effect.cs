@@ -24,6 +24,7 @@ namespace Lampion.Core.Model.Effects;
 [JsonDerivedType(typeof(LightningEffect), "lightning")]
 [JsonDerivedType(typeof(HeartbeatEffect), "heartbeat")]
 [JsonDerivedType(typeof(HitEffect), "hit")]
+[JsonDerivedType(typeof(MorseEffect), "morse")]
 public abstract class Effect
 {
     private protected Effect() { }

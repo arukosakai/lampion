@@ -103,4 +103,23 @@ internal static class TrackEdits
         track.Expanded = !track.Expanded;
         state.Touch();
     }
+
+    /// <summary>Switches the track between a compact and a full-height row. A view change, so it touches rather than adding an undo step.</summary>
+    public static void ToggleCompact(EditorState state, Track track)
+    {
+        track.Compact = !track.Compact;
+        state.Touch();
+    }
+
+    /// <summary>Whether there are tracks and every one of them is compact.</summary>
+    public static bool AllCompact(EditorState state) => state.Project.Tracks.Count > 0 && state.Project.Tracks.TrueForAll(t => t.Compact);
+
+    /// <summary>Makes every track compact, or every track full height when they all already are. A view change, like <see cref="ToggleCompact"/>.</summary>
+    public static void ToggleCompactAll(EditorState state)
+    {
+        var compact = !AllCompact(state);
+        foreach (var track in state.Project.Tracks)
+            track.Compact = compact;
+        state.Touch();
+    }
 }

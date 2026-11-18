@@ -92,7 +92,7 @@ internal sealed class TimelineInput
 
         if (p.X < TimelineViewport.HeaderWidth)
         {
-            _headers.Press(row, rowY, p, rightButton);
+            _headers.Press(row, rowY, p, rightButton, e.ClickCount);
             return;
         }
 
@@ -121,6 +121,7 @@ internal sealed class TimelineInput
         {
             if (!(_state.SelectedClipIds.Contains(hit.Clip.Id) && !additive))
                 _state.SelectClip(hit.Clip.Id, additive);
+            SeekToEdge(hit);
             if (!row.Track.Locked)
                 Begin(StartClipDrag(hit, row.Track, _viewport.XToTime(p.X)), e);
             return;
@@ -180,6 +181,15 @@ internal sealed class TimelineInput
             ClipZone.Transition => new TransitionResizeInteraction(_state, _viewport, _snapper, (LightClip)hit.Clip, track, time),
             _ => new ClipMoveInteraction(_state, _viewport, _snapper, _hitTester, hit.Clip, track, time),
         };
+
+    // Grabbing a clip's edge puts the playhead on it, so the frame being cut is the one on screen.
+    private void SeekToEdge(ClipHit hit)
+    {
+        if (hit.Zone == ClipZone.TrimStart)
+            _state.Seek(hit.Clip.Start);
+        else if (hit.Zone == ClipZone.TrimEnd)
+            _state.Seek(hit.Clip.End);
+    }
 
     private void Begin(ITimelineInteraction interaction, PointerPressedEventArgs e)
     {

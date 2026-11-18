@@ -26,7 +26,8 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 
 ### 🎬 Timeline editing
 - Light, audio and video tracks, with a beat grid driven by BPM and offset
-- Drag, trim, split (<kbd>Ctrl</kbd>+<kbd>K</kbd>), duplicate, copy and paste clips
+- Drag, trim, split (<kbd>Ctrl</kbd>+<kbd>K</kbd>), duplicate, copy and paste clips; grabbing a clip edge puts the playhead on it
+- Compact tracks to fit more on screen: double-click a track header, or compact them all from the transport bar or Timeline menu
 - Fade handles and transitions: crossfade, dip to black, wipe across the rig
 - Markers: the playhead snaps to them while scrubbing (Alt scrubs freely); Ctrl+click or right-click one to delete it
 - Audio waveforms, plus clips snapping to beats, markers, clip edges and the playhead (the stopped playhead wins when it's in reach, then the end of the previous clip on the track; hold Alt to drag freely)
@@ -35,7 +36,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 <td width="50%" valign="top">
 
 ### 🌈 Effects & automation
-- Solid, colour fade, rainbow, colour cycle, chase, strobe, pulse, sparkle, gradient, colour wave, fire, lightning, heartbeat, hit
+- Solid, colour fade, rainbow, colour cycle, chase (with an offset to run tracks out of step), strobe, pulse, sparkle, gradient, colour wave, fire, lightning, heartbeat, hit (one colour or a new one every hit), and Morse code blinking any text you type
 - Presets: save a clip's whole look (effect, fades, automation) and reuse it in any show; import/export as `.lampfx`
 - Keyframe lanes for hue shift, saturation, intensity, opacity and white
 - Animate any numeric effect parameter (sparkle rate, chase step time, strobe duty, decay, ...) with its ⏱ stopwatch; keyframed speeds ramp smoothly instead of jumping, and a split clip carries on exactly where it was
@@ -173,7 +174,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 | <kbd>Ctrl</kbd>+<kbd>G</kbd> | Go to time (or click the timecode) | | |
 
 **Stage:** right-drag to orbit, middle-drag to pan, scroll to zoom, <kbd>Alt</kbd>+drag to change height.
-**Timeline:** click the timecode to type a time (`1:30`, `00:01:30:15`, `90.5`, or `+5` / `-2` from the playhead), double-click an empty track for a new clip, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.
+**Timeline:** click the timecode to type a time (`1:30`, `00:01:30:15`, `90.5`, or `+5` / `-2` from the playhead), double-click an empty track for a new clip, double-click a track header to make it compact, <kbd>Ctrl</kbd>+scroll to zoom, <kbd>Alt</kbd> while dragging to turn snapping off.
 
 ---
 

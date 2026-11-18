@@ -31,15 +31,20 @@ public sealed class ChaseEffect : Effect
     /// <summary>Intensity of fixtures the chase is not on, 0..1.</summary>
     public double Background { get; set; }
 
+    /// <summary>How many fixtures ahead the head starts, so chases on different tracks can run out of step; fractions are fine.</summary>
+    public double Offset { get; set; }
+
     private const int StepTimeSlot = 0;
     private const int TailSlot = 1;
     private const int BackgroundSlot = 2;
+    private const int OffsetSlot = 3;
 
     private static readonly AnimatableParameter[] Animatable =
     [
         AnimatableParameter.Period<ChaseEffect>("stepTime", "Step time", e => e.StepTime, (e, v) => e.StepTime = v, minimum: 0.01),
         AnimatableParameter.Plain<ChaseEffect>("tail", "Tail", e => e.Tail, (e, v) => e.Tail = v),
         AnimatableParameter.Plain<ChaseEffect>("background", "Background", e => e.Background, (e, v) => e.Background = v),
+        AnimatableParameter.Plain<ChaseEffect>("offset", "Offset", e => e.Offset, (e, v) => e.Offset = v),
     ];
 
     private protected override IReadOnlyList<AnimatableParameter> DeclaredParameters => Animatable;
@@ -54,7 +59,7 @@ public sealed class ChaseEffect : Effect
     public override EffectSample Sample(in EffectContext ctx)
     {
         var count = Math.Max(1, ctx.Count);
-        var position = ctx.Time / Math.Max(0.01, ctx.Parameter(StepTimeSlot, StepTime));
+        var position = ctx.Time / Math.Max(0.01, ctx.Parameter(StepTimeSlot, StepTime)) + ctx.Parameter(OffsetSlot, Offset);
         var laps = position / count;
         var lap = (int)Math.Floor(laps);
         var head = Direction switch
@@ -80,7 +85,8 @@ public sealed class ChaseEffect : Effect
     private static double Bounce(double position, int count)
     {
         var period = 2 * (count - 1);
-        var p = position % period;
+        // A negative offset can put the position before 0.
+        var p = ((position % period) + period) % period;
         return p <= count - 1 ? p : period - p;
     }
 

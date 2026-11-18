@@ -179,6 +179,13 @@ public sealed class TimelineControl : Control
     /// <inheritdoc />
     public override void Render(DrawingContext context) => _renderer.Render(context, _drops.Preview);
 
+    /// <summary>Makes every track compact, or full height again when they all already are.</summary>
+    public void ToggleCompactAll()
+    {
+        TrackEdits.ToggleCompactAll(_state);
+        NotifyViewChanged();
+    }
+
     /// <summary>Raises <see cref="ViewChanged"/>; for collaborators that change the layout or the view.</summary>
     internal void NotifyViewChanged() => ViewChanged?.Invoke();
 

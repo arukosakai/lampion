@@ -20,7 +20,8 @@ public static class EffectCatalog
         new("fire", "Fire", "Flickering embers and flames"),
         new("lightning", "Lightning", "Irregular bursts of bright flashes"),
         new("heartbeat", "Heartbeat", "A lub-dub double pulse"),
-        new("hit", "Hit", "A sharp flash that decays, once or on repeat"),
+        new("hit", "Hit", "A sharp flash that decays, once or on repeat, optionally a new colour every hit"),
+        new("morse", "Morse Code", "Blinks a message you type in Morse code"),
     ];
 
     /// <summary>A new effect with default parameters; unknown kinds give a <see cref="SolidEffect"/>.</summary>
@@ -41,6 +42,7 @@ public static class EffectCatalog
             "lightning" => new LightningEffect(),
             "heartbeat" => new HeartbeatEffect(),
             "hit" => new HitEffect(),
+            "morse" => new MorseEffect(),
             _ => new SolidEffect(),
         };
 

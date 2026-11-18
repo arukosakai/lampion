@@ -49,14 +49,19 @@ internal sealed class TimelineLayout
         }
     }
 
+    /// <summary>Height of a compact track row, in pixels: room for the header toggles and a clip's name bar.</summary>
+    public const double CompactHeight = 26;
+
     /// <summary>Row height of a track (not its lanes), in pixels.</summary>
     public static double TrackHeight(Track track) =>
-        track.Kind switch
-        {
-            TrackKind.Audio => 60,
-            TrackKind.Video => 46,
-            _ => 54,
-        };
+        track.Compact
+            ? CompactHeight
+            : track.Kind switch
+            {
+                TrackKind.Audio => 60,
+                TrackKind.Video => 46,
+                _ => 54,
+            };
 
     /// <summary>Content-space bottom of the last row belonging to a light track (lanes included), or null when there is none.</summary>
     public double? LightTracksBottom()

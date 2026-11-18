@@ -13,6 +13,7 @@
     "tail": 2,
     "direction": "Bounce",
     "background": 0.05,
+    "offset": 0,
     "displayName": "Chase",
     "swatchColor": "#FF0000",
     "intensity": 1
