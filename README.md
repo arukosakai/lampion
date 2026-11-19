@@ -71,7 +71,7 @@ You patch your DMX fixtures, build the venue in metres, and lay your lights out 
 
 ### 🎚️ Live console
 - A set list of shows, cut to with **GO**, with the song as the master clock for the lights
-- Faders for intensity, colour or any channel, and launchpad-style effect pads
+- Faders for intensity, colour or any channel, and launchpad-style effect pads that can fire sound effects
 - MIDI learn, plus one-click mapping for the Akai APC mini mk2 with lit pads
 - A 100 Hz engine on its own thread, built to keep running through errors on show night
 
@@ -148,7 +148,7 @@ The 3D preview is drawn **from the computed DMX**, decoded back into light, so w
 - **Set list:** other Lampion shows (or this project's own timeline). **GO** cuts to the selected one. Show fixtures are matched to the rig by id, then by universe and address.
 - **Music in sync:** the show's audio plays and is the master clock. The lights hold the first frame while the song buffers, start with it, then follow its position: small drift is slewed away (up to ±5 % speed), so there are no visible jumps. **Light delay (ms)** makes up for the PA's latency.
 - **Faders:** intensity, hue, saturation or any channel role of some fixtures, or the intensity, speed or hue of a pad. Faders only reach fixtures the playing show doesn't drive, and a strip says when the show holds its fixtures.
-- **Pads:** launchpad-style buttons that start and stop an effect (toggle or flash), lit while on. If the controller has an output, its pad LEDs light up too.
+- **Pads:** launchpad-style buttons that start and stop an effect (toggle or flash), lit while on. If the controller has an output, its pad LEDs light up too. A pad can also play a sound effect (Edit → **Sound**): it plays from the start each time the pad switches on, at its own volume, and either plays out or stops with the pad. Sounds are kept buffered, so a press sounds straight away.
 - **Widgets:** a column for a wall clock and photos (+ Widget; right-click to change or remove). Display only.
 - **Save console… / Load console…:** take a whole console (set list, faders, pads, MIDI mappings, widgets) to another project as a `.lamplive` file. Fixtures are matched by universe and address, groups by name, and anything that can't be matched is listed. Loading is one undo step.
 - **MIDI:** right-click a fader or pad → Edit → **Learn**, then move a slider or hit a pad. Windows only for now.

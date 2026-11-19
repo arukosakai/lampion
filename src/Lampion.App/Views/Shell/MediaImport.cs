@@ -16,7 +16,8 @@ internal sealed class MediaImport
     // Used when neither LibVLC nor the waveform reader can tell how long the file is.
     private const double FallbackDuration = 60;
 
-    private static readonly string[] AudioPatterns = ["*.mp3", "*.wav", "*.ogg", "*.flac", "*.m4a", "*.aac"];
+    /// <summary>File picker patterns for the audio formats Lampion plays.</summary>
+    internal static readonly string[] AudioPatterns = ["*.mp3", "*.wav", "*.ogg", "*.flac", "*.m4a", "*.aac"];
     private static readonly string[] VideoPatterns = ["*.mp4", "*.mov", "*.mkv", "*.webm", "*.avi", "*.m4v"];
 
     private readonly Window _owner;

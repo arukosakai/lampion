@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Lampion.App.Controls.Icons;
 using Lampion.App.Live;
 using Lampion.Core.Model.Live;
 
@@ -34,7 +35,7 @@ internal sealed class PadButton : Border
         BorderBrush = Brushes.Black;
         Background = Off;
         Cursor = new Cursor(StandardCursorType.Hand);
-        Child = new StackPanel
+        var labels = new StackPanel
         {
             VerticalAlignment = VerticalAlignment.Center,
             Children =
@@ -43,7 +44,11 @@ internal sealed class PadButton : Border
                 new TextBlock { Text = (pad.Mode == PadMode.Flash ? "flash · " : "") + (pad.Midi?.ToString() ?? "no MIDI"), FontSize = 10, HorizontalAlignment = HorizontalAlignment.Center },
             },
         };
-        ToolTip.SetTip(this, $"{pad.Name}: {pad.Effect.DisplayName}. Click to {(pad.Mode == PadMode.Flash ? "flash" : "start / stop")}; right-click to edit or map MIDI.");
+        if (pad.SoundPath.Length > 0)
+            labels.Children.Add(new LucideIcon(Lucide.Music, 11) { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 3, 0, 0) });
+        Child = labels;
+        var sound = pad.SoundPath.Length > 0 ? $" Plays {Path.GetFileName(pad.SoundPath)}." : "";
+        ToolTip.SetTip(this, $"{pad.Name}: {pad.Effect.DisplayName}.{sound} Click to {(pad.Mode == PadMode.Flash ? "flash" : "start / stop")}; right-click to edit or map MIDI.");
         var editItem = new MenuItem { Header = "Edit…" };
         editItem.Click += (_, _) => edit();
         var removeItem = new MenuItem { Header = "Delete" };

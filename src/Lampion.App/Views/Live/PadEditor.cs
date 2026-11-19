@@ -48,6 +48,7 @@ internal static class PadEditor
                     Ui.Field("Order", Ui.Combo(Enum.GetValues<FixtureOrder>(), pad.Order, o => pad.Order = o), 110),
                     Ui.Field("LED velocity", Ui.Number(pad.LedVelocity, v => pad.LedVelocity = (int)v, 1, 127, 1, "0"), 110),
                     TargetPicker.Build(state.Project, pad.FixtureIds, pad.GroupIds),
+                    PadSoundRows.Build(window, state, fields, pad),
                     MidiLearnRow.Build(session, () => pad.Midi, b => pad.Midi = b),
                     done,
                 },

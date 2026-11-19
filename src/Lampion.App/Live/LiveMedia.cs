@@ -40,10 +40,14 @@ internal sealed partial class LiveMedia : IDisposable
         {
             Error = $"Live audio unavailable (LibVLC): {ex.Message}";
         }
+        Pads = new PadSounds(_vlc);
     }
 
     /// <summary>Why live audio can't play, or null.</summary>
     public string? Error { get; }
+
+    /// <summary>The console's pad sounds, played through the same LibVLC as the music.</summary>
+    public PadSounds Pads { get; }
 
     /// <summary>Seconds the lights run behind the music (negative: ahead). Any thread.</summary>
     public double LightDelay
@@ -127,10 +131,11 @@ internal sealed partial class LiveMedia : IDisposable
         _cue = null;
     }
 
-    /// <summary>Stops the music and LibVLC.</summary>
+    /// <summary>Stops the music, the pad sounds and LibVLC.</summary>
     public void Dispose()
     {
         Stop();
+        Pads.Dispose();
         _vlc?.Dispose();
     }
 

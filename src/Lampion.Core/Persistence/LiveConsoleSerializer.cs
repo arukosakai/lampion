@@ -14,7 +14,7 @@ public static class LiveConsoleSerializer
     public const string Extension = ".lamplive";
 
     /// <summary>
-    /// <paramref name="project"/>'s console as a file: a deep copy, with show and photo paths made absolute (resolved
+    /// <paramref name="project"/>'s console as a file: a deep copy, with show, photo and pad sound paths made absolute (resolved
     /// against <paramref name="projectPath"/>, the project's file or null while unsaved) and the targeted fixtures and
     /// groups described so they can be found again elsewhere.
     /// </summary>
@@ -26,6 +26,8 @@ public static class LiveConsoleSerializer
             show.Path = ShowPaths.Resolve(projectPath, show.Path);
         foreach (var widget in file.Console.Widgets)
             widget.ImagePath = ShowPaths.Resolve(projectPath, widget.ImagePath);
+        foreach (var pad in file.Console.Pads)
+            pad.SoundPath = ShowPaths.Resolve(projectPath, pad.SoundPath);
 
         var fixtureIds = new HashSet<string>();
         var groupIds = new HashSet<string>();
@@ -62,6 +64,8 @@ public static class LiveConsoleSerializer
             show.Path = ShowPaths.Relative(projectPath, show.Path);
         foreach (var widget in console.Widgets)
             widget.ImagePath = ShowPaths.Relative(projectPath, widget.ImagePath);
+        foreach (var pad in console.Pads)
+            pad.SoundPath = ShowPaths.Relative(projectPath, pad.SoundPath);
 
         var fixtureMap = MapFixtures(file, project, out var unmatchedFixtures);
         var groupMap = MapGroups(file, project, out var unmatchedGroups);

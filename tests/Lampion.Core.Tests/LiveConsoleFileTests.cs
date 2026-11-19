@@ -23,7 +23,7 @@ public class LiveConsoleFileTests
         var fader = new LiveFader { Name = "Reflectors", Midi = new MidiBinding(MidiBindingKind.Control, 1, 7) };
         fader.FixtureIds.AddRange(["b", "c"]);
         fader.GroupIds.Add("g1");
-        var pad = new LivePad { Name = "Rainbow", Effect = new RainbowEffect { Speed = 3 } };
+        var pad = new LivePad { Name = "Rainbow", Effect = new RainbowEffect { Speed = 3 }, SoundPath = "sfx/horn.wav", SoundVolume = 0.5, SoundStopsWithPad = true };
         pad.FixtureIds.Add("a");
         project.Live.Faders.Add(fader);
         project.Live.Pads.Add(pad);
@@ -71,6 +71,8 @@ public class LiveConsoleFileTests
         Assert.Equal("Reflectors", import.Console.Faders[0].Name);
         Assert.Equal(new MidiBinding(MidiBindingKind.Control, 1, 7), import.Console.Faders[0].Midi);
         Assert.Equal(3, Assert.IsType<RainbowEffect>(import.Console.Pads[0].Effect).Speed);
+        Assert.Equal(0.5, import.Console.Pads[0].SoundVolume);
+        Assert.True(import.Console.Pads[0].SoundStopsWithPad);
         Assert.Equal(["Opener", "This timeline"], import.Console.Shows.Select(s => s.Name));
         Assert.Equal(40, import.Console.LightDelayMs);
     }
@@ -97,6 +99,8 @@ public class LiveConsoleFileTests
         Assert.Equal(Path.Combine(Here, "tour", "songs", "opener.lampion"), file.Console.Shows[0].Path);
         Assert.Equal("songs/opener.lampion", import.Console.Shows[0].Path);
         Assert.Equal("gumi.png", import.Console.Widgets[0].ImagePath);
+        Assert.Equal(Path.Combine(Here, "tour", "sfx", "horn.wav"), file.Console.Pads[0].SoundPath);
+        Assert.Equal("sfx/horn.wav", import.Console.Pads[0].SoundPath);
         Assert.Equal("", import.Console.Shows[1].Path);
     }
 

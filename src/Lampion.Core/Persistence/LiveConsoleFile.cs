@@ -5,7 +5,7 @@ namespace Lampion.Core.Persistence;
 /// <summary>
 /// A <c>.lamplive</c> file: a live console (set list, faders, pads, MIDI mappings, widgets) taken out of its project,
 /// plus the fixtures and groups it refers to, so it can be loaded into a project with another patch.
-/// Paths to shows and photos are absolute in the file.
+/// Paths to shows, photos and pad sounds are absolute in the file.
 /// </summary>
 public sealed class LiveConsoleFile
 {

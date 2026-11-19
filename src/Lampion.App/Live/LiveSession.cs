@@ -12,7 +12,7 @@ namespace Lampion.App.Live;
 
 /// <summary>
 /// Live mode for one workspace: runs the <see cref="LiveLoop"/> on the project's rig, loads set-list shows off the
-/// UI thread, routes MIDI (set-list buttons included), lights the controller and keeps the engine's patch in step with edits.
+/// UI thread, routes MIDI (set-list buttons included), plays pad sounds, lights the controller and keeps the engine's patch in step with edits.
 /// While running, the editor's stage and DMX monitor and the DMX output all show the live frames. UI thread only.
 /// </summary>
 internal sealed class LiveSession : IDisposable
@@ -26,6 +26,8 @@ internal sealed class LiveSession : IDisposable
     private readonly DmxOutput _output;
     private readonly ControllerLeds _leds = new();
     private readonly LiveMedia _media = new();
+    private readonly PadEdges _padEdges = new();
+    private readonly HashSet<string> _soundPads = [];
     private int _patchVersion = -1;
     private Project? _patchProject;
     private long _lastRebuild;
@@ -132,6 +134,7 @@ internal sealed class LiveSession : IDisposable
         if (!Loop.IsRunning)
             return;
         _media.Stop();
+        _media.Pads.StopAll();
         _output.Source = null;
         _state.LiveSource = null;
         Loop.Stop();
@@ -293,6 +296,7 @@ internal sealed class LiveSession : IDisposable
 
         _media.LightDelay = _state.Project.Live.LightDelayMs / 1000;
         _media.Tick();
+        TickPadSounds();
 
         HandlePresses();
         if (Router.TryGetLatest(ref _midiSeen, out var message))
@@ -431,6 +435,8 @@ internal sealed class LiveSession : IDisposable
             Controls.SetFader(i, faderValues.GetValueOrDefault(_faderIds[i]));
         for (var i = 0; i < LiveControls.MaxPads; i++)
             Controls.SetPad(i, i < _padIds.Length && padsOn.Contains(_padIds[i]));
+        // Carrying pads over moves their generations; that isn't a press and mustn't fire their sounds.
+        _padEdges.Skip(Controls);
 
         Patch = patch;
         Router.Patch = patch;
@@ -439,6 +445,30 @@ internal sealed class LiveSession : IDisposable
         _patchProject = _state.Project;
         _lastRebuild = Stopwatch.GetTimestamp();
         Changed?.Invoke();
+    }
+
+    // Rebuilds are throttled, so right after an edit a position can briefly point at another pad: those are skipped.
+    private void TickPadSounds()
+    {
+        var pads = _state.Project.Live.Pads;
+        _soundPads.Clear();
+        for (var i = 0; i < _padIds.Length; i++)
+        {
+            var edge = _padEdges.Poll(Controls, i);
+            if (i >= pads.Count || pads[i].Id != _padIds[i] || pads[i].SoundPath.Length == 0)
+                continue;
+            var pad = pads[i];
+            var armed = _media.Pads.Arm(pad.Id, pad.SoundPath, _state.FilePath);
+            if (armed)
+                _soundPads.Add(pad.Id);
+            if (edge == PadEdge.On && armed)
+                _media.Pads.Fire(pad.Id, pad.SoundVolume);
+            else if (edge == PadEdge.On)
+                Problem = _media.Error ?? $"{pad.Name}: sound not found ({Path.GetFileName(pad.SoundPath)}); check the file is still there.";
+            else if (edge == PadEdge.Off && pad.SoundStopsWithPad)
+                _media.Pads.Stop(pad.Id);
+        }
+        _media.Pads.Tidy(_soundPads);
     }
 
     private static Project Copy(Project project) => ProjectSerializer.Deserialize(ProjectSerializer.Serialize(project, indented: false));

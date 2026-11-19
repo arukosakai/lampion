@@ -40,4 +40,13 @@ public sealed class LivePad
 
     /// <summary>Velocity sent back to the controller's pad while on, which picks the LED colour on most grids (1–127).</summary>
     public int LedVelocity { get; set; } = 21;
+
+    /// <summary>Audio file played from the start each time the pad switches on; empty for none. Relative to the project when beside it.</summary>
+    public string SoundPath { get; set; } = "";
+
+    /// <summary>Sound volume, 0..2 (1 = as recorded).</summary>
+    public double SoundVolume { get; set; } = 1;
+
+    /// <summary>True to cut the sound when the pad switches off, rather than letting it play out.</summary>
+    public bool SoundStopsWithPad { get; set; }
 }
